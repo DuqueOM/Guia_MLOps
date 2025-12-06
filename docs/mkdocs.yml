@@ -1,0 +1,148 @@
+# MkDocs configuration for Guía MLOps v2
+# Run: mkdocs serve  (dev) or mkdocs build (prod)
+
+site_name: "Guía MLOps — Portfolio Edition v2"
+site_description: "Curso end-to-end para construir un portafolio ML/MLOps profesional desde cero"
+site_author: "DuqueOM"
+site_url: "https://duqueom.github.io/ML-MLOps-Portfolio/"
+
+# Repository
+repo_name: "ML-MLOps-Portfolio"
+repo_url: "https://github.com/DuqueOM/ML-MLOps-Portfolio"
+edit_uri: "edit/main/docs/guia_mlops/"
+
+# Theme
+theme:
+  name: material
+  language: es
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: deep purple
+      toggle:
+        icon: material/brightness-7
+        name: Cambiar a modo oscuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: deep purple
+      toggle:
+        icon: material/brightness-4
+        name: Cambiar a modo claro
+  font:
+    text: Roboto
+    code: Roboto Mono
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+# Extensions
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.mark
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.tilde
+  - admonition
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+# Plugins
+plugins:
+  - search:
+      lang: es
+  - minify:
+      minify_html: true
+
+# Extra
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/DuqueOM
+    - icon: fontawesome/brands/linkedin
+      link: https://linkedin.com/in/duqueom
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+
+# Copyright
+copyright: Copyright &copy; 2024 DuqueOM — Guía MLOps v2
+
+# Navigation
+nav:
+  - Inicio: index.md
+  - Índice Principal: 00_INDICE.md
+  - Syllabus: SYLLABUS.md
+  - Fase 1 - Fundamentos:
+    - "01 — Python Moderno": 01_PYTHON_MODERNO.md
+    - "02 — Diseño de Sistemas": 02_DISENO_SISTEMAS.md
+    - "03 — Estructura de Proyecto": 03_ESTRUCTURA_PROYECTO.md
+    - "04 — Entornos": 04_ENTORNOS.md
+    - "05 — Git Profesional": 05_GIT_PROFESIONAL.md
+    - "06 — Versionado de Datos": 06_VERSIONADO_DATOS.md
+  - Fase 2 - ML Engineering:
+    - "07 — sklearn Pipelines": 07_SKLEARN_PIPELINES.md
+    - "08 — Ingeniería de Features": 08_INGENIERIA_FEATURES.md
+    - "09 — Training Profesional": 09_TRAINING_PROFESIONAL.md
+    - "10 — Experiment Tracking": 10_EXPERIMENT_TRACKING.md
+  - Fase 3 - MLOps Core:
+    - "11 — Testing ML": 11_TESTING_ML.md
+    - "12 — CI/CD": 12_CI_CD.md
+    - "13 — Docker": 13_DOCKER.md
+    - "14 — FastAPI": 14_FASTAPI.md
+    - "15 — Streamlit": 15_STREAMLIT.md
+    - "16 — Observabilidad": 16_OBSERVABILIDAD.md
+  - Fase 4 - Producción:
+    - "17 — Despliegue": 17_DESPLIEGUE.md
+    - "18 — Infraestructura": 18_INFRAESTRUCTURA.md
+  - Fase 5 - Especialización:
+    - "19 — Documentación": 19_DOCUMENTACION.md
+    - "20 — Proyecto Integrador": 20_PROYECTO_INTEGRADOR.md
+    - "21 — Glosario": 21_GLOSARIO.md
+    - "22 — Checklist": 22_CHECKLIST.md
+    - "23 — Recursos": 23_RECURSOS.md
+  - Práctica:
+    - Ejercicios: EJERCICIOS.md
+    - Soluciones: EJERCICIOS_SOLUCIONES.md
+    - Rúbrica: RUBRICA_EVALUACION.md
+  - Entrevistas:
+    - "🟢 Junior (0-2 años)": SIMULACRO_ENTREVISTA_JUNIOR.md
+    - "🟡 Mid (2-4 años)": SIMULACRO_ENTREVISTA_MID.md
+    - "🔴 Senior Parte 1": SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md
+    - "🔴 Senior Parte 2": SIMULACRO_ENTREVISTA_SENIOR_PARTE2.md
+    - "Apéndice A - Speech": APENDICE_A_SPEECH_PORTAFOLIO.md
+    - "Apéndice B - Talking Points": APENDICE_B_TALKING_POINTS.md
+  - Recursos:
+    - "📺 Videos y Cursos por Módulo": RECURSOS_POR_MODULO.md
+    - "📓 Notebook Pipelines (07-08)": notebooks/07_08_sklearn_pipelines.ipynb
+    - Plantillas: templates/index.md
+    - Plan de Estudios: PLAN_ESTUDIOS.md
+    - Decisiones Técnicas: DECISIONES_TECH.md
+    - Guía Audiovisual: GUIA_AUDIOVISUAL.md
+    - Mantenimiento: MAINTENANCE_GUIDE.md
