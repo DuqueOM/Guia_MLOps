@@ -30,7 +30,7 @@ LANG = "es"
 SLOW = False
 
 # Directorio de salida
-OUTPUT_DIR = "audio"
+OUTPUT_DIR = "audios"
 
 # Archivos a procesar (orden correcto) - v5.0 Senior Edition
 MODULE_FILES = [
@@ -291,12 +291,12 @@ def extract_module_title(content: str) -> str:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# GENERACIÓN DE AUDIO
+# GENERACIÓN DE AUDIOS
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
 def generate_audio(text: str, output_path: Path):
-    """Genera audio MP3 usando gTTS (Google Text-to-Speech)."""
+    """Genera audios MP3 usando gTTS (Google Text-to-Speech)."""
     from gtts import gTTS
 
     tts = gTTS(text=text, lang=LANG, slow=SLOW)
@@ -414,7 +414,9 @@ def main():
 
     # Directorio actual
     script_dir = Path(__file__).parent
-    output_dir = script_dir / OUTPUT_DIR
+    # Generar audios en la carpeta raiz del proyecto: Guia_MLOps/audio
+    project_root = script_dir.parent
+    output_dir = project_root / OUTPUT_DIR
     output_dir.mkdir(exist_ok=True)
 
     # Determinar archivos a procesar
