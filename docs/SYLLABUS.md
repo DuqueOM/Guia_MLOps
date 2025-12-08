@@ -107,8 +107,8 @@ Al completar este programa serás capaz de:
 
  **MÓDULO 08 — Infraestructura y Nube**  
  Objetivo: operar como un engineer en cloud.  
- Incluye: IaC (Terraform), fundamentos AWS/GCP, redes y seguridad básica.  
- Práctica en este repo: partir de `17_DESPLIEGUE.md` y `18_INFRAESTRUCTURA.md` para desplegar un stack MLOps básico en cloud (o simularlo localmente con los manifests y Terraform). 
+ Incluye: IaC (Terraform), fundamentos AWS/GCP, redes, seguridad básica y control de costos (FinOps) para evitar sorpresas en la factura.  
+ Práctica en este repo: partir de `17_DESPLIEGUE.md` y `18_INFRAESTRUCTURA.md` (especialmente la sección *Cloud y Control de Costos*) para desplegar un stack MLOps básico en cloud (o simularlo localmente con los manifests y Terraform). 
 
  **MÓDULO 09 — Escalado y Sistemas Distribuidos**  
  Objetivo: pensar en batch/streaming y K8s para producción masiva.  

@@ -383,6 +383,8 @@
 | 🔴 | **Kubernetes Tutorial** | TechWorld with Nana | 4h | [YouTube](https://www.youtube.com/watch?v=X48VuDVv0do) |
 | 🟡 | **Terraform Tutorial** | freeCodeCamp | 2h 30m | [YouTube](https://www.youtube.com/watch?v=7xngnjfIlK4) |
 | 🟢 | **Kubeflow for ML** | Google Cloud | 40 min | [YouTube](https://www.youtube.com/watch?v=HBxyLnEzyhw) |
+| 🟡 | **Cloud Cost Optimization for ML Workloads** | AWS re:Invent | 45 min | [YouTube](https://www.youtube.com/results?search_query=aws+reinvent+cost+optimization+ml) |
+| 🟢 | **FinOps Fundamentals on GCP** | Google Cloud | 30 min | [YouTube](https://www.youtube.com/results?search_query=google+cloud+finops+cost+management) |
 
 ### 📚 Cursos
 
@@ -390,6 +392,13 @@
 |:--:|:-------|:-----------|:--------:|:-----|
 | 🟡 | Kubernetes Fundamentals | Linux Foundation | 35h | [LF Training](https://training.linuxfoundation.org/training/kubernetes-fundamentals/) |
 | 🟢 | Terraform Associate | HashiCorp | 15h | [HashiCorp Learn](https://learn.hashicorp.com/terraform) |
+
+### 📄 Documentación
+
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [AWS Well-Architected – Cost Optimization Pillar](https://docs.aws.amazon.com/wellarchitected/latest/cost-optimization-pillar/welcome.html) | Guía oficial para diseñar sistemas eficientes en costos |
+| 🟡 | [Google Cloud – Cost Management](https://cloud.google.com/cost-management/docs) | Documentación de gestión de costos en GCP |
 
 ---
 

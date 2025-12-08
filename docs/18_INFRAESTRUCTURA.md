@@ -170,6 +170,136 @@ Terraform y K8s son skills valiosos, pero no necesarios para demostrar competenc
 
 ---
 
+##  Cloud y Control de Costos (FinOps para MLOps)
+
+> Objetivo: que no te llegue una factura de 500 USD por dejar un cluster o una GPU encendidos sin uso.
+
+### 1) Modelo mental de costos en cloud
+
+```
+╔═══════════════════════════════════════════════════════════════════════════╗
+║  REGLA DE ORO: En cloud, TODO lo que corre o almacena datos tiene costo.  ║
+║                                                                           ║
+║  Principales drivers de costo en MLOps:                                   ║
+║  • Cómputo: EC2/VMs, nodos de K8s, GPUs, Jobs de entrenamiento            ║
+║  • Almacenamiento: S3/GCS, volúmenes, snapshots, buckets "olvidados"     ║
+║  • Networking: tráfico de salida (egress), balanceadores de carga         ║
+║  • Servicios gestionados: EKS/GKE fee, bases de datos, colas, etc.       ║
+║                                                                           ║
+║  Pregunta que siempre debes hacerte:                                      ║
+║  "¿Este recurso está generando valor AHORA MISMO o podría estar apagado?"║
+╚═══════════════════════════════════════════════════════════════════════════╝
+```
+
+Buena parte del FinOps (gestión financiera en cloud) se reduce a:
+
+- **Apagar lo que no usas** (clusters, GPUs, VMs demo).
+- **Que los recursos escalen a cero** cuando no hay tráfico.
+- **Poner límites y alertas** antes de que llegue una sorpresa.
+
+---
+
+### 2) Alertas de facturación mínimas en AWS y GCP
+
+#### AWS: AWS Budgets + Cost Explorer
+
+- **Paso 1**: Ir a `Billing > Budgets` y crear un **Budget mensual** por cuenta o proyecto.
+- **Paso 2**: Configurar umbrales típicos, por ejemplo:
+  - 50% del presupuesto → alerta informativa.
+  - 80% del presupuesto → alerta de acción (revisar recursos).
+  - 100% del presupuesto → posible freeze de entornos no críticos.
+- **Paso 3**: Enviar alertas a:
+  - Email del equipo.
+  - (Opcional) SNS → Slack/Teams.
+- **Paso 4**: Activar **Cost Explorer** para revisar qué servicio está creciendo (EKS, EC2, S3, etc.).
+
+> 💡 En entrevistas, menciona que siempre configuras **AWS Budgets** en cuentas nuevas y usas **Cost Allocation Tags** (`Project`, `Env`, `Owner`) para saber quién gasta qué.
+
+#### GCP: Presupuestos y alertas en Cloud Billing
+
+- **Paso 1**: Entra a `Billing > Budgets & alerts` y crea un **presupuesto por proyecto**.
+- **Paso 2**: Define umbrales 50/80/100% y activa notificaciones por correo.
+- **Paso 3**: Opcionalmente integra con **Cloud Monitoring** para disparar alertas a Slack/PagerDuty.
+- **Paso 4**: Usa el reporte de **Cost breakdown** para identificar servicios caros (GKE, Cloud Run, BigQuery, etc.).
+
+Checklist rápido para cualquier cuenta cloud nueva:
+
+- [ ] Presupuesto mensual configurado.
+- [ ] Alertas a 50/80/100% del presupuesto.
+- [ ] Etiquetas/labels de costo definidas (`project`, `env`, `owner`).
+- [ ] Entornos **dev/staging** con límites de gasto más agresivos.
+
+---
+
+### 3) Errores frecuentes de costo en MLOps y cómo evitarlos
+
+#### a) Dejar un cluster de Kubernetes encendido sin tráfico
+
+**Escenario típico**: EKS/GKE creado para pruebas, sin pods críticos, pero:
+
+- Los **nodos** siguen encendidos.
+- EKS cobra una **tarifa fija por cluster**.
+- Hay LoadBalancers y volúmenes asociados que nadie recuerda.
+
+**Señales de alarma**
+
+- Factura con líneas como `EKS cluster fee`, `Compute Engine`, `Load Balancer` sin apenas requests.
+- `kubectl get pods -A` muestra casi todo idle.
+
+**Buenas prácticas**
+
+- Para **dev/staging**, preferir:
+  - Cloud Run/ECS con `min-instances = 0` o tareas bajo demanda.
+  - Clusters efímeros destruidos con `terraform destroy` o scripts programados.
+- Configurar **cluster autoscaler** con `minNodes = 0` en nodos no críticos.
+- Revisar mensualmente: `kubectl get nodes -A` + panel de uso de CPU/RAM.
+
+#### b) GPUs encendidas 24/7 para entrenamiento puntual
+
+- **Problema**: nodos GPU (p.ej. `p3`, `a2-highgpu`) usados una vez al día pero pagando 24/7.
+- **Solución**:
+  - Usar **jobs efímeros** (Spot/Preemptible) y destruirlos al terminar.
+  - Automatizar con IaC (`terraform apply` / `destroy`) o workflows de CI/CD.
+  - Para portafolios, priorizar entrenamiento **local** y solo usar GPU cloud en casos concretos.
+
+#### c) Configuración "cómoda" pero cara en serverless
+
+- En Cloud Run/Lambda es fácil poner:
+  - `min-instances` > 0 en todos los servicios.
+  - Timeouts muy altos con mucha memoria.
+- **Reglas sanas**:
+  - Entornos **dev/staging**: `min-instances = 0` y límites de memoria modestos.
+  - Reservar configuraciones "grandes" para prod con justificación.
+
+---
+
+### 4) Checklist de costos por entorno
+
+| Entorno | Patrón recomendado |
+|---------|-----------------------|
+| Dev | Cloud Run/ECS con `min-instances = 0`, sin clusters K8s dedicados |
+| Staging | Igual que dev, pero con presupuestos y alertas separados |
+| Prod | K8s/cloud gestionado solo si hay tráfico real y equipo de Ops suficiente |
+
+- [ ] Hay un **owner claro** por entorno (quien responde a la factura).
+- [ ] Cada recurso tiene **tags/labels** de `project`, `env`, `owner`.
+- [ ] Hay un **runbook** para apagar recursos no críticos fuera de horario (scripts/programado).
+
+---
+
+### 5) Consejos profesionales orientados a entrevistas
+
+- **Cuenta una historia realista**: "Nos llegó una factura alta por X; la mitigación fue: budgets, etiquetado, autoscaling y IaC para destruir entornos efímeros".
+- Menciona explícitamente:
+  - **Presupuestos y alertas de facturación** (AWS Budgets / GCP Budgets).
+  - **Autoscaling a cero** para workloads de baja criticidad.
+  - **Tags/labels de costo** como requisito obligatorio.
+- Conecta esta sección con:
+  - La **matriz de costo** del módulo de despliegue (`17_DESPLIEGUE.md`).
+  - Las **métricas y alertas** vistas en observabilidad (`16_OBSERVABILIDAD.md`).
+
+---
+
 ## 🧨 Errores habituales y cómo depurarlos en Infraestructura como Código
 
 Aunque este módulo es avanzado, es común cometer errores que dejan tu IaC frágil o inconsistente.

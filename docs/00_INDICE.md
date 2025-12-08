@@ -159,16 +159,16 @@ Al completar esta guía serás capaz de:
 
 ### FASE 4: Producción (Semana 7)
 
-> **Objetivo**: Entender estrategias de despliegue e infraestructura como código.
+> **Objetivo**: Entender estrategias de despliegue, infraestructura como código y control de costos en cloud.
 
 | # | Módulo | Qué Aprenderás | Tiempo |
 |:-:|--------|----------------|:------:|
-| 17 | [Estrategias de Despliegue](17_DESPLIEGUE.md) | Lambda vs ECS vs K8s, blue-green, canary | 4h |
-| 18 | [Infraestructura como Código](18_INFRAESTRUCTURA.md) | Terraform basics, Kubernetes intro | 3h |
+| 17 | [Estrategias de Despliegue](17_DESPLIEGUE.md) | Lambda vs ECS vs K8s, blue-green, canary, análisis de costos | 4h |
+| 18 | [Infraestructura como Código](18_INFRAESTRUCTURA.md) | Terraform basics, Kubernetes intro, Cloud & FinOps (costos en AWS/GCP) | 3h |
 
 **📦 Aplicación en el Portafolio**:
 - `infra/terraform/` → Templates Terraform
-- `k8s/` → Manifests Kubernetes
+- `k8s/` → Manifests Kubernetes (incluyendo buenas prácticas de costos)
 - `docker-compose.demo.yml` → Orquestación local
 
 ---

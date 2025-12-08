@@ -316,7 +316,7 @@
 </blockquote>
 <h3>FASE 4: Producción (Semana 7)</h3>
 <blockquote>
-<p><strong>Objetivo</strong>: Entender estrategias de despliegue e infraestructura como código.</p>
+<p><strong>Objetivo</strong>: Entender estrategias de despliegue, infraestructura como código y control de costos en cloud.</p>
 </blockquote>
 <table>
 <thead>
@@ -331,20 +331,20 @@
 <tr>
 <td style="text-align: center;">17</td>
 <td><a href="#mod_17_DESPLIEGUE">Estrategias de Despliegue</a></td>
-<td>Lambda vs ECS vs K8s, blue-green, canary</td>
+<td>Lambda vs ECS vs K8s, blue-green, canary, análisis de costos</td>
 <td style="text-align: center;">4h</td>
 </tr>
 <tr>
 <td style="text-align: center;">18</td>
 <td><a href="#mod_18_INFRAESTRUCTURA">Infraestructura como Código</a></td>
-<td>Terraform basics, Kubernetes intro</td>
+<td>Terraform basics, Kubernetes intro, Cloud &amp; FinOps (costos en AWS/GCP)</td>
 <td style="text-align: center;">3h</td>
 </tr>
 </tbody>
 </table>
 <p><strong>📦 Aplicación en el Portafolio</strong>:<br />
 - <code>infra/terraform/</code> → Templates Terraform<br />
-- <code>k8s/</code> → Manifests Kubernetes<br />
+- <code>k8s/</code> → Manifests Kubernetes (incluyendo buenas prácticas de costos)<br />
 - <code>docker-compose.demo.yml</code> → Orquestación local</p>
 <h3>FASE 5: Especialización y Maestría (Semana 8)</h3>
 <blockquote>
@@ -924,8 +924,8 @@ sino que ofrece una vista de alto nivel basada en madurez.</p>
  Práctica en este repo: seguir <code>16_OBSERVABILIDAD.md</code> para instrumentar BankChurn con métricas y paneles, apoyándote en los manifiestos de <code>k8s/</code> y las reglas de <code>infra/</code>.</p>
 <p><strong>MÓDULO 08 — Infraestructura y Nube</strong><br />
  Objetivo: operar como un engineer en cloud.<br />
- Incluye: IaC (Terraform), fundamentos AWS/GCP, redes y seguridad básica.<br />
- Práctica en este repo: partir de <code>17_DESPLIEGUE.md</code> y <code>18_INFRAESTRUCTURA.md</code> para desplegar un stack MLOps básico en cloud (o simularlo localmente con los manifests y Terraform). </p>
+ Incluye: IaC (Terraform), fundamentos AWS/GCP, redes, seguridad básica y control de costos (FinOps) para evitar sorpresas en la factura.<br />
+ Práctica en este repo: partir de <code>17_DESPLIEGUE.md</code> y <code>18_INFRAESTRUCTURA.md</code> (especialmente la sección <em>Cloud y Control de Costos</em>) para desplegar un stack MLOps básico en cloud (o simularlo localmente con los manifests y Terraform). </p>
 <p><strong>MÓDULO 09 — Escalado y Sistemas Distribuidos</strong><br />
  Objetivo: pensar en batch/streaming y K8s para producción masiva.<br />
  Incluye: batch vs streaming, Kubernetes, automatización avanzada.<br />
@@ -19199,6 +19199,137 @@ spec:
 <h3>Para Este Portafolio</h3>
 <p><strong>Docker + GitHub Actions es suficiente.</strong></p>
 <p>Terraform y K8s son skills valiosos, pero no necesarios para demostrar competencia MLOps en proyectos de portafolio.</p>
+<h2>Cloud y Control de Costos (FinOps para MLOps)</h2>
+<blockquote>
+<p>Objetivo: que no te llegue una factura de 500 USD por dejar un cluster o una GPU encendidos sin uso.</p>
+</blockquote>
+<h3>1) Modelo mental de costos en cloud</h3>
+<pre><code>╔═══════════════════════════════════════════════════════════════════════════╗
+║  REGLA DE ORO: En cloud, TODO lo que corre o almacena datos tiene costo.  ║
+║                                                                           ║
+║  Principales drivers de costo en MLOps:                                   ║
+║  • Cómputo: EC2/VMs, nodos de K8s, GPUs, Jobs de entrenamiento            ║
+║  • Almacenamiento: S3/GCS, volúmenes, snapshots, buckets &quot;olvidados&quot;     ║
+║  • Networking: tráfico de salida (egress), balanceadores de carga         ║
+║  • Servicios gestionados: EKS/GKE fee, bases de datos, colas, etc.       ║
+║                                                                           ║
+║  Pregunta que siempre debes hacerte:                                      ║
+║  &quot;¿Este recurso está generando valor AHORA MISMO o podría estar apagado?&quot;║
+╚═══════════════════════════════════════════════════════════════════════════╝
+</code></pre>
+<p>Buena parte del FinOps (gestión financiera en cloud) se reduce a:</p>
+<ul>
+<li><strong>Apagar lo que no usas</strong> (clusters, GPUs, VMs demo).</li>
+<li><strong>Que los recursos escalen a cero</strong> cuando no hay tráfico.</li>
+<li><strong>Poner límites y alertas</strong> antes de que llegue una sorpresa.</li>
+</ul>
+<h3>2) Alertas de facturación mínimas en AWS y GCP</h3>
+<h4>AWS: AWS Budgets + Cost Explorer</h4>
+<ul>
+<li><strong>Paso 1</strong>: Ir a <code>Billing &gt; Budgets</code> y crear un <strong>Budget mensual</strong> por cuenta o proyecto.</li>
+<li><strong>Paso 2</strong>: Configurar umbrales típicos, por ejemplo:</li>
+<li>50% del presupuesto → alerta informativa.</li>
+<li>80% del presupuesto → alerta de acción (revisar recursos).</li>
+<li>100% del presupuesto → posible freeze de entornos no críticos.</li>
+<li><strong>Paso 3</strong>: Enviar alertas a:</li>
+<li>Email del equipo.</li>
+<li>(Opcional) SNS → Slack/Teams.</li>
+<li><strong>Paso 4</strong>: Activar <strong>Cost Explorer</strong> para revisar qué servicio está creciendo (EKS, EC2, S3, etc.).</li>
+</ul>
+<blockquote>
+<p>💡 En entrevistas, menciona que siempre configuras <strong>AWS Budgets</strong> en cuentas nuevas y usas <strong>Cost Allocation Tags</strong> (<code>Project</code>, <code>Env</code>, <code>Owner</code>) para saber quién gasta qué.</p>
+</blockquote>
+<h4>GCP: Presupuestos y alertas en Cloud Billing</h4>
+<ul>
+<li><strong>Paso 1</strong>: Entra a <code>Billing &gt; Budgets &amp; alerts</code> y crea un <strong>presupuesto por proyecto</strong>.</li>
+<li><strong>Paso 2</strong>: Define umbrales 50/80/100% y activa notificaciones por correo.</li>
+<li><strong>Paso 3</strong>: Opcionalmente integra con <strong>Cloud Monitoring</strong> para disparar alertas a Slack/PagerDuty.</li>
+<li><strong>Paso 4</strong>: Usa el reporte de <strong>Cost breakdown</strong> para identificar servicios caros (GKE, Cloud Run, BigQuery, etc.).</li>
+</ul>
+<p>Checklist rápido para cualquier cuenta cloud nueva:</p>
+<ul>
+<li>[ ] Presupuesto mensual configurado.</li>
+<li>[ ] Alertas a 50/80/100% del presupuesto.</li>
+<li>[ ] Etiquetas/labels de costo definidas (<code>project</code>, <code>env</code>, <code>owner</code>).</li>
+<li>[ ] Entornos <strong>dev/staging</strong> con límites de gasto más agresivos.</li>
+</ul>
+<h3>3) Errores frecuentes de costo en MLOps y cómo evitarlos</h3>
+<h4>a) Dejar un cluster de Kubernetes encendido sin tráfico</h4>
+<p><strong>Escenario típico</strong>: EKS/GKE creado para pruebas, sin pods críticos, pero:</p>
+<ul>
+<li>Los <strong>nodos</strong> siguen encendidos.</li>
+<li>EKS cobra una <strong>tarifa fija por cluster</strong>.</li>
+<li>Hay LoadBalancers y volúmenes asociados que nadie recuerda.</li>
+</ul>
+<p><strong>Señales de alarma</strong></p>
+<ul>
+<li>Factura con líneas como <code>EKS cluster fee</code>, <code>Compute Engine</code>, <code>Load Balancer</code> sin apenas requests.</li>
+<li><code>kubectl get pods -A</code> muestra casi todo idle.</li>
+</ul>
+<p><strong>Buenas prácticas</strong></p>
+<ul>
+<li>Para <strong>dev/staging</strong>, preferir:</li>
+<li>Cloud Run/ECS con <code>min-instances = 0</code> o tareas bajo demanda.</li>
+<li>Clusters efímeros destruidos con <code>terraform destroy</code> o scripts programados.</li>
+<li>Configurar <strong>cluster autoscaler</strong> con <code>minNodes = 0</code> en nodos no críticos.</li>
+<li>Revisar mensualmente: <code>kubectl get nodes -A</code> + panel de uso de CPU/RAM.</li>
+</ul>
+<h4>b) GPUs encendidas 24/7 para entrenamiento puntual</h4>
+<ul>
+<li><strong>Problema</strong>: nodos GPU (p.ej. <code>p3</code>, <code>a2-highgpu</code>) usados una vez al día pero pagando 24/7.</li>
+<li><strong>Solución</strong>:</li>
+<li>Usar <strong>jobs efímeros</strong> (Spot/Preemptible) y destruirlos al terminar.</li>
+<li>Automatizar con IaC (<code>terraform apply</code> / <code>destroy</code>) o workflows de CI/CD.</li>
+<li>Para portafolios, priorizar entrenamiento <strong>local</strong> y solo usar GPU cloud en casos concretos.</li>
+</ul>
+<h4>c) Configuración "cómoda" pero cara en serverless</h4>
+<ul>
+<li>En Cloud Run/Lambda es fácil poner:</li>
+<li><code>min-instances</code> &gt; 0 en todos los servicios.</li>
+<li>Timeouts muy altos con mucha memoria.</li>
+<li><strong>Reglas sanas</strong>:</li>
+<li>Entornos <strong>dev/staging</strong>: <code>min-instances = 0</code> y límites de memoria modestos.</li>
+<li>Reservar configuraciones "grandes" para prod con justificación.</li>
+</ul>
+<h3>4) Checklist de costos por entorno</h3>
+<table>
+<thead>
+<tr>
+<th>Entorno</th>
+<th>Patrón recomendado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dev</td>
+<td>Cloud Run/ECS con <code>min-instances = 0</code>, sin clusters K8s dedicados</td>
+</tr>
+<tr>
+<td>Staging</td>
+<td>Igual que dev, pero con presupuestos y alertas separados</td>
+</tr>
+<tr>
+<td>Prod</td>
+<td>K8s/cloud gestionado solo si hay tráfico real y equipo de Ops suficiente</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>[ ] Hay un <strong>owner claro</strong> por entorno (quien responde a la factura).</li>
+<li>[ ] Cada recurso tiene <strong>tags/labels</strong> de <code>project</code>, <code>env</code>, <code>owner</code>.</li>
+<li>[ ] Hay un <strong>runbook</strong> para apagar recursos no críticos fuera de horario (scripts/programado).</li>
+</ul>
+<h3>5) Consejos profesionales orientados a entrevistas</h3>
+<ul>
+<li><strong>Cuenta una historia realista</strong>: "Nos llegó una factura alta por X; la mitigación fue: budgets, etiquetado, autoscaling y IaC para destruir entornos efímeros".</li>
+<li>Menciona explícitamente:</li>
+<li><strong>Presupuestos y alertas de facturación</strong> (AWS Budgets / GCP Budgets).</li>
+<li><strong>Autoscaling a cero</strong> para workloads de baja criticidad.</li>
+<li><strong>Tags/labels de costo</strong> como requisito obligatorio.</li>
+<li>Conecta esta sección con:</li>
+<li>La <strong>matriz de costo</strong> del módulo de despliegue (<code>17_DESPLIEGUE.md</code>).</li>
+<li>Las <strong>métricas y alertas</strong> vistas en observabilidad (<code>16_OBSERVABILIDAD.md</code>).</li>
+</ul>
 <h2>🧨 Errores habituales y cómo depurarlos en Infraestructura como Código</h2>
 <p>Aunque este módulo es avanzado, es común cometer errores que dejan tu IaC frágil o inconsistente.</p>
 <h3>1) Terraform aplicado “a mano” sin estado controlado</h3>
@@ -26277,6 +26408,20 @@ mlflow ui --port 5000 &amp;
 <td style="text-align: center;">40 min</td>
 <td style="text-align: left;"><a href="https://www.youtube.com/watch?v=HBxyLnEzyhw">YouTube</a></td>
 </tr>
+<tr>
+<td style="text-align: center;">🟡</td>
+<td style="text-align: left;"><strong>Cloud Cost Optimization for ML Workloads</strong></td>
+<td style="text-align: left;">AWS re:Invent</td>
+<td style="text-align: center;">45 min</td>
+<td style="text-align: left;"><a href="https://www.youtube.com/results?search_query=aws+reinvent+cost+optimization+ml">YouTube</a></td>
+</tr>
+<tr>
+<td style="text-align: center;">🟢</td>
+<td style="text-align: left;"><strong>FinOps Fundamentals on GCP</strong></td>
+<td style="text-align: left;">Google Cloud</td>
+<td style="text-align: center;">30 min</td>
+<td style="text-align: left;"><a href="https://www.youtube.com/results?search_query=google+cloud+finops+cost+management">YouTube</a></td>
+</tr>
 </tbody>
 </table>
 <h3>📚 Cursos</h3>
@@ -26304,6 +26449,28 @@ mlflow ui --port 5000 &amp;
 <td style="text-align: left;">HashiCorp</td>
 <td style="text-align: center;">15h</td>
 <td style="text-align: left;"><a href="https://learn.hashicorp.com/terraform">HashiCorp Learn</a></td>
+</tr>
+</tbody>
+</table>
+<h3>📄 Documentación</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">🏷️</th>
+<th style="text-align: left;">Recurso</th>
+<th style="text-align: left;">Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">🔴</td>
+<td style="text-align: left;"><a href="https://docs.aws.amazon.com/wellarchitected/latest/cost-optimization-pillar/welcome.html">AWS Well-Architected – Cost Optimization Pillar</a></td>
+<td style="text-align: left;">Guía oficial para diseñar sistemas eficientes en costos</td>
+</tr>
+<tr>
+<td style="text-align: center;">🟡</td>
+<td style="text-align: left;"><a href="https://cloud.google.com/cost-management/docs">Google Cloud – Cost Management</a></td>
+<td style="text-align: left;">Documentación de gestión de costos en GCP</td>
 </tr>
 </tbody>
 </table>
