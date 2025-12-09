@@ -5,10 +5,14 @@ GENERADOR DE AUDIO - GUÍA MLOps
 Convierte módulos Markdown a archivos MP3 usando gTTS (Google Text-to-Speech)
 ═══════════════════════════════════════════════════════════════════════════════
 
-Uso:
-    python generate_audio.py                    # Genera todos los módulos
-    python generate_audio.py 01_FUNDAMENTOS.md  # Genera un módulo específico
-    python generate_audio.py --install          # Muestra instrucciones de instalación
+Uso (desde la raíz del proyecto):
+    python docs/generate_audio.py                    # Genera todos los módulos
+    python docs/generate_audio.py --force            # Regenera todos (ignora existentes)
+    python docs/generate_audio.py 01_PYTHON_MODERNO.md  # Genera un módulo específico
+    python docs/generate_audio.py --install          # Muestra instrucciones de instalación
+
+Salida:
+    Los audios se guardan en: Guia_MLOps/audios/
 
 Instalación:
     pip install gtts
@@ -123,7 +127,12 @@ def convert_table_to_speech(table_text: str) -> str:
             # Filas de datos: leer como "Columna valor" (sin signos)
             cleaned_cells = [clean_cell_for_speech(c) for c in cells]
             if len(cleaned_cells) == len(headers):
-                row_text = ", ".join([f"{headers[j]} {cleaned_cells[j]}" for j in range(len(cleaned_cells))])
+                row_text = ", ".join(
+                    [
+                        f"{headers[j]} {cleaned_cells[j]}"
+                        for j in range(len(cleaned_cells))
+                    ]
+                )
                 result.append(row_text + ".")
             elif cleaned_cells:
                 result.append(", ".join(cleaned_cells) + ".")
@@ -196,8 +205,9 @@ def clean_markdown_for_speech(content: str) -> str:
     # 9. Eliminar imágenes markdown
     text = re.sub(r"!\[([^\]]*)\]\([^\)]+\)", "", text)
 
-    # 10. Convertir headers a texto con pausas
-    text = re.sub(r"^#{1,6}\s*(.+)$", r"\n\1.\n", text, flags=re.MULTILINE)
+    # 10. Convertir headers a texto con pausas largas (punto y aparte)
+    # Los puntos adicionales generan una pausa más larga en gTTS
+    text = re.sub(r"^#{1,6}\s*(.+)$", r"\n\n\1. . .\n\n", text, flags=re.MULTILINE)
 
     # 11. Eliminar formato bold/italic pero mantener texto
     text = re.sub(r"\*\*([^*]+)\*\*", r"\1", text)
@@ -339,7 +349,9 @@ def process_file(md_path: Path, output_dir: Path) -> bool:
         return False
 
 
-def process_all_files(files_to_process: list, output_dir: Path, skip_existing: bool = True):
+def process_all_files(
+    files_to_process: list, output_dir: Path, skip_existing: bool = True
+):
     """Procesa todos los archivos con delay para evitar rate limiting."""
 
     success = 0
@@ -361,7 +373,9 @@ def process_all_files(files_to_process: list, output_dir: Path, skip_existing: b
             # Delay de 30 segundos entre archivos para evitar rate limiting
             if i < len(files_to_process) - 1:
                 remaining = len(files_to_process) - i - 1
-                print(f"  ⏳ Esperando 30s antes del siguiente ({remaining} restantes)...")
+                print(
+                    f"  ⏳ Esperando 30s antes del siguiente ({remaining} restantes)..."
+                )
                 time.sleep(30)
         else:
             failed += 1
@@ -425,7 +439,9 @@ def main():
         files_to_process = [script_dir / sys.argv[1]]
     else:
         # Todos los .md actuales en la carpeta (excepto scripts auxiliares)
-        files_to_process = sorted(p for p in script_dir.glob("*.md") if not p.name.startswith("generate"))
+        files_to_process = sorted(
+            p for p in script_dir.glob("*.md") if not p.name.startswith("generate")
+        )
 
     print(f"📁 Archivos a procesar: {len(files_to_process)}")
     print("🗣️ Motor: Google Text-to-Speech (español)")
@@ -433,10 +449,14 @@ def main():
 
     # Procesar
     force = "--force" in sys.argv
-    success, failed, skipped = process_all_files(files_to_process, output_dir, skip_existing=not force)
+    success, failed, skipped = process_all_files(
+        files_to_process, output_dir, skip_existing=not force
+    )
 
     print("\n" + "═" * 60)
-    print(f"📊 RESUMEN: ✅ {success} exitosos, ⏭️ {skipped} saltados, ❌ {failed} fallidos")
+    print(
+        f"📊 RESUMEN: ✅ {success} exitosos, ⏭️ {skipped} saltados, ❌ {failed} fallidos"
+    )
     print("═" * 60)
 
     if success > 0:
