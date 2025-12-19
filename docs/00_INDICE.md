@@ -46,6 +46,15 @@ Al completar esta guía serás capaz de:
 └────────────────────────────────────────────────────────────────────────────┘
 ```
 
+### 🧠 Sistema de Estudio (Protocolo E)
+
+- **[Study Tools](study_tools/index.md)**
+- **[Protocolo E](study_tools/PROTOCOLO_E.md)**
+- **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**
+- **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)**
+- **[Badges y Checkpoints](study_tools/BADGES_CHECKPOINTS.md)**
+- **[Simulacros Performance-Based](study_tools/SIMULACRO_PERFORMANCE_BASED.md)**
+
 ### Rutas de Aprendizaje
 
 | Si eres... | Ruta recomendada |

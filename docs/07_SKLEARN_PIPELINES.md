@@ -23,15 +23,67 @@ Dominar el patrón más importante de ML profesional: **pipelines unificados** q
 
 ---
 
-## 📋 Contenido
+<a id="00-prerrequisitos"></a>
 
-1. [¿Por Qué Pipelines?](#71-por-qué-pipelines)
-2. [ColumnTransformer: Transformaciones Paralelas](#72-columntransformer-transformaciones-paralelas)
-3. [Custom Transformers](#73-custom-transformers-tu-superpoder)
-4. [Pipeline Completo: Código Real](#74-pipeline-completo-código-real)
-5. [Ejercicios Prácticos](#75-ejercicios-prácticos)
+## 0.0 Prerrequisitos
+
+- Haber completado **[01_PYTHON_MODERNO](01_PYTHON_MODERNO.md)** y entender el motivo del `src/` layout.
+- Tener un proyecto del portafolio a mano (ideal: BankChurn) para ubicar el `pipeline.pkl` real.
+- Entender el problema de *training-serving skew* (al menos a nivel conceptual).
 
 ---
+
+<a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+
+## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+
+- **Antes de codificar**: abre **[Protocolo E](study_tools/PROTOCOLO_E.md)** y define tu *output mínimo* (ej: “pipeline serializable + tests básicos”).
+- **Mientras debuggeas**: si te atoras >15 min (ColumnTransformer, columnas, dtypes, `fit/transform`), registra el bloqueo en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**.
+- **Al cerrar la semana**: usa **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)** para decidir qué mejorar (reproducibilidad, tests, DX).
+
+---
+
+<a id="02-entregables-verificables-minimo-viable"></a>
+
+## 0.2 ✅ Entregables verificables (mínimo viable)
+
+Al terminar este módulo, deberías poder mostrar (en al menos 1 proyecto del portafolio):
+
+- [ ] **1 pipeline unificado** serializado (`pipeline.pkl`) que incluya preprocesamiento + modelo.
+- [ ] **Inferencia consistente**: `pipeline.predict(X_new)` sin re-fit de transformadores.
+- [ ] **Checklist de verificación** pasando (sección “Checkpoint”).
+
+---
+
+<a id="03-puente-teoria-codigo-portafolio"></a>
+
+## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+
+Para que esto cuente como progreso real, fuerza este mapeo:
+
+- **Concepto**: Pipeline/ColumnTransformer/custom transformers
+- **Archivo**: `src/<paquete>/training.py`, `src/<paquete>/features.py`, `models/pipeline.pkl`
+- **Prueba**: entrenar una vez, guardar `pipeline.pkl`, cargarlo y predecir con datos nuevos.
+
+---
+
+## 📋 Contenido
+
+- **0.0** [Prerrequisitos](#00-prerrequisitos)
+- **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+- **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+- **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+1. [¿Por Qué Pipelines?](#71-por-que-pipelines)
+2. [ColumnTransformer: Transformaciones Paralelas](#72-columntransformer-transformaciones-paralelas)
+3. [Custom Transformers](#73-custom-transformers-tu-superpoder)
+4. [Pipeline Completo: Código Real](#74-pipeline-completo-codigo-real)
+5. [Ejercicios Prácticos](#75-ejercicios-practicos)
+- [Errores habituales](#errores-habituales)
+- [✅ Checkpoint](#checkpoint)
+
+---
+
+<a id="71-por-que-pipelines"></a>
 
 ## 7.1 ¿Por Qué Pipelines?
 
@@ -129,6 +181,8 @@ predictions = pipeline.predict(X_new)  # ← Transforma Y predice
 
 ---
 
+<a id="72-columntransformer-transformaciones-paralelas"></a>
+
 ## 7.2 ColumnTransformer: Transformaciones Paralelas
 
 ### El Problema: Diferentes Columnas, Diferentes Tratamientos
@@ -223,6 +277,8 @@ X_processed = preprocessor.fit_transform(X_train)
 ```
 
 ---
+
+<a id="73-custom-transformers-tu-superpoder"></a>
 
 ## 7.3 Custom Transformers: Tu Superpoder
 
@@ -492,6 +548,8 @@ class MiTransformer(BaseEstimator, TransformerMixin):
 
 ---
 
+<a id="74-pipeline-completo-codigo-real"></a>
+
 ## 7.4 Pipeline Completo: Código Real
 
 ### CarVision: El Pipeline de 3 Etapas
@@ -630,6 +688,8 @@ def build_pipeline(self) -> Pipeline:
 ```
 
 ---
+
+<a id="75-ejercicios-practicos"></a>
 
 ## 7.5 Ejercicios Prácticos
 
@@ -870,9 +930,13 @@ pipeline = build_telecom_pipeline()
 
 ---
 
+<a id="errores-habituales"></a>
+
 ## 🧨 Errores habituales y cómo depurarlos en sklearn Pipelines
 
 Los errores en este módulo rara vez son “fallos exóticos” del algoritmo; casi siempre son **desalineaciones** entre datos, columnas, transformers y cómo guardas/cargas el pipeline.
+
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 ### 1) `ValueError: number of features does not match` (mismatch entre train e inference)
 
@@ -983,13 +1047,13 @@ Los errores en este módulo rara vez son “fallos exóticos” del algoritmo; c
 
 Con este enfoque, los pipelines dejan de ser una “caja negra mágica” y se convierten en una línea de ensamblaje transparente y depurable.
 
----
+----
+
+<a id="checkpoint"></a>
 
 ## ✅ Checkpoint: ¿Completaste el Módulo?
 
-Antes de continuar, verifica:
-
-- [ ] Entiendes por qué los pipelines previenen training-serving skew
+### Checklist
 - [ ] Sabes usar ColumnTransformer para diferentes tipos de columnas
 - [ ] Puedes crear un Custom Transformer con fit/transform
 - [ ] Has construido un pipeline de 3 etapas (features → preprocessing → model)

@@ -1,7 +1,48 @@
 # 11. Testing para Machine Learning
-
+ 
+<a id="00-prerrequisitos"></a>
+ 
+## 0.0 Prerrequisitos
+ 
+- Tener `pytest` y `pytest-cov` disponibles en tu entorno.
+- Haber revisado la estructura `src/` + `tests/` en al menos 1 proyecto del portafolio.
+ 
+---
+ 
+<a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+ 
+## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+ 
+- **Antes de empezar**: abre **[Protocolo E](study_tools/PROTOCOLO_E.md)** y define tu *output mínimo* (una suite que corre en CI).
+- **Durante el debugging**: si te atoras >15 min (fixtures, flaky tests, coverage), registra el caso en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**.
+- **Al cierre de semana**: usa **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)** para auditar si tus tests realmente protegen el pipeline.
+ 
+---
+ 
+<a id="02-entregables-verificables-minimo-viable"></a>
+ 
+## 0.2 ✅ Entregables verificables (mínimo viable)
+ 
+- [ ] Un `tests/` con:
+  - `conftest.py` con fixtures reutilizables
+  - unit tests para features/transformers
+  - data tests (rango, NaN, schema)
+  - al menos 1 integración (pipeline o API)
+- [ ] Coverage `>= 80%` (en al menos 1 proyecto).
+- [ ] 1 entrada en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** si hubo bloqueo real.
+ 
+---
+ 
+<a id="03-puente-teoria-codigo-portafolio"></a>
+ 
+## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+ 
+- **Concepto**: testing por capas (unit/data/model/integration/e2e) + coverage
+- **Archivo**: `tests/`, `pyproject.toml` (pytest), workflows CI
+- **Prueba**: `pytest -v --cov=src/<paquete> --cov-report=term-missing`
+ 
 ## 🎯 Objetivo del Módulo
-
+ 
 Dominar el testing en proyectos ML para alcanzar **80%+ de coverage** sin tests frágiles ni falsos positivos.
 
 ```
@@ -21,35 +62,36 @@ Dominar el testing en proyectos ML para alcanzar **80%+ de coverage** sin tests 
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 ```
-
+ 
 ---
-
+ 
+<a id="contenido"></a>
+ 
 ## 📋 Contenido
-
-1. [La Pirámide de Testing en ML](#111-la-pirámide-de-testing-en-ml)
-2. [Fixtures y conftest.py](#112-fixtures-y-conftestpy)
-3. [Unit Tests: Funciones Individuales](#113-unit-tests-funciones-individuales)
-4. [Data Tests: Validación de Datos](#114-data-tests-validación-de-datos)
-5. [Model Tests: Comportamiento del Modelo](#115-model-tests-comportamiento-del-modelo)
-6. [Integration Tests: Pipeline Completo](#116-integration-tests-pipeline-completo)
-7. [Alcanzar 80% Coverage](#117-alcanzar-80-coverage)
-
-### 🧩 Cómo se aplica en este portafolio
-
-- Cada uno de los tres proyectos tiene una carpeta `tests/` rica en ejemplos reales:
-  - **BankChurn-Predictor**: tests de pipeline de entrenamiento y métricas.
-  - **CarVision-Market-Intelligence**: tests de features, datos y modelo (incluidos en este módulo).
-  - **TelecomAI-Customer-Intelligence**: tests centrados en clasificación y contratos de datos.
-- El workflow `ci-mlops.yml` ejecuta estos tests en matrix (3 proyectos × 2 versiones de Python)
-  y aplica thresholds de coverage (79–80%). Este módulo te da el modelo mental para entender
-  y extender esos tests sin romper la pirámide de testing.
-
+ 
+- **0.0** [Prerrequisitos](#00-prerrequisitos)
+- **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+- **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+- **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+- **11.1** [La Pirámide de Testing en ML](#111-la-piramide-de-testing-en-ml)
+- **11.2** [Fixtures y conftest.py](#112-fixtures-y-conftestpy)
+- **11.3** [Unit Tests: Funciones Individuales](#113-unit-tests-funciones-individuales)
+- **11.4** [Data Tests: Validación de Datos](#114-data-tests-validacion-de-datos)
+- **11.5** [Model Tests: Comportamiento del Modelo](#115-model-tests-comportamiento-del-modelo)
+- **11.6** [Integration Tests: Pipeline Completo](#116-integration-tests-pipeline-completo)
+- **11.7** [Alcanzar 80% Coverage](#117-alcanzar-80-coverage)
+- [Errores habituales](#errores-habituales)
+- [✅ Ejercicio](#ejercicio)
+- [✅ Checkpoint](#checkpoint)
+ 
 ---
-
+ 
+<a id="111-la-piramide-de-testing-en-ml"></a>
+ 
 ## 11.1 La Pirámide de Testing en ML
-
+ 
 ### Analogía: Inspección de un Avión
-
+ 
 ```
 ╔═══════════════════════════════════════════════════════════════════════════╗
 ║  ✈️ ANTES DE CADA VUELO, SE INSPECCIONA:                                  ║
@@ -71,9 +113,9 @@ Dominar el testing en proyectos ML para alcanzar **80%+ de coverage** sin tests 
 ║  EN ML ES IGUAL: Testeas componentes → sistemas → pipeline completo       ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 ```
-
+ 
 ### La Pirámide Específica para ML
-
+ 
 ```
                         ┌─────────────────┐
                         │    E2E Tests    │ ← 5-10% de tests
@@ -92,7 +134,7 @@ Dominar el testing en proyectos ML para alcanzar **80%+ de coverage** sin tests 
                                  │
         ┌────────────────────────┴────────────────────────┐
         │                 Data Tests                      │ ← 20-25% de tests
-        │    (schema, rangos, distribuciones, NaN)        │   Validan datos
+        │    (schema, rangos, NaN, schema)                │   Validan datos
         └────────────────────────┬────────────────────────┘   test_data.py
                                  │
 ┌────────────────────────────────┴────────────────────────────────────────┐
@@ -100,21 +142,23 @@ Dominar el testing en proyectos ML para alcanzar **80%+ de coverage** sin tests 
 │              (funciones individuales, transformers)                     │   Rápidos, muchos
 └─────────────────────────────────────────────────────────────────────────┘   test_features.py
 ```
-
+ 
 ### Coverage del Portafolio Real
-
+ 
 | Proyecto | Coverage | Tests | Tipo Principal |
 |----------|:--------:|:-----:|----------------|
 | **BankChurn** | 79.5% | 45+ | Unit + Integration |
 | **CarVision** | 97% | 50+ | Unit + Data + Model |
 | **TelecomAI** | 97% | 35+ | Unit + Integration |
-
+ 
 ---
-
+ 
+<a id="112-fixtures-y-conftestpy"></a>
+ 
 ## 11.2 Fixtures y conftest.py
-
+ 
 ### ¿Qué es una Fixture?
-
+ 
 ```
 ╔═══════════════════════════════════════════════════════════════════════════╗
 ║  🧪 FIXTURE = Datos o recursos preparados para tests                      ║
@@ -130,23 +174,23 @@ Dominar el testing en proyectos ML para alcanzar **80%+ de coverage** sin tests 
 ║  • Se limpia automáticamente después                                      ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 ```
-
+ 
 ### conftest.py del Portafolio (CarVision)
-
+ 
 ```python
 # tests/conftest.py - Código REAL del portafolio
-
+ 
 import pytest
 import pandas as pd
 import numpy as np
 from pathlib import Path
 import tempfile
 import yaml
-
+ 
 # ═══════════════════════════════════════════════════════════════════════════
 # FIXTURES DE DATOS
 # ═══════════════════════════════════════════════════════════════════════════
-
+ 
 @pytest.fixture
 def sample_data() -> pd.DataFrame:
     """DataFrame pequeño para tests rápidos.
@@ -168,8 +212,8 @@ def sample_data() -> pd.DataFrame:
         "condition": ["good", "excellent", "like new", 
                      "good", "excellent"],
     })
-
-
+ 
+ 
 @pytest.fixture
 def sample_data_with_nulls() -> pd.DataFrame:
     """DataFrame con valores faltantes para probar imputación."""
@@ -181,8 +225,8 @@ def sample_data_with_nulls() -> pd.DataFrame:
         "fuel": ["gas", "gas", None, "diesel", "gas"],
         "transmission": [None, "automatic", "manual", "automatic", None],
     })
-
-
+ 
+ 
 @pytest.fixture
 def large_sample_data() -> pd.DataFrame:
     """DataFrame más grande para tests de performance."""
@@ -196,12 +240,12 @@ def large_sample_data() -> pd.DataFrame:
         "fuel": np.random.choice(["gas", "diesel", "electric"], n),
         "transmission": np.random.choice(["automatic", "manual"], n),
     })
-
-
+ 
+ 
 # ═══════════════════════════════════════════════════════════════════════════
 # FIXTURES DE CONFIGURACIÓN
 # ═══════════════════════════════════════════════════════════════════════════
-
+ 
 @pytest.fixture
 def sample_config() -> dict:
     """Configuración mínima para tests."""
@@ -235,8 +279,8 @@ def sample_config() -> dict:
             }
         }
     }
-
-
+ 
+ 
 @pytest.fixture
 def temp_config_file(sample_config, tmp_path) -> Path:
     """Crea archivo config temporal para tests de carga."""
@@ -244,12 +288,12 @@ def temp_config_file(sample_config, tmp_path) -> Path:
     with open(config_path, "w") as f:
         yaml.dump(sample_config, f)
     return config_path
-
-
+ 
+ 
 # ═══════════════════════════════════════════════════════════════════════════
 # FIXTURES DE MODELO
 # ═══════════════════════════════════════════════════════════════════════════
-
+ 
 @pytest.fixture
 def fitted_pipeline(sample_data, sample_config):
     """Pipeline entrenado para tests de predicción."""
@@ -269,20 +313,20 @@ def fitted_pipeline(sample_data, sample_config):
     pipeline.fit(X, y)
     
     return pipeline
-
-
+ 
+ 
 # ═══════════════════════════════════════════════════════════════════════════
 # FIXTURES ESPECIALES
 # ═══════════════════════════════════════════════════════════════════════════
-
+ 
 @pytest.fixture
 def temp_artifacts_dir(tmp_path) -> Path:
     """Directorio temporal para artefactos."""
     artifacts = tmp_path / "artifacts"
     artifacts.mkdir()
     return artifacts
-
-
+ 
+ 
 @pytest.fixture(scope="module")
 def slow_fixture():
     """Fixture que tarda en crearse - se reutiliza en todo el módulo.
@@ -294,12 +338,12 @@ def slow_fixture():
     time.sleep(0.1)  # Simula operación lenta
     return {"expensive_resource": True}
 ```
-
+ 
 ### Uso de Fixtures en Tests
-
+ 
 ```python
 # tests/test_features.py
-
+ 
 def test_feature_engineer_creates_vehicle_age(sample_data):
     """Test que usa la fixture sample_data."""
     from src.carvision.features import FeatureEngineer
@@ -309,8 +353,8 @@ def test_feature_engineer_creates_vehicle_age(sample_data):
     
     assert "vehicle_age" in result.columns
     assert result["vehicle_age"].iloc[0] == 2024 - 2015  # 9 años
-
-
+ 
+ 
 def test_pipeline_predicts_positive_prices(fitted_pipeline, sample_data):
     """Test que usa DOS fixtures."""
     X = sample_data.drop(columns=["price"])
@@ -318,21 +362,23 @@ def test_pipeline_predicts_positive_prices(fitted_pipeline, sample_data):
     
     assert all(predictions > 0), "Precios deben ser positivos"
 ```
-
+ 
 ---
-
+ 
+<a id="113-unit-tests-funciones-individuales"></a>
+ 
 ## 11.3 Unit Tests: Funciones Individuales
-
+ 
 ### Qué Testear en Unit Tests
-
+ 
 ```python
 # tests/test_features.py - Código REAL del portafolio
-
+ 
 import pytest
 import pandas as pd
 from src.carvision.features import FeatureEngineer
-
-
+ 
+ 
 class TestFeatureEngineer:
     """Tests unitarios para FeatureEngineer."""
     
@@ -438,22 +484,24 @@ class TestFeatureEngineer:
         except Exception as e:
             pytest.fail(f"Pipeline falló: {e}")
 ```
-
+ 
 ---
-
+ 
+<a id="114-data-tests-validacion-de-datos"></a>
+ 
 ## 11.4 Data Tests: Validación de Datos
-
+ 
 ### Tests de Schema y Calidad de Datos
-
+ 
 ```python
 # tests/test_data.py - Código REAL del portafolio
-
+ 
 import pytest
 import pandas as pd
 import numpy as np
 from src.carvision.data import load_data, clean_data
-
-
+ 
+ 
 class TestDataLoading:
     """Tests de carga y validación de datos."""
     
@@ -522,8 +570,8 @@ class TestDataLoading:
         
         invalid = actual - valid
         assert len(invalid) == 0, f"Valores de transmission inválidos: {invalid}"
-
-
+ 
+ 
 class TestDataCleaning:
     """Tests de limpieza de datos."""
     
@@ -555,21 +603,23 @@ class TestDataCleaning:
         # Registros con price=None deben ser eliminados o manejados
         assert len(cleaned) <= len(sample_data_with_nulls)
 ```
-
+ 
 ---
-
+ 
+<a id="115-model-tests-comportamiento-del-modelo"></a>
+ 
 ## 11.5 Model Tests: Comportamiento del Modelo
-
+ 
 ### Tests Específicos de ML
-
+ 
 ```python
 # tests/test_model_logic.py - Código REAL del portafolio
-
+ 
 import pytest
 import numpy as np
 import pandas as pd
-
-
+ 
+ 
 class TestModelPredictions:
     """Tests de comportamiento del modelo."""
     
@@ -676,8 +726,8 @@ class TestModelPredictions:
         # En promedio, más nuevo → mayor precio
         assert pred_newer.mean() > pred_original.mean(), \
             "Modelo no aprendió que autos nuevos cuestan más"
-
-
+ 
+ 
 class TestModelMetrics:
     """Tests de métricas del modelo."""
     
@@ -710,24 +760,26 @@ class TestModelMetrics:
         # Nota: Con sample data pequeño, R² puede ser bajo
         assert r2 > 0.0, f"R²={r2:.3f} <= 0 (peor que baseline)"
 ```
-
+ 
 ---
-
+ 
+<a id="116-integration-tests-pipeline-completo"></a>
+ 
 ## 11.6 Integration Tests: Pipeline Completo
-
+ 
 ### Tests End-to-End
-
+ 
 ```python
 # tests/test_main_workflow.py - Código REAL del portafolio
-
+ 
 import pytest
 import pandas as pd
 import numpy as np
 from pathlib import Path
 import tempfile
 import joblib
-
-
+ 
+ 
 class TestTrainingWorkflow:
     """Tests de integración del flujo completo de entrenamiento."""
     
@@ -813,8 +865,8 @@ class TestTrainingWorkflow:
         assert len(prediction) == 1
         assert prediction[0] > 0
         assert not np.isnan(prediction[0])
-
-
+ 
+ 
 class TestAPIWorkflow:
     """Tests de integración del API."""
     
@@ -853,111 +905,45 @@ class TestAPIWorkflow:
         except ImportError:
             pytest.skip("FastAPI app not available")
 ```
-
+ 
 ---
-
+ 
+<a id="errores-habituales"></a>
+ 
 ## 🧨 Errores habituales y cómo depurarlos en testing ML
-
+ 
 Aunque pytest es muy potente, en ML es fácil caer en tests frágiles o engañosos. Estos son los patrones más comunes y cómo atacarlos.
-
+ 
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
+ 
 ### 1) Tests que dependen de datos reales o externos
-
+ 
 **Síntomas típicos**
-
+ 
 - Tests que leen de `data/raw/...` o llaman APIs externas.
 - Fallan solo en CI o solo en ciertas máquinas.
-
+ 
 **Cómo identificarlo**
-
+ 
 - Busca en tests accesos directos a rutas del proyecto o a recursos externos.
 - Revisa que tus fixtures (`sample_data`, `sample_config`, etc.) no lean de archivos reales salvo cuando se prueban funciones de I/O.
-
+ 
 **Cómo corregirlo**
-
+ 
 - Usa **fixtures sintéticas** en memoria para la mayoría de tests.
 - Deja el acceso a disco/red solo en tests de integración marcados (`@pytest.mark.integration` o `@pytest.mark.slow`).
-
+ 
 ---
-
-### 2) Fixtures mal definidas (estado compartido, side-effects)
-
-**Síntomas típicos**
-
-- Tests que pasan individualmente pero fallan cuando se ejecutan todos juntos.
-- Mutación de `DataFrame` compartido entre tests.
-
-**Cómo identificarlo**
-
-- Revisa que tus fixtures devuelvan **nuevas instancias** o copias (`df.copy()`) cuando sea necesario.
-- Usa `scope="function"` por defecto; solo usa `module`/`session` para recursos pesados cuidadosamente diseñados.
-
-**Cómo corregirlo**
-
-- Asegura inmutabilidad en el código (ej. `X = X.copy()` en transformers) y en los tests (no reutilizar el mismo objeto mutable entre múltiples asserts sin reset).
-
----
-
-### 3) Coverage alto pero sin cubrir lo importante
-
-**Síntomas típicos**
-
-- Reporte de coverage muestra 80–90%, pero:
-  - No hay tests de datos.
-  - No hay tests de comportamiento del modelo.
-  - Solo se testea “feliz path”.
-
-**Cómo identificarlo**
-
-- Usa `--cov-report=term-missing` para ver **qué líneas** no se cubren.
-- Verifica que las capas clave (data, features, training, prediction) tienen tests dedicados.
-
-**Cómo corregirlo**
-
-- Añade tests para:
-  - Validación de datos (rangos, NaN, tipos).
-  - Comportamiento básico del modelo (shapes, ranges, determinismo).
-  - Al menos un flujo de integración (`train_model`, API `/predict`).
-
----
-
-### 4) Tests lentos que bloquean el flujo de trabajo
-
-**Síntomas típicos**
-
-- `pytest` tarda minutos porque ejecuta entrenamiento completo en cada test.
-
-**Cómo identificarlo**
-
-- Localiza tests que entrenan modelos con muchos datos o hiperparámetros pesados.
-
-**Cómo corregirlo**
-
-- Para tests, usa:
-  - **datasets pequeños**.
-  - Modelos simplificados (pocos árboles, menor profundidad).
-  - Marcadores `@pytest.mark.slow` para separar tests pesados.
-- Ajusta tu CI para ejecutar rápida y frecuentemente los tests rápidos, y los lentos solo en ciertas ramas.
-
----
-
-### 5) Patrón general de debugging en tests ML
-
-1. **Reproduce el fallo en local** con el mismo comando que CI (`pytest` con las mismas flags).
-2. **Aísla el test problemático** usando `-k` o el nombre del test.
-3. **Inspecciona fixtures y datos**: asegúrate de que no hay estado compartido inesperado.
-4. **Conecta el problema** con la capa correspondiente (datos, features, modelo, API) y ajusta los tests para cubrir el caso real que quieres proteger.
-
-Con esta mentalidad, los tests dejan de ser una carga y se convierten en la red de seguridad que te permite refactorizar con confianza.
-
----
-
+ 
+<a id="117-alcanzar-80-coverage"></a>
+ 
 ## 11.7 Alcanzar 80% Coverage
-
+ 
 ### Configuración de pytest-cov
-
+ 
 ```toml
 # pyproject.toml
-
+ 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
@@ -974,7 +960,7 @@ markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
 ]
-
+ 
 [tool.coverage.run]
 source = ["src"]
 omit = [
@@ -982,7 +968,7 @@ omit = [
     "*/__init__.py",
     "*/visualization.py",  # Excluir código de UI
 ]
-
+ 
 [tool.coverage.report]
 fail_under = 80
 exclude_lines = [
@@ -991,26 +977,26 @@ exclude_lines = [
     "raise NotImplementedError",
 ]
 ```
-
+ 
 ### Ejecutar Tests con Coverage
-
+ 
 ```bash
 # Tests rápidos (sin slow)
 pytest -m "not slow"
-
+ 
 # Todos los tests con coverage
 pytest --cov=src/carvision --cov-report=term-missing
-
+ 
 # Solo ver coverage sin ejecutar tests
 pytest --cov=src/carvision --cov-report=html
 # Abre htmlcov/index.html en el navegador
-
+ 
 # Verificar que pasa el threshold
 pytest --cov-fail-under=80
 ```
-
+ 
 ### Estrategias para Aumentar Coverage
-
+ 
 ```
 ╔═══════════════════════════════════════════════════════════════════════════╗
 ║  📈 CÓMO PASAR DE 60% A 80% COVERAGE                                      ║
@@ -1037,41 +1023,45 @@ pytest --cov-fail-under=80
 ║                                                                           ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 ```
-
+ 
 ---
-
+ 
+<a id="checkpoint"></a>
+ 
 ## ✅ Checkpoint: ¿Completaste el Módulo?
-
+ 
 Antes de continuar, verifica:
-
+ 
 - [ ] Tienes `tests/conftest.py` con fixtures reutilizables
 - [ ] Tienes tests unitarios para tus transformers
 - [ ] Tienes tests de validación de datos
 - [ ] Tienes tests de comportamiento del modelo
 - [ ] Tienes al menos un test de integración
 - [ ] Tu coverage es >= 80%
-
+ 
 ---
-
+ 
+<a id="como-se-uso-en-el-portafolio"></a>
+ 
 ## 📦 Cómo se Usó en el Portafolio
-
+ 
 Los 3 proyectos del portafolio implementan testing profesional con 80%+ coverage:
-
+ 
 ### Coverage por Proyecto
-
+ 
 | Proyecto | Coverage | Tests | Archivos Clave |
 |----------|:--------:|:-----:|----------------|
 | BankChurn | 79%+ | 45+ | `tests/conftest.py`, `test_pipeline.py` |
 | CarVision | 97% | 50+ | `tests/test_features.py`, `test_data.py` |
 | TelecomAI | 97% | 35+ | `tests/test_training.py` |
-
+ 
 ### conftest.py Real (CarVision)
-
+ 
 ```python
 # CarVision-Market-Intelligence/tests/conftest.py
 import pytest
 import pandas as pd
-
+ 
 @pytest.fixture
 def sample_df():
     """DataFrame de prueba con datos realistas."""
@@ -1081,7 +1071,8 @@ def sample_df():
         'odometer': [50000, 30000],
         'price': [35000, 25000]
     })
-
+ 
+ 
 @pytest.fixture
 def config():
     """Configuración de prueba."""
@@ -1090,9 +1081,9 @@ def config():
         'model': {'random_state': 42}
     }
 ```
-
+ 
 ### Estructura de Tests
-
+ 
 ```
 tests/
 ├── conftest.py           # Fixtures compartidas
@@ -1103,14 +1094,16 @@ tests/
 ├── test_training.py      # Tests de entrenamiento
 └── test_api.py           # Tests de FastAPI
 ```
-
+ 
 ### 🔧 Ejercicio: Ejecuta Tests Reales
-
+ 
+<a id="ejercicio"></a>
+ 
 ```bash
 # 1. Ejecuta tests de CarVision
 cd CarVision-Market-Intelligence
 pytest tests/ -v --cov=src/carvision --cov-report=term-missing
-
+ 
 # 2. Ve qué líneas NO están cubiertas
 pytest --cov-report=html  # Genera htmlcov/index.html
 

@@ -30,15 +30,67 @@ Implementar un pipeline de entrenamiento robusto, reproducible y loggeable como 
 
 ---
 
-## 📋 Contenido
+<a id="00-prerrequisitos"></a>
 
-1. [Arquitectura de una Clase Trainer](#91-arquitectura-de-una-clase-trainer)
-2. [Carga y Validación de Datos](#92-carga-y-validación-de-datos)
-3. [Cross-Validation Profesional](#93-cross-validation-profesional)
-4. [Gestión de Artefactos](#94-gestión-de-artefactos)
-5. [Logging y Métricas](#95-logging-y-métricas)
+## 0.0 Prerrequisitos
+
+- Haber completado **[07_SKLEARN_PIPELINES](07_SKLEARN_PIPELINES.md)** (pipeline unificado, serialización).
+- Tener claro el *target* y el esquema de columnas del dataset.
+- Entender el rol de **CV**, split, y seeds para reproducibilidad.
 
 ---
+
+<a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+
+## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+
+- **Antes de entrenar**: abre **[Protocolo E](study_tools/PROTOCOLO_E.md)** y define tu *output mínimo* (ej: `Trainer.run()` que deja artefactos + métricas).
+- **Durante el debugging**: si te atoras >15 min (splits, CV, métricas raras, MLflow), registra el caso en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**.
+- **Al cerrar la semana**: usa **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)** para auditar reproducibilidad y trazabilidad (artefactos + logs).
+
+---
+
+<a id="02-entregables-verificables-minimo-viable"></a>
+
+## 0.2 ✅ Entregables verificables (mínimo viable)
+
+Al terminar este módulo, deberías poder mostrar (en al menos 1 proyecto del portafolio):
+
+- [ ] Un `Trainer` con método `run()` que produce **artefactos** en un directorio (`model.joblib`, `training_results.json`).
+- [ ] **Reproducibilidad**: misma semilla → métricas consistentes (dentro de ruido razonable).
+- [ ] **Logging útil** (split sizes, métricas CV/test, paths de salida).
+
+---
+
+<a id="03-puente-teoria-codigo-portafolio"></a>
+
+## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+
+Para que esto cuente como progreso real, fuerza este mapeo:
+
+- **Concepto**: pipeline de entrenamiento auditable
+- **Archivo**: `src/<paquete>/training.py`, `configs/config.yaml`, `artifacts/*`
+- **Prueba**: correr `Trainer.run()` dos veces con misma config/seed y comparar outputs.
+
+---
+
+## 📋 Contenido
+
+ - **0.0** [Prerrequisitos](#00-prerrequisitos)
+ - **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+ - **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+ - **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+ 1. [Arquitectura de una Clase Trainer](#91-arquitectura-de-una-clase-trainer)
+ 2. [Carga y Validación de Datos](#92-carga-y-validacion-de-datos)
+ 3. [Cross-Validation Profesional](#93-cross-validation-profesional)
+ 4. [Gestión de Artefactos](#94-gestion-de-artefactos)
+ 5. [Logging y Métricas](#95-logging-y-metricas)
+ - [Errores habituales](#errores-habituales)
+ - [✅ Ejercicio: Implementar tu Trainer](#ejercicio)
+
+---
+
+<a id="91-arquitectura-de-una-clase-trainer"></a>
 
 ## 9.1 Arquitectura de una Clase Trainer
 
@@ -215,6 +267,8 @@ class ChurnTrainer:
 
 ---
 
+<a id="92-carga-y-validacion-de-datos"></a>
+
 ## 9.2 Carga y Validación de Datos
 
 ```python
@@ -292,6 +346,8 @@ def prepare_features(self, data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]
 
 ---
 
+<a id="93-cross-validation-profesional"></a>
+
 ## 9.3 Cross-Validation Profesional
 
 ```python
@@ -354,6 +410,8 @@ def cross_validate(self, X: pd.DataFrame, y: pd.Series) -> Dict[str, float]:
 
 ---
 
+<a id="94-gestion-de-artefactos"></a>
+
 ## 9.4 Gestión de Artefactos
 
 ```python
@@ -413,6 +471,8 @@ def evaluate(self, X_test: pd.DataFrame, y_test: pd.Series) -> Dict:
 ```
 
 ---
+
+<a id="95-logging-y-metricas"></a>
 
 ## 9.5 Logging y Métricas
 
@@ -485,9 +545,13 @@ def _log_to_mlflow(self) -> None:
 
 ---
 
+<a id="errores-habituales"></a>
+
 ## 🧨 Errores habituales y cómo depurarlos en training
 
 En este módulo, casi todos los problemas vienen de **datos mal preparados**, **splits inconsistentes** o **logging incompleto**. Aquí están los patrones más frecuentes.
+
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 ### 1) `KeyError` o `ValueError` al cargar datos (columnas/config mal alineadas)
 
@@ -595,6 +659,8 @@ En este módulo, casi todos los problemas vienen de **datos mal preparados**, **
 Con este enfoque, el entrenamiento deja de ser “caja negra” y se convierte en un pipeline controlado y auditable, como se espera en un rol Senior/Staff.
 
 ---
+
+<a id="ejercicio"></a>
 
 ## ✅ Ejercicio: Implementar tu Trainer
 

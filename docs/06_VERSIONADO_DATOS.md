@@ -1,12 +1,12 @@
 # ════════════════════════════════════════════════════════════════════════════════
-# MÓDULO 05: INGENIERÍA DE DATOS Y DVC
+# MÓDULO 06: INGENIERÍA DE DATOS Y DVC
 # Versionado de Datos, DAGs y Reproducibilidad
 # Guía MLOps v5.0: Senior Edition | DuqueOM | Noviembre 2025
 # ════════════════════════════════════════════════════════════════════════════════
 
 <div align="center">
 
-# 📊 MÓDULO 05: Ingeniería de Datos y DVC
+# 📊 MÓDULO 06: Ingeniería de Datos y DVC
 
 ### El Arte de Versionar lo que Git No Puede
 
@@ -19,6 +19,73 @@
 </div>
 
 ---
+
+<a id="00-prerrequisitos"></a>
+
+## 0.0 Prerrequisitos
+
+- Haber completado **[05_GIT_PROFESIONAL](05_GIT_PROFESIONAL.md)** (ramas limpias, PRs, `.gitignore`).
+- Entender que **Git NO está hecho para datasets grandes**.
+- Tener acceso (o plan) para un remote de DVC (local, GDrive, S3/GCS/Azure).
+
+---
+
+<a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+
+## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+
+- **Antes de correr comandos**: abre **[Protocolo E](study_tools/PROTOCOLO_E.md)** y define tu *output mínimo* (ej: “`dvc.yaml` + `params.yaml` + repro reproducible”).
+- **Mientras integras DVC**: si te atoras >15 min (remotes, credenciales, `dvc repro`, `dvc checkout`), registra el bloqueo en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**.
+- **Al cerrar la semana**: usa **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)** para decidir qué mejorar (reproducibilidad, estructura del pipeline, naming de stages).
+
+---
+
+<a id="02-entregables-verificables-minimo-viable"></a>
+
+## 0.2 ✅ Entregables verificables (mínimo viable)
+
+Al terminar este módulo, deberías poder mostrar (en al menos 1 proyecto del portafolio):
+
+- [ ] **Datos trackeados por DVC** (no en Git), con `.dvc/` y/o archivos `.dvc` en el repo.
+- [ ] **Remote configurado** y flujo básico funcionando: `dvc push` / `dvc pull`.
+- [ ] **Pipeline reproducible** con `dvc.yaml` + `params.yaml` y `dvc repro`.
+- [ ] **Evidencia**: poder recrear resultados al hacer `git checkout <tag>` + `dvc checkout` + `dvc pull`.
+
+---
+
+<a id="03-puente-teoria-codigo-portafolio"></a>
+
+## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+
+Para que esto cuente como progreso real, fuerza este mapeo:
+
+- **Concepto**: versionado de datos / DAG / reproducibilidad
+- **Archivo**: `dvc.yaml`, `params.yaml`, `.dvc/config`, `data/**.dvc`, `metrics/*.json`
+- **Comandos**: `dvc status`, `dvc dag`, `dvc repro`, `dvc push`, `dvc pull`, `dvc checkout`
+- **Evidencia**: resultados reproducibles cuando cambias de commit/tag.
+
+---
+
+## 📋 Contenido
+
+- **0.0** [Prerrequisitos](#00-prerrequisitos)
+- **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+- **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+- **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+- [ADR de Inicio](#adr-inicio)
+- [6.1 El Problema](#61-problema)
+- [6.2 Configuración Inicial](#62-configuracion)
+- [6.3 Versionado Básico](#63-versionado-basico)
+- [6.4 Pipelines con dvc.yaml](#64-pipelines)
+- [6.5 Métricas y Experimentos](#65-metricas)
+- [6.6 Patrones Avanzados](#66-patrones-avanzados)
+- [Errores habituales](#errores-habituales)
+- [6.7 Ejercicio Integrador](#67-ejercicio)
+- [6.8 Autoevaluación](#68-autoevaluacion)
+
+---
+
+<a id="adr-inicio"></a>
 
 ## 🎯 ADR de Inicio: ¿Cuándo (NO) Usar DVC?
 
@@ -72,7 +139,9 @@
 
 ---
 
-## 5.1 El Problema: Git No Escala para Datos
+<a id="61-problema"></a>
+
+## 6.1 El Problema: Git No Escala para Datos
 
 ```
 ╔═══════════════════════════════════════════════════════════════════════════════╗
@@ -121,7 +190,9 @@
 
 ---
 
-## 5.2 Configuración Inicial de DVC
+<a id="62-configuracion"></a>
+
+## 6.2 Configuración Inicial de DVC
 
 ### Instalación
 
@@ -206,7 +277,9 @@ bankchurn-predictor/
 
 ---
 
-## 5.3 Versionado Básico de Archivos
+<a id="63-versionado-basico"></a>
+
+## 6.3 Versionado Básico de Archivos
 
 ### Añadir Datos a DVC
 
@@ -269,7 +342,9 @@ dvc checkout
 
 ---
 
-## 5.4 Pipelines con dvc.yaml (El Poder Real)
+<a id="64-pipelines"></a>
+
+## 6.4 Pipelines con dvc.yaml (El Poder Real)
 
 ### ¿Por Qué Pipelines?
 
@@ -473,7 +548,9 @@ dvc dag --outs train
 
 ---
 
-## 5.5 Métricas y Experimentos
+<a id="65-metricas"></a>
+
+## 6.5 Métricas y Experimentos
 
 ### Tracking de Métricas
 
@@ -535,7 +612,9 @@ dvc exp branch exp-abc123 feature/best-model
 
 ---
 
-## 5.6 Patrones Avanzados
+<a id="66-patrones-avanzados"></a>
+
+## 6.6 Patrones Avanzados
 
 ### Multi-Output Stages
 
@@ -605,11 +684,16 @@ def train():
         
         # Log modelo
         mlflow.sklearn.log_model(model, "model")
+```
 ---
+ 
+<a id="errores-habituales"></a>
 
 ## 🧨 Errores habituales y cómo depurarlos en DVC
 
-Aunque DVC parece “solo añadir un comando más”, en la práctica los errores suelen venir de **desalineación entre Git, datos y configuración**.
+Aunque DVC parece “caja negra que falla”, en la práctica los errores suelen venir de **desalineación entre Git, datos y configuración**.
+
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 ### 1) Datos no aparecen al clonar el repo (`dvc pull`/`dvc checkout` olvidados)
 
@@ -751,7 +835,9 @@ Con este checklist, DVC pasa de ser “caja negra que falla” a una herramienta
 
 ---
 
-## 5.7 Ejercicio Integrador
+<a id="67-ejercicio"></a>
+
+## 6.7 Ejercicio Integrador
 
 ### Setup Completo de DVC
 
@@ -809,7 +895,9 @@ VERSIONADO:
 
 ---
 
-## 5.8 Autoevaluación
+<a id="68-autoevaluacion"></a>
+
+## 6.8 Autoevaluación
 
 ### Preguntas de Reflexión
 

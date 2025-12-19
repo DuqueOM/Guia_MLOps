@@ -15,6 +15,74 @@ Crear la estructura de proyecto que usarás en los 3 proyectos del portafolio.
 
 ---
 
+<a id="00-prerrequisitos"></a>
+
+## 0.0 Prerrequisitos
+
+- Haber completado **[01_PYTHON_MODERNO](01_PYTHON_MODERNO.md)** (type hints + `src/` layout).
+- Tener claro qué proyecto del portafolio vas a usar como base (BankChurn, CarVision, TelecomAI).
+- Poder ejecutar comandos básicos (instalar deps, correr tests).
+
+---
+
+<a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+
+## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+
+- **Antes de tocar el repo**: abre **[Protocolo E](study_tools/PROTOCOLO_E.md)** y define tu *output mínimo* (ej: “estructura + `pyproject.toml` + Makefile + tests corriendo”).
+- **Mientras implementas**: si te atoras >15 min (imports, `pip install -e`, targets del Makefile), registra el bloqueo en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**.
+- **Al cerrar la semana**: usa **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)** para decidir qué mejorar (DX, reproducibilidad, CI).
+
+---
+
+<a id="02-entregables-verificables-minimo-viable"></a>
+
+## 0.2 ✅ Entregables verificables (mínimo viable)
+
+Al terminar este módulo, deberías poder mostrar (en al menos 1 proyecto del portafolio):
+
+- [ ] **Árbol de proyecto** consistente con `src/`, `tests/`, `configs/`, `data/` (gitignored) y `artifacts/` (gitignored).
+- [ ] **Instalación editable** funcionando: `pip install -e ".[dev]"`.
+- [ ] **Tests ejecutables** desde la raíz: `pytest`.
+- [ ] **Makefile** con al menos: `install`, `test`, `lint` (y opcional `train`, `serve`).
+
+---
+
+<a id="03-puente-teoria-codigo-portafolio"></a>
+
+## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+
+Para que esto cuente como progreso real, fuerza este mapeo:
+
+- **Concepto**: estructura del repo / packaging / DX
+- **Archivo**: `pyproject.toml`, `Makefile`, `.gitignore`, `src/<paquete>/`, `tests/`
+- **Prueba**: `pip install -e ".[dev]"` + `pytest` + `ruff check` + `mypy src/`
+- **Evidencia**: un repo que corre igual en tu máquina y en CI.
+
+---
+
+## 📋 Contenido
+
+- **0.0** [Prerrequisitos](#00-prerrequisitos)
+- **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+- **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+- **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+- [La Estructura del Portafolio](#estructura-portafolio)
+- [Cómo se aplica en este portafolio](#como-se-aplica)
+- [pyproject.toml completo](#pyproject)
+- [Makefile](#makefile)
+- [.gitignore](#gitignore)
+- [Errores habituales y cómo depurarlos](#errores-habituales)
+- [Consejos Profesionales](#consejos-profesionales)
+- [Recursos Externos Recomendados](#recursos-externos)
+- [Referencias del Glosario](#referencias-glosario)
+- [Plantillas Relacionadas](#plantillas-relacionadas)
+- [Ejercicios](#ejercicios)
+
+---
+
+<a id="estructura-portafolio"></a>
+
 ## 📋 La Estructura del Portafolio
 
 ```
@@ -77,6 +145,8 @@ MiProyecto-ML/
 └── README.md                     # 📖 DOCUMENTACIÓN PRINCIPAL
 ```
 
+<a id="como-se-aplica"></a>
+
 ## 🧩 Cómo se aplica en este portafolio
 
 Esta estructura no es teórica: los **3 proyectos** del portafolio la siguen con ligeras
@@ -101,6 +171,8 @@ Para aprovechar este módulo al máximo en el repositorio real:
   [20_PROYECTO_INTEGRADOR](20_PROYECTO_INTEGRADOR.md).
 
 ---
+
+<a id="pyproject"></a>
 
 ## 📄 pyproject.toml Completo
 
@@ -190,6 +262,8 @@ ignore_missing_imports = true
 
 ---
 
+<a id="makefile"></a>
+
 ## 🔨 Makefile
 
 ```makefile
@@ -249,6 +323,8 @@ rm -rf htmlcov .coverage
 
 ---
 
+<a id="gitignore"></a>
+
 ## 🚫 .gitignore
 
 ```gitignore
@@ -302,9 +378,13 @@ htmlcov/
 
 ---
 
+<a id="errores-habituales"></a>
+
 ## 🧨 Errores habituales y cómo depurarlos en la estructura de proyecto
 
 Aquí los problemas ya no son algoritmos, sino **cómo está organizado el repo**. Son los típicos errores que hacen que algo “funcione en mi máquina pero no en CI” o que el repo se vuelva inmanejable.
+
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 ### 1) `ModuleNotFoundError` y tests que solo funcionan desde ciertos directorios
 
@@ -421,6 +501,8 @@ Este checklist de estructura es lo primero que un revisor Senior mira cuando abr
 
 ---
 
+<a id="consejos-profesionales"></a>
+
 ## 💼 Consejos Profesionales
 
 > **Recomendaciones para destacar en entrevistas y proyectos reales**
@@ -453,6 +535,8 @@ Este checklist de estructura es lo primero que un revisor Senior mira cuando abr
 
 ---
 
+<a id="recursos-externos"></a>
+
 ## 📺 Recursos Externos Recomendados
 
 > Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
@@ -464,6 +548,8 @@ Este checklist de estructura es lo primero que un revisor Senior mira cuando abr
 
 ---
 
+<a id="referencias-glosario"></a>
+
 ## 🔗 Referencias del Glosario
 
 Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
@@ -473,6 +559,8 @@ Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
 
 ---
 
+<a id="plantillas-relacionadas"></a>
+
 ## 📋 Plantillas Relacionadas
 
 Ver [templates/](templates/index.md) para plantillas listas:
@@ -481,6 +569,8 @@ Ver [templates/](templates/index.md) para plantillas listas:
 - [Makefile](templates/Makefile) — Automatización de tareas
 
 ---
+
+<a id="ejercicios"></a>
 
 ## ✅ Ejercicios
 

@@ -1,9 +1,75 @@
 # 20. Proyecto Integrador
-
-## 🎯 Objetivo
-
-Construir un proyecto ML completo desde cero, aplicando TODO lo aprendido.
-
+ 
+ <a id="00-prerrequisitos"></a>
+ 
+ ## 0.0 Prerrequisitos
+ 
+ - Haber completado los módulos 01–19 (en particular: Testing, CI/CD, APIs, Observabilidad y Documentación).
+ - Tener listo un repositorio “vacío pero bien estructurado” (o estar dispuesto a crearlo primero) antes de entrenar cualquier modelo.
+ - Aceptar el enfoque de este módulo: *integración por capas* (estructura → pipeline → tests → API → Docker → CI/CD → docs).
+ 
+ ---
+ 
+ <a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+ 
+ ## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+ 
+ - **Antes de empezar**: define un “alcance senior” realista (qué vas a construir y qué NO).
+ - **Durante**: trabaja con commits pequeños, y valida cada capa (instalación, tests, API) antes de pasar a la siguiente.
+ - **Si te atoras >15 min** (tests rotos, CI fallando, configs duplicadas), regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
+ 
+ ---
+ 
+ <a id="02-entregables-verificables-minimo-viable"></a>
+ 
+ ## 0.2 ✅ Entregables verificables (mínimo viable)
+ 
+ - [ ] El repo instala con `pip install -e .` (sin pasos manuales ocultos).
+ - [ ] `make test` pasa en local con coverage objetivo.
+ - [ ] `make train` produce artefactos reproducibles (y el pipeline se puede re-ejecutar).
+ - [ ] La API expone `/health` y `/predict` y tiene tests mínimos.
+ - [ ] Hay documentación mínima (README + Model/Data card).
+ 
+ ---
+ 
+ <a id="03-puente-teoria-codigo-portafolio"></a>
+ 
+ ## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+ 
+ - Este módulo es tu “**producto final**”: demostrar que puedes ensamblar un sistema ML completo, no solo un modelo.
+ - Reutiliza patrones del portafolio (estructura `src/`, config, tests, CI) pero justificando adaptaciones.
+ - Tu objetivo es que un revisor pueda clonar tu repo, ejecutar 2–3 comandos y ver el sistema funcionando.
+ 
+ ---
+ 
+ ## 📋 Contenido
+ 
+ - **0.0** [Prerrequisitos](#00-prerrequisitos)
+ - **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+ - **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+ - **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+ - **20.1** [Objetivo](#201-objetivo)
+ - **20.2** [El Proyecto: Sistema de Recomendación de Planes](#202-el-proyecto-sistema-de-recomendacion-de-planes)
+ - **20.3** [Checklist de Entrega (100 puntos)](#203-checklist-de-entrega-100-puntos)
+ - **20.4** [Plantilla de README](#204-plantilla-de-readme)
+ - **20.5** [Rúbrica de Evaluación](#205-rubrica-de-evaluacion)
+ - [Errores habituales](#errores-habituales)
+ - **20.6** [Tips para Éxito](#206-tips-para-exito)
+ - **20.7** [Consejos Profesionales](#207-consejos-profesionales)
+ - **20.8** [Recursos Externos Recomendados](#208-recursos-externos-recomendados)
+ - **20.9** [Referencias del Glosario](#209-referencias-del-glosario)
+ - [✅ Ejercicio](#ejercicio)
+ - **20.10** [Entrega](#2010-entrega)
+ - [✅ Checkpoint](#checkpoint)
+ 
+ ---
+ 
+ <a id="201-objetivo"></a>
+ 
+ ## 🎯 Objetivo
+ 
+ Construir un proyecto ML completo desde cero, aplicando TODO lo aprendido.
+ 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                                                                              ║
@@ -20,7 +86,7 @@ Construir un proyecto ML completo desde cero, aplicando TODO lo aprendido.
 
 ---
 
-## 📋 El Proyecto: Sistema de Recomendación de Planes
+## 📋 <a id="202-el-proyecto-sistema-de-recomendacion-de-planes"></a> El Proyecto: Sistema de Recomendación de Planes
 
 **Contexto**: Una empresa de telecomunicaciones quiere recomendar planes móviles basándose en el comportamiento del usuario.
 
@@ -28,7 +94,7 @@ Construir un proyecto ML completo desde cero, aplicando TODO lo aprendido.
 
 ---
 
-## ✅ Checklist de Entrega (100 puntos)
+## ✅ <a id="203-checklist-de-entrega-100-puntos"></a> Checklist de Entrega (100 puntos)
 
 ### Fase 1: Estructura y Configuración (20 puntos)
 
@@ -94,7 +160,7 @@ Construir un proyecto ML completo desde cero, aplicando TODO lo aprendido.
 
 ---
 
-## 📝 Plantilla de README
+## 📝 <a id="204-plantilla-de-readme"></a> Plantilla de README
 
 ```markdown
 # 📱 PlanRec: Mobile Plan Recommender
@@ -161,7 +227,7 @@ planrec/
 
 ---
 
-## 🎯 Rúbrica de Evaluación
+## 🎯 <a id="205-rubrica-de-evaluacion"></a> Rúbrica de Evaluación
 
 ### Nivel Junior (50-69 puntos)
 - Funciona pero con estructura básica
@@ -188,9 +254,11 @@ planrec/
 
 ---
 
-## 🧨 Errores habituales y cómo depurarlos en el Proyecto Integrador
+## 🧨 <a id="errores-habituales"></a> Errores habituales y cómo depurarlos en el Proyecto Integrador
 
 En el proyecto integrador el mayor reto no es una tecnología concreta, sino **coordinar todas las piezas** sin romper nada en el camino.
+
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 ### 1) Empezar por el modelo y olvidar la estructura
 
@@ -276,7 +344,7 @@ Con este enfoque, reduces la frustración y aumentas la probabilidad de tener un
 
 ---
 
-## 💡 Tips para Éxito
+## 💡 <a id="206-tips-para-exito"></a> Tips para Éxito
 
 1. **Empieza por la estructura** - No escribas código sin tener pyproject.toml y Makefile
 2. **Tests primero** - TDD te ahorra tiempo a largo plazo
@@ -286,7 +354,7 @@ Con este enfoque, reduces la frustración y aumentas la probabilidad de tener un
 
 ---
 
-## 💼 Consejos Profesionales
+## 💼 <a id="207-consejos-profesionales"></a> Consejos Profesionales
 
 > **Recomendaciones para destacar en entrevistas y proyectos reales**
 
@@ -319,9 +387,9 @@ Con este enfoque, reduces la frustración y aumentas la probabilidad de tener un
 
 ---
 
-## 📺 Recursos Externos Recomendados
-
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+## 📺 <a id="208-recursos-externos-recomendados"></a> Recursos Externos Recomendados
+ 
+ > Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
 
 | 🏷️ | Recurso | Tipo |
 |:--:|:--------|:-----|
@@ -330,37 +398,43 @@ Con este enfoque, reduces la frustración y aumentas la probabilidad de tener un
 
 ---
 
-## 🔗 Referencias del Glosario
-
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **E2E Pipeline**: Flujo completo de datos a predicción
-- **Integration Test**: Tests que verifican componentes juntos
-- **CI/CD**: Integración y despliegue continuo
-
----
-
-## ✅ Ejercicios
-
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 20:
-- **20.1**: Script E2E completo
-- **20.2**: Health Check Script
-
----
-
-## 🏁 Entrega
-
-1. Repositorio público en GitHub
-2. CI pasando (verde)
-3. README con badges actualizados
-4. Self-assessment del checklist completado
+## 🔗 <a id="209-referencias-del-glosario"></a> Referencias del Glosario
+ 
+ Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
+ - **E2E Pipeline**: Flujo completo de datos a predicción
+ - **Integration Test**: Tests que verifican componentes juntos
+ - **CI/CD**: Integración y despliegue continuo
+ 
+ ---
+ 
+## ✅ <a id="ejercicio"></a> Ejercicio
+ 
+ Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 20:
+ - **20.1**: Script E2E completo
+ - **20.2**: Health Check Script
 
 ---
 
-## 🎤 Checkpoint: Simulacro Senior/Lead
+## 🏁 <a id="2010-entrega"></a> Entrega
+ 
+ 1. Repositorio público en GitHub
+ 2. CI pasando (verde)
+ 3. README con badges actualizados
+ 4. Self-assessment del checklist completado
 
-> 🎯 **¡Has completado la guía completa!** (Módulos 01-20)
-> 
-> Si buscas posiciones **Senior/Lead ML Engineer**, es momento del simulacro completo:
+---
+
+## 🎤 <a id="checkpoint"></a> Checkpoint: Simulacro Senior/Lead
+ 
+ - [ ] `pip install -e .` funciona en un entorno limpio.
+ - [ ] `make test` pasa y el coverage cumple el objetivo.
+ - [ ] `make train` produce artefactos en `artifacts/` y es reproducible.
+ - [ ] La API expone `/health` y `/predict` (y al menos un test de integración lo valida).
+ - [ ] CI está en verde y el README tiene `Quick Start` sin pasos ocultos.
+ 
+ > 🎯 **¡Has completado la guía completa!** (Módulos 01-20)
+ > 
+ > Si buscas posiciones **Senior/Lead ML Engineer**, es momento del simulacro completo:
 > 
 > **[→ SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md](SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md)** — 70 preguntas técnicas avanzadas
 > **[→ SIMULACRO_ENTREVISTA_SENIOR_PARTE2.md](SIMULACRO_ENTREVISTA_SENIOR_PARTE2.md)** — System design, liderazgo, trade-offs

@@ -1,13 +1,54 @@
-# 16. Streamlit Dashboards para ML
-
+# 15. Streamlit Dashboards para ML
+ 
+<a id="00-prerrequisitos"></a>
+ 
+## 0.0 Prerrequisitos
+ 
+- Tener Streamlit instalado y poder levantar una app (`streamlit run app/streamlit_app.py`).
+- Conocer lo básico de pandas para cargar/filtrar DataFrames.
+- Haber completado el módulo 14 (FastAPI) si tu dashboard consume un API (opcional, pero recomendado).
+ 
+---
+ 
+<a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+ 
+## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+ 
+- **Antes de empezar**: abre **[Protocolo E](study_tools/PROTOCOLO_E.md)** y define el output mínimo: un dashboard con caching y un predictor que responde.
+- **Durante el debugging**: si te atoras >15 min (caching, rutas de artefactos, reruns, performance), registra el caso en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**.
+- **Al cierre de semana**: usa **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)** para auditar UX, performance y reproducibilidad (Docker/requirements).
+ 
+---
+ 
+<a id="02-entregables-verificables-minimo-viable"></a>
+ 
+## 0.2 ✅ Entregables verificables (mínimo viable)
+ 
+- [ ] App Streamlit levanta localmente y en contenedor (si aplica).
+- [ ] Caching correcto: datos con `@st.cache_data` y modelo con `@st.cache_resource`.
+- [ ] UI organizada (tabs o páginas) con al menos 2 vistas.
+- [ ] Un predictor (formulario) que ejecuta inferencia y muestra salida.
+- [ ] Visualización interactiva (ideal: Plotly) para métricas o análisis.
+ 
+---
+ 
+<a id="03-puente-teoria-codigo-portafolio"></a>
+ 
+## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+ 
+- **Concepto**: UX + performance (caching) + separación carga/visualización
+- **Archivo**: `app/streamlit_app.py`
+- **Prueba**: `streamlit run app/streamlit_app.py`
+ 
+---
+ 
 ## 🎯 Objetivo del Módulo
-
+ 
 Construir dashboards interactivos profesionales como el de CarVision.
-
 ```
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                                                                              ║
-║  Streamlit = La forma más rápida de crear UIs para ML                        ║
+ ╔══════════════════════════════════════════════════════════════════════════════╗
+ ║                                                                              ║
+ ║  Streamlit = La forma más rápida de crear UIs para ML                        ║
 ║                                                                              ║
 ║  ✅ Python puro (sin HTML/CSS/JS)                                            ║
 ║  ✅ Reactivo (cambios automáticos)                                           ║
@@ -16,22 +57,31 @@ Construir dashboards interactivos profesionales como el de CarVision.
 ║  ✅ Deploy fácil                                                             ║
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
-```
-
+ 
 ---
-
+ 
 ## 📋 Contenido
-
-1. [Estructura de un Dashboard ML](#161-estructura-de-un-dashboard-ml)
-2. [Caching para Performance](#162-caching-para-performance)
-3. [Tabs y Secciones](#163-tabs-y-secciones)
-4. [Visualizaciones con Plotly](#164-visualizaciones-con-plotly)
-5. [Predictor Interactivo](#165-predictor-interactivo)
-
+ 
+ - **0.0** [Prerrequisitos](#00-prerrequisitos)
+ - **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+ - **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+ - **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+ - **15.1** [Estructura de un Dashboard ML](#151-estructura-de-un-dashboard-ml)
+ - **15.2** [Caching para Performance](#152-caching-para-performance)
+ - **15.3** [Tabs y Secciones](#153-tabs-y-secciones)
+ - **15.4** [Visualizaciones con Plotly](#154-visualizaciones-con-plotly)
+ - **15.5** [Predictor Interactivo](#155-predictor-interactivo)
+ - **15.6** [Dashboard Avanzado: Visualizaciones Profesionales](#156-dashboard-avanzado-visualizaciones-profesionales)
+ - [Errores habituales](#errores-habituales)
+ - [✅ Checkpoint](#checkpoint)
+ - [✅ Ejercicio](#ejercicio)
+ 
 ---
-
-## 16.1 Estructura de un Dashboard ML
-
+ 
+<a id="151-estructura-de-un-dashboard-ml"></a>
+ 
+## 15.1 Estructura de un Dashboard ML
+ 
 ### Arquitectura del Dashboard CarVision
 
 ```
@@ -144,8 +194,10 @@ if __name__ == "__main__":
 
 ---
 
-## 16.2 Caching para Performance
-
+<a id="152-caching-para-performance"></a>
+ 
+## 15.2 Caching para Performance
+ 
 ### @st.cache_data vs @st.cache_resource
 
 ```python
@@ -205,8 +257,10 @@ def main():
 
 ---
 
-## 16.3 Tabs y Secciones
-
+<a id="153-tabs-y-secciones"></a>
+ 
+## 15.3 Tabs y Secciones
+ 
 ### Tab 1: Overview
 
 ```python
@@ -309,8 +363,10 @@ def render_model_metrics():
 
 ---
 
-## 16.4 Visualizaciones con Plotly
-
+<a id="154-visualizaciones-con-plotly"></a>
+ 
+## 15.4 Visualizaciones con Plotly
+ 
 ### Gráficos Interactivos
 
 ```python
@@ -372,9 +428,11 @@ def create_price_gauge(predicted_price: float, min_price: float, max_price: floa
 
 ---
 
-## 16.5 Predictor Interactivo
-
-### Tab 4: Price Predictor
+<a id="155-predictor-interactivo"></a>
+ 
+## 15.5 Predictor Interactivo
+ 
+ ### Tab 4: Price Predictor
 
 ```python
 def render_price_predictor(model, df: pd.DataFrame):
@@ -462,29 +520,22 @@ def render_price_predictor(model, df: pd.DataFrame):
             
         except Exception as e:
             st.error(f"Error en predicción: {str(e)}")
----
-
-## 🧨 Errores habituales y cómo depurarlos en Streamlit para ML
-
-En dashboards de ML es fácil mezclar lógica pesada con UI y terminar con apps lentas o que se rompen al mínimo cambio.
-
-### 1) App muy lenta o que recalcula todo en cada interacción
+ ---
+ 
+ <a id="errores-habituales"></a>
+ 
+ ## 🧨 Errores habituales y cómo depurarlos en Streamlit para ML
+ 
+ En dashboards de ML es fácil mezclar lógica pesada con UI y terminar con apps lentas o que se rompen al mínimo cambio.
+ 
+ Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
+ 
+ ### 1) App muy lenta o que recalcula todo en cada interacción
 
 **Síntomas típicos**
 
 - Cada vez que mueves un slider, tarda varios segundos.
 - Ves en logs que se vuelve a leer el CSV o cargar el modelo a cada cambio.
-
-**Cómo identificarlo**
-
-- Busca lecturas de disco o cargas de modelo dentro de la función `main` o dentro de callbacks de widgets.
-
-**Cómo corregirlo**
-
-- Usa `@st.cache_data` para datos y `@st.cache_resource` para el modelo, como en los ejemplos del módulo.
-- Separa **carga** (funciones cacheadas) de **visualización** (funciones ligeras que usan los datos ya cargados).
-
----
 
 ### 2) Errores al filtrar o mapear columnas (DataFrame desalineado)
 
@@ -531,74 +582,76 @@ En dashboards de ML es fácil mezclar lógica pesada con UI y terminar con apps 
 
 - Revisa el uso de `st.session_state` y de formularios (`st.form`).
 
-**Cómo corregirlo**
-
-- Usa `st.form` para agrupar inputs y ejecutar lógica solo cuando el usuario pulsa el botón de submit.
-- Cuando necesites estado, usa `st.session_state` de forma explícita y documenta qué claves manejas.
-
----
-
-### 5) Patrón general de debugging en Streamlit
-
-1. Reproduce el problema con un **mínimo ejemplo** (quita tabs/funciones hasta aislar el fallo).
-2. Añade logs (`st.write`, `print`) temporales para ver en qué orden se ejecuta el código.
-3. Verifica qué funciones deberían estar cacheadas y cuáles no.
-4. Asegúrate de que las dependencias clave (datos, modelo) están disponibles antes de renderizar la UI.
-
-Con este enfoque, tus dashboards serán rápidos, robustos y mantenibles.
-
----
-
-## 16.6 Dashboard Avanzado: Visualizaciones Profesionales
-
-### Gauge Chart para Predicciones
-
-```python
-import plotly.graph_objects as go
-
-def create_price_gauge(predicted_price: float, min_price: float = 0, max_price: float = 100000):
-    """Crea un gauge chart para visualizar predicción de precio."""
-    
-    # Determinar color según rango
-    if predicted_price < max_price * 0.3:
-        color = "green"
-    elif predicted_price < max_price * 0.7:
-        color = "orange"
-    else:
-        color = "red"
-    
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number+delta",
-        value=predicted_price,
-        domain={'x': [0, 1], 'y': [0, 1]},
-        title={'text': "Predicted Price", 'font': {'size': 24}},
-        number={'prefix': "$", 'font': {'size': 40}},
-        gauge={
-            'axis': {'range': [min_price, max_price], 'tickwidth': 1},
-            'bar': {'color': color},
-            'bgcolor': "white",
-            'borderwidth': 2,
-            'steps': [
-                {'range': [0, max_price * 0.3], 'color': 'lightgreen'},
-                {'range': [max_price * 0.3, max_price * 0.7], 'color': 'lightyellow'},
-                {'range': [max_price * 0.7, max_price], 'color': 'lightcoral'}
-            ],
-            'threshold': {
-                'line': {'color': "black", 'width': 4},
-                'thickness': 0.75,
-                'value': predicted_price
-            }
-        }
-    ))
-    
-    fig.update_layout(height=300)
-    return fig
-
-# Uso en Streamlit
-if prediction is not None:
-    gauge = create_price_gauge(prediction, min_price=0, max_price=80000)
-    st.plotly_chart(gauge, use_container_width=True)
-```
+ **Cómo corregirlo**
+ 
+ - Usa `st.form` para agrupar inputs y ejecutar lógica solo cuando el usuario pulsa el botón de submit.
+ - Cuando necesites estado, usa `st.session_state` de forma explícita y documenta qué claves manejas.
+ 
+ ---
+ 
+ ### 5) Patrón general de debugging en Streamlit
+ 
+ 1. Reproduce el problema con un **mínimo ejemplo** (quita tabs/funciones hasta aislar el fallo).
+ 2. Añade logs (`st.write`, `print`) temporales para ver en qué orden se ejecuta el código.
+ 3. Verifica qué funciones deberían estar cacheadas y cuáles no.
+ 4. Asegúrate de que las dependencias clave (datos, modelo) están disponibles antes de renderizar la UI.
+ 
+ Con este enfoque, tus dashboards serán rápidos, robustos y mantenibles.
+ 
+ ---
+ 
+ <a id="156-dashboard-avanzado-visualizaciones-profesionales"></a>
+ 
+ ## 15.6 Dashboard Avanzado: Visualizaciones Profesionales
+ 
+ ### Gauge Chart para Predicciones
+ 
+ ```python
+ import plotly.graph_objects as go
+ 
+ def create_price_gauge(predicted_price: float, min_price: float = 0, max_price: float = 100000):
+     """Crea un gauge chart para visualizar predicción de precio."""
+     
+     # Determinar color según rango
+     if predicted_price < max_price * 0.3:
+         color = "green"
+     elif predicted_price < max_price * 0.7:
+         color = "orange"
+     else:
+         color = "red"
+     
+     fig = go.Figure(go.Indicator(
+         mode="gauge+number+delta",
+         value=predicted_price,
+         domain={'x': [0, 1], 'y': [0, 1]},
+         title={'text': "Predicted Price", 'font': {'size': 24}},
+         number={'prefix': "$", 'font': {'size': 40}},
+         gauge={
+             'axis': {'range': [min_price, max_price], 'tickwidth': 1},
+             'bar': {'color': color},
+             'bgcolor': "white",
+             'borderwidth': 2,
+             'steps': [
+                 {'range': [0, max_price * 0.3], 'color': 'lightgreen'},
+                 {'range': [max_price * 0.3, max_price * 0.7], 'color': 'lightyellow'},
+                 {'range': [max_price * 0.7, max_price], 'color': 'lightcoral'}
+             ],
+             'threshold': {
+                 'line': {'color': "black", 'width': 4},
+                 'thickness': 0.75,
+                 'value': predicted_price
+             }
+         }
+     ))
+     
+     fig.update_layout(height=300)
+     return fig
+ 
+ # Uso en Streamlit
+ if prediction is not None:
+     gauge = create_price_gauge(prediction, min_price=0, max_price=80000)
+     st.plotly_chart(gauge, use_container_width=True)
+ ```
 
 ### Métricas con Confianza (Bootstrap)
 
@@ -787,11 +840,13 @@ Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
 - **@st.cache_resource**: Decorator para cachear modelos
 - **Plotly**: Librería de visualizaciones interactivas
 
----
-
-## ✅ Ejercicios
-
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 15:
+ ---
+ 
+ <a id="ejercicio"></a>
+ 
+ ## ✅ Ejercicios
+ 
+ Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 15:
 - **15.1**: Dashboard de predicción
 
 **Ejercicio completo:**
@@ -805,11 +860,13 @@ Crea un dashboard Streamlit para BankChurn con:
 - Implementa SHAP waterfall plot para explicar predicciones
 - Usa multi-page structure
 
----
-
-## 🎤 Checkpoint: Simulacro Mid
-
-> 🎯 **¡Has completado ML Core + Deploy!** (Módulos 07-15)
+ ---
+ 
+ <a id="checkpoint"></a>
+ 
+ ## 🎤 Checkpoint: Simulacro Mid
+ 
+ > 🎯 **¡Has completado ML Core + Deploy!** (Módulos 07-15)
 > 
 > Si buscas posiciones **Mid-Level ML Engineer**, ahora es buen momento para practicar:
 > 

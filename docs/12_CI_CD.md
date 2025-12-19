@@ -1,8 +1,48 @@
-# 13. CI/CD con GitHub Actions
-
-## 🎯 Objetivo del Módulo
-
-Implementar un pipeline CI/CD profesional que valide automáticamente tu código en cada push, como el workflow `ci-mlops.yml` del portafolio.
+# 12. CI/CD con GitHub Actions
+ 
+ <a id="00-prerrequisitos"></a>
+ 
+ ## 0.0 Prerrequisitos
+ 
+ - Tener una cuenta de GitHub y saber abrir Pull Requests.
+ - Haber ejecutado `pytest` localmente al menos una vez en un proyecto del portafolio.
+ - Conocer la ubicación del workflow real: `.github/workflows/ci-mlops.yml`.
+ 
+ ---
+ 
+ <a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+ 
+ ## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+ 
+ - **Antes de empezar**: abre **[Protocolo E](study_tools/PROTOCOLO_E.md)** y define el output mínimo (un workflow que corre en PR).
+ - **Durante el debugging**: si te atoras >15 min (YAML, permisos, paths, matrix), registra el caso en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**.
+ - **Al cierre de semana**: usa **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)** para evaluar si CI te protege de regressions.
+ 
+ ---
+ 
+ <a id="02-entregables-verificables-minimo-viable"></a>
+ 
+ ## 0.2 ✅ Entregables verificables (mínimo viable)
+ 
+ - [ ] Un workflow que corre en `push` y `pull_request`.
+ - [ ] Matrix con (mínimo) 2 versiones de Python.
+ - [ ] Tests con coverage y threshold (`--cov-fail-under`).
+ - [ ] Al menos 1 check de seguridad (Bandit o secret scanning).
+ - [ ] Evidencia en GitHub Actions (runs verdes + artifacts si aplica).
+ 
+ ---
+ 
+ <a id="03-puente-teoria-codigo-portafolio"></a>
+ 
+ ## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+ 
+ - **Concepto**: CI (validación automática) + gates (coverage/security) + CD (build/push)
+ - **Archivo**: `.github/workflows/ci-mlops.yml`
+ - **Prueba**: abre un PR y verifica que corran jobs por `project` y `python-version`.
+ 
+ ## 🎯 Objetivo del Módulo
+ 
+ Implementar un pipeline CI/CD profesional que valide automáticamente tu código en cada push, como el workflow `ci-mlops.yml` del portafolio.
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
@@ -26,16 +66,25 @@ Implementar un pipeline CI/CD profesional que valide automáticamente tu código
 
 ## 📋 Contenido
 
-1. [Anatomía de un Workflow](#131-anatomía-de-un-workflow)
-2. [Matrix Testing: Múltiples Versiones](#132-matrix-testing-múltiples-versiones)
-3. [Coverage Enforcement](#133-coverage-enforcement)
-4. [Security Scanning](#134-security-scanning)
-5. [Docker Build y Push](#135-docker-build-y-push)
-6. [El Workflow Completo del Portafolio](#136-el-workflow-completo)
+- **0.0** [Prerrequisitos](#00-prerrequisitos)
+- **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+- **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+- **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+- **12.1** [Anatomía de un Workflow](#121-anatomia-de-un-workflow)
+- **12.2** [Matrix Testing: Múltiples Versiones](#122-matrix-testing-multiples-versiones)
+- **12.3** [Coverage Enforcement](#123-coverage-enforcement)
+- **12.4** [Security Scanning](#124-security-scanning)
+- **12.5** [Docker Build y Push](#125-docker-build-y-push)
+- **12.6** [El Workflow Completo del Portafolio](#126-el-workflow-completo-del-portafolio)
+- [Errores habituales](#errores-habituales)
+- [✅ Ejercicio](#ejercicio)
+- [✅ Checkpoint](#checkpoint)
 
 ---
 
-## 13.1 Anatomía de un Workflow
+<a id="121-anatomia-de-un-workflow"></a>
+
+## 12.1 Anatomía de un Workflow
 
 ### Estructura Básica
 
@@ -90,7 +139,9 @@ jobs:                                 # ¿Qué ejecutar?
 
 ---
 
-## 13.2 Matrix Testing: Múltiples Versiones
+<a id="122-matrix-testing-multiples-versiones"></a>
+
+## 12.2 Matrix Testing: Múltiples Versiones
 
 ### El Problema: "Funciona en mi versión de Python"
 
@@ -178,7 +229,9 @@ Total: 6 jobs ejecutándose EN PARALELO
 
 ---
 
-## 13.3 Coverage Enforcement
+<a id="123-coverage-enforcement"></a>
+
+## 12.3 Coverage Enforcement
 
 ### Thresholds por Proyecto
 
@@ -229,7 +282,9 @@ Total: 6 jobs ejecutándose EN PARALELO
 
 ---
 
-## 13.4 Security Scanning
+<a id="124-security-scanning"></a>
+
+## 12.4 Security Scanning
 
 ### Múltiples Capas de Seguridad
 
@@ -301,7 +356,9 @@ docker-security:
 
 ---
 
-## 13.5 Docker Build y Push
+<a id="125-docker-build-y-push"></a>
+
+## 12.5 Docker Build y Push
 
 ### Build Multi-Proyecto
 
@@ -349,7 +406,9 @@ docker-build:
 
 ---
 
-## 13.6 El Workflow Completo del Portafolio
+<a id="126-el-workflow-completo-del-portafolio"></a>
+
+## 12.6 El Workflow Completo del Portafolio
 
 ### Diagrama del Pipeline
 
@@ -614,9 +673,13 @@ jobs:
 
 ---
 
+<a id="errores-habituales"></a>
+
 ## 🧨 Errores habituales y cómo depurarlos en CI/CD
 
 En este módulo los problemas suelen venir de **triggers mal configurados**, **rutas incorrectas** o **jobs mal encadenados**.
+
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 ### 1) El workflow no se dispara
 
@@ -707,6 +770,8 @@ Con este enfoque, CI/CD pasa de ser una caja negra “que a veces falla” a un 
 
 ---
 
+<a id="ejercicio"></a>
+
 ## ✅ Ejercicio: Crear Tu Propio Workflow
 
 ### Paso 1: Workflow Mínimo
@@ -754,6 +819,8 @@ jobs:
 Añade un job nuevo con Bandit y Gitleaks.
 
 ---
+
+<a id="checkpoint"></a>
 
 ## ✅ Checkpoint
 

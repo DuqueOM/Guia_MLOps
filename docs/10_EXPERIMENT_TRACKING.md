@@ -1,8 +1,50 @@
 # 10. Experiment Tracking con MLflow
-
-## 🎯 Objetivo del Módulo
-
-Implementar tracking de experimentos como lo hace el portafolio con `run_mlflow.py`.
+ 
+ <a id="00-prerrequisitos"></a>
+ 
+ ## 0.0 Prerrequisitos
+ 
+ - Tener al menos 1 proyecto del portafolio con:
+   - `artifacts/training_results.json` (o equivalente)
+   - Un modelo serializado (`model.pkl`, `model.joblib`, etc.)
+ - Poder instalar MLflow en tu entorno del proyecto.
+ 
+ ---
+ 
+ <a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+ 
+ ## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+ 
+ - **Antes de empezar**: abre **[Protocolo E](study_tools/PROTOCOLO_E.md)** y define tu *output mínimo* (1 run visible y comparable).
+ - **Durante el debugging**: si te atoras >15 min (tracking_uri, artifacts, registry), registra el caso en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**.
+ - **Al cierre de semana**: usa **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)** para auditar trazabilidad (runs, params, métricas, artifacts).
+ 
+ ---
+ 
+ <a id="02-entregables-verificables-minimo-viable"></a>
+ 
+ ## 0.2 ✅ Entregables verificables (mínimo viable)
+ 
+ - [ ] Un experimento MLflow con:
+   - params (ej. hiperparámetros o `run_type`)
+   - métricas (ej. `test_f1`, `test_auc`)
+   - artifacts (ej. `training_results.json`, `config.yaml`)
+ - [ ] Evidencia (UI o `mlflow ui`) de poder comparar 2 runs.
+ - [ ] 1 entrada en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** si hubo bloqueo real.
+ 
+ ---
+ 
+ <a id="03-puente-teoria-codigo-portafolio"></a>
+ 
+ ## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+ 
+ - **Concepto**: experiment tracking (params/metrics/artifacts + comparación + registry)
+ - **Archivo**: `scripts/run_mlflow.py`, `docker-compose.mlflow.yml`, `configs/config.yaml`
+ - **Prueba**: entrenar → loguear → abrir UI → comparar runs
+ 
+ ## 🎯 Objetivo del Módulo
+ 
+ Implementar tracking de experimentos como lo hace el portafolio con `run_mlflow.py`.
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
@@ -24,22 +66,31 @@ Implementar tracking de experimentos como lo hace el portafolio con `run_mlflow.
 - En **BankChurn-Predictor** ya tienes:
   - `scripts/run_mlflow.py` como script de logging posterior al entrenamiento.
   - Configuración de MLflow en `configs/config.yaml` y `src/bankchurn/config.py`.
-- El archivo `docker-compose.mlflow.yml` en la raíz del repo levanta un servidor MLflow
-  real que puedes usar para practicar este módulo.
-- El mismo patrón de logging puedes aplicarlo a **CarVision** y **TelecomAI**, usando
-  sus `artifacts/` y modelos entrenados como fuente de métricas y artifacts.
+ - El archivo `docker-compose.mlflow.yml` en la raíz del repo levanta un servidor MLflow
+   real que puedes usar para practicar este módulo.
+ - El mismo patrón de logging puedes aplicarlo a **CarVision** y **TelecomAI**, usando
+   sus `artifacts/` y modelos entrenados como fuente de métricas y artifacts.
 
 ---
 
 ## 📋 Contenido
 
+- **0.0** [Prerrequisitos](#00-prerrequisitos)
+- **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+- **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+- **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
 1. [Conceptos de MLflow](#101-conceptos-de-mlflow)
-2. [Setup y Configuración](#102-setup-y-configuración)
+2. [Setup y Configuración](#102-setup-y-configuracion)
 3. [Logging de Experimentos](#103-logging-de-experimentos)
 4. [Model Registry](#104-model-registry)
-5. [Código Real del Portafolio](#105-código-real-del-portafolio)
+5. [Código Real del Portafolio](#105-codigo-real-del-portafolio)
+- [Errores habituales](#errores-habituales)
+- [✅ Ejercicio](#ejercicio)
+- [✅ Checkpoint](#checkpoint)
 
 ---
+
+<a id="101-conceptos-de-mlflow"></a>
 
 ## 10.1 Conceptos de MLflow
 
@@ -73,8 +124,8 @@ EN ESTE PORTAFOLIO USAMOS: Tracking + Registry
 MLflow Server
 └── Experiment: "BankChurn"
     ├── Run: abc123 (2024-01-15)
-    │   ├── Parameters: {n_estimators: 100, max_depth: 10}
-    │   ├── Metrics: {f1: 0.60, auc: 0.85}
+    │   ├── Parameters: {n_estimators: 200, max_depth: 10}
+    │   ├── Metrics: {f1: 0.65, auc: 0.88}
     │   └── Artifacts: [model.pkl, config.yaml]
     │
     ├── Run: def456 (2024-01-16)
@@ -89,6 +140,8 @@ MLflow Server
 ```
 
 ---
+
+<a id="102-setup-y-configuracion"></a>
 
 ## 10.2 Setup y Configuración
 
@@ -142,12 +195,15 @@ mlflow:
 ```python
 # src/bankchurn/config.py
 class MLflowConfig(BaseModel):
+    """MLflow tracking configuration."""
     tracking_uri: str = "file:./mlruns"
     experiment_name: str = "bankchurn"
     enabled: bool = True
 ```
 
 ---
+
+<a id="103-logging-de-experimentos"></a>
 
 ## 10.3 Logging de Experimentos
 
@@ -202,6 +258,8 @@ for epoch in range(100):
 ```
 
 ---
+
+<a id="104-model-registry"></a>
 
 ## 10.4 Model Registry
 
@@ -258,6 +316,8 @@ model = mlflow.sklearn.load_model("models:/BankChurnClassifier/latest")
 ```
 
 ---
+
+<a id="105-codigo-real-del-portafolio"></a>
 
 ## 10.5 Código Real del Portafolio
 
@@ -422,9 +482,13 @@ mlflow ui --host 0.0.0.0 --port 5000
 
 ---
 
+<a id="errores-habituales"></a>
+
 ## 🧨 Errores habituales y cómo depurarlos en MLflow
 
 MLflow añade una capa extra (servidor, rutas, artefactos), así que muchos errores son de **configuración** más que de código puro.
+
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 ### 1) Runs que no aparecen en la UI (tracking_uri/experimento incorrectos)
 
@@ -510,12 +574,27 @@ Con este patrón, MLflow pasa de ser “caja negra” a una herramienta confiabl
 
 ---
 
+<a id="ejercicio"></a>
+
 ## ✅ Ejercicio: Integrar MLflow en TelecomAI
 
 1. Crea `scripts/run_mlflow.py` para TelecomAI
 2. Log las métricas: accuracy, f1, precision, recall, roc_auc
 3. Calcula métricas de negocio (customers retained, revenue saved)
 4. Registra el modelo como "TelecomPlanClassifier"
+
+---
+
+<a id="checkpoint"></a>
+
+## ✅ Checkpoint
+
+- [ ] Puedo correr un run end-to-end y verlo en la UI (o en `mlflow ui`).
+- [ ] Puedo explicar dónde quedan:
+  - params
+  - metrics
+  - artifacts
+- [ ] Puedo comparar 2 runs y justificar qué cambió (params → métricas).
 
 ---
 

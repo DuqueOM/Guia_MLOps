@@ -1,12 +1,73 @@
 # 18. Infraestructura como Código
-
-## 🎯 Objetivo
-
-Conceptos de IaC (Terraform) y orquestación (Kubernetes) para despliegue ML.
+ 
+ <a id="00-prerrequisitos"></a>
+ 
+ ## 0.0 Prerrequisitos
+ 
+ - Haber completado el módulo 17 (Despliegue) para entender plataformas y healthchecks.
+ - Conocer Docker (imágenes, puertos, redes) antes de subir el nivel a IaC/K8s.
+ - Entender el objetivo de IaC: reproducibilidad, auditoría y rollback de infraestructura.
+ 
+ ---
+ 
+ <a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+ 
+ ## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+ 
+ - **Antes de profundizar**: decide si este módulo es “necesario ahora” o “skill complementario” para tu portafolio.
+ - **Durante el estudio**: traduce cada concepto a un artefacto concreto (un `main.tf`, un `deployment.yaml`, un `hpa.yaml`).
+ - **Si te atoras >15 min** (estado de Terraform, permisos de registry, probes, secrets), regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
+ 
+ ---
+ 
+ <a id="02-entregables-verificables-minimo-viable"></a>
+ 
+ ## 0.2 ✅ Entregables verificables (mínimo viable)
+ 
+ - [ ] Puedes explicar (en 60s) qué problema resuelve IaC vs “click-ops”.
+ - [ ] Puedes leer y modificar un `deployment.yaml` y un `service.yaml` básicos.
+ - [ ] Entiendes `requests/limits`, `livenessProbe` y `readinessProbe` a nivel conceptual.
+ - [ ] Sabes diseñar mínimos de FinOps: presupuestos + alertas + tags/labels.
+ 
+ ---
+ 
+ <a id="03-puente-teoria-codigo-portafolio"></a>
+ 
+ ## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+ 
+ - **Terraform**: infraestructura reproducible (clusters, redes, servicios gestionados)
+ - **Kubernetes**: manifests para desplegar y escalar APIs ML
+ - **Prueba**: ser capaz de justificar cuándo usar Docker/CI-CD (portafolio) vs IaC/K8s (contexto profesional)
+ 
+ ---
+ 
+ ## 📋 Contenido
+ 
+ - **0.0** [Prerrequisitos](#00-prerrequisitos)
+ - **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+ - **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+ - **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+ - **18.1** [Terraform Básico](#181-terraform-basico)
+ - **18.2** [Kubernetes Básico](#182-kubernetes-basico)
+ - **18.3** [¿Cuándo usar qué?](#183-cuando-usar-que)
+ - **18.4** [Cloud y Control de Costos (FinOps para MLOps)](#184-cloud-y-control-de-costos-finops-para-mlops)
+ - **18.5** [Horizontal Pod Autoscaler (HPA)](#185-horizontal-pod-autoscaler-hpa)
+ - **18.6** [ConfigMaps y Secrets](#186-configmaps-y-secrets)
+ - **18.7** [Ingress para Routing HTTP](#187-ingress-para-routing-http)
+ - **18.8** [Cómo se usó en el Portafolio](#188-como-se-uso-en-el-portafolio)
+ - [Errores habituales](#errores-habituales)
+ - [✅ Ejercicio](#ejercicio)
+ - [✅ Checkpoint](#checkpoint)
+ 
+ ## 🎯 Objetivo
+ 
+ Conceptos de IaC (Terraform) y orquestación (Kubernetes) para despliegue ML.
 
 > **Nota**: Este módulo es AVANZADO. Para el portafolio actual, Docker + GitHub Actions es suficiente.
 
 ---
+
+<a id="181-terraform-basico"></a>
 
 ## Terraform Básico
 
@@ -71,6 +132,8 @@ resource "aws_ecs_service" "bankchurn_api" {
 ```
 
 ---
+
+<a id="182-kubernetes-basico"></a>
 
 ## Kubernetes Básico
 
@@ -153,6 +216,8 @@ spec:
 
 ---
 
+<a id="183-cuando-usar-que"></a>
+
 ## ¿Cuándo Usar Qué?
 
 | Escenario | Solución Recomendada |
@@ -169,6 +234,8 @@ spec:
 Terraform y K8s son skills valiosos, pero no necesarios para demostrar competencia MLOps en proyectos de portafolio.
 
 ---
+
+<a id="184-cloud-y-control-de-costos-finops-para-mlops"></a>
 
 ##  Cloud y Control de Costos (FinOps para MLOps)
 
@@ -224,10 +291,9 @@ Buena parte del FinOps (gestión financiera en cloud) se reduce a:
 
 Checklist rápido para cualquier cuenta cloud nueva:
 
-- [ ] Presupuesto mensual configurado.
-- [ ] Alertas a 50/80/100% del presupuesto.
-- [ ] Etiquetas/labels de costo definidas (`project`, `env`, `owner`).
-- [ ] Entornos **dev/staging** con límites de gasto más agresivos.
+- [ ] Hay un **owner claro** por entorno (quien responde a la factura).
+- [ ] Cada recurso tiene **tags/labels** de `project`, `env`, `owner`.
+- [ ] Hay un **runbook** para apagar recursos no críticos fuera de horario (scripts/programado).
 
 ---
 
@@ -300,9 +366,13 @@ Checklist rápido para cualquier cuenta cloud nueva:
 
 ---
 
+<a id="errores-habituales"></a>
+
 ## 🧨 Errores habituales y cómo depurarlos en Infraestructura como Código
 
 Aunque este módulo es avanzado, es común cometer errores que dejan tu IaC frágil o inconsistente.
+
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 ### 1) Terraform aplicado “a mano” sin estado controlado
 
@@ -379,6 +449,8 @@ Con este enfoque, IaC y K8s se vuelven herramientas que suman, no otra fuente de
 
 ---
 
+<a id="185-horizontal-pod-autoscaler-hpa"></a>
+
 ## Horizontal Pod Autoscaler (HPA)
 
 El HPA escala automáticamente los pods basándose en métricas como CPU o memoria.
@@ -415,6 +487,8 @@ spec:
 
 ---
 
+<a id="186-configmaps-y-secrets"></a>
+
 ## ConfigMaps y Secrets
 
 ### ConfigMap (configuración no sensible)
@@ -440,10 +514,11 @@ metadata:
   name: ml-secrets
   namespace: mlops
 type: Opaque
-data:
+stringData:
   # Valores de ejemplo. En un entorno real se inyectan desde el sistema de secretos.
-  database-password: REEMPLAZAR_EN_ENTORNO_REAL
-  api-key: REEMPLAZAR_EN_ENTORNO_REAL
+  mlflow-uri: "http://mlflow-service:5000"
+  database-password: "REEMPLAZAR_EN_ENTORNO_REAL"
+  api-key: "REEMPLAZAR_EN_ENTORNO_REAL"
 ```
 
 ### Uso en Deployment
@@ -460,6 +535,8 @@ spec:
 ```
 
 ---
+
+<a id="187-ingress-para-routing-http"></a>
 
 ## Ingress para Routing HTTP
 
@@ -494,6 +571,8 @@ spec:
 ```
 
 ---
+
+<a id="188-como-se-uso-en-el-portafolio"></a>
 
 ## 📦 Cómo se usó en el Portafolio
 
@@ -562,7 +641,6 @@ Secrets:    Vault o AWS Secrets Manager
 Monitoring: Prometheus + Grafana
 ```
 
-
 ---
 
 ## 📺 Recursos Externos Recomendados
@@ -587,6 +665,16 @@ Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones detalladas de:
 
 ---
 
+<a id="ejercicio"></a>
+
+## ✅ Ejercicio
+
+Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulos 17-18
+
+---
+
+<a id="checkpoint"></a>
+
 ## ✅ Checkpoint
 
 Para este nivel:
@@ -595,8 +683,6 @@ Para este nivel:
 - [ ] Sabes qué hace un HPA y cuándo usarlo
 - [ ] Entiendes la diferencia entre ConfigMap y Secret
 - [ ] Sabes cuándo escalar más allá de Docker
-
-**Ejercicios**: Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulos 17-18
 
 ---
 

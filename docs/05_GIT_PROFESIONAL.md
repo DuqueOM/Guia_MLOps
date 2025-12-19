@@ -1,12 +1,12 @@
 # ════════════════════════════════════════════════════════════════════════════════
-# MÓDULO 04: GIT PROFESIONAL
+# MÓDULO 05: GIT PROFESIONAL
 # Más Allá del Commit: Conventional Commits, Hooks y Branching
 # Guía MLOps v5.0: Senior Edition | DuqueOM | Noviembre 2025
 # ════════════════════════════════════════════════════════════════════════════════
 
 <div align="center">
 
-# 🌿 MÓDULO 04: Git Profesional
+# 🌿 MÓDULO 05: Git Profesional
 
 ### Control de Versiones que Impresiona en Code Review
 
@@ -19,6 +19,71 @@
 </div>
 
 ---
+
+## 📋 Índice
+
+- **0.0** [Prerrequisitos](#00-prerrequisitos)
+- **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+- **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+- **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+- [Lo que lograrás en este módulo](#lograras)
+- [5.1 Conventional Commits](#51-conventional-commits)
+- [5.2 Pre-commit Hooks](#52-pre-commit-hooks)
+- [5.3 Estrategias de Branching](#53-branching)
+- [5.4 Comandos Avanzados](#54-comandos-avanzados)
+- [5.5 .gitignore profesional](#55-gitignore)
+- [5.6 Ejercicio integrador](#56-ejercicio)
+- [Errores habituales](#errores-habituales)
+- [5.7 Autoevaluación](#57-autoevaluacion)
+
+---
+
+<a id="00-prerrequisitos"></a>
+
+## 0.0 Prerrequisitos
+
+- Haber completado **[04_ENTORNOS](04_ENTORNOS.md)** (o al menos tener un entorno reproducible para correr hooks y CI).
+- Poder ejecutar comandos básicos de terminal.
+- Tener un repo Git inicializado o clonar el portafolio.
+
+---
+
+<a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+
+## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+
+- **Antes de tocar ramas**: abre **[Protocolo E](study_tools/PROTOCOLO_E.md)** y define tu *output mínimo* (ej: “pre-commit + conv commits + PR limpio”).
+- **Mientras haces PRs**: si te atoras >15 min (rebase, conflictos, hooks, commitlint), registra el bloqueo en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**.
+- **Al cerrar la semana**: usa **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)** para mejorar tu DX (menos fricción, más calidad automática).
+
+---
+
+<a id="02-entregables-verificables-minimo-viable"></a>
+
+## 0.2 ✅ Entregables verificables (mínimo viable)
+
+Al terminar este módulo, deberías poder mostrar (en al menos 1 proyecto del portafolio):
+
+- [ ] **Commits con Conventional Commits** consistentes (sin “wip”, “fix”, “final_final”).
+- [ ] **Pre-commit instalado** y pasando en `pre-commit run --all-files`.
+- [ ] **Flujo de ramas**: feature branch → PR → merge a `main` (sin commits directos a `main`).
+- [ ] **Capacidad de recuperación**: poder deshacer un error usando `reflog` o `reset --soft`.
+
+---
+
+<a id="03-puente-teoria-codigo-portafolio"></a>
+
+## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+
+Para que esto cuente como progreso real, fuerza este mapeo:
+
+- **Concepto**: historial legible / prevención de errores / colaboración
+- **Archivo**: `.pre-commit-config.yaml`, `.gitleaks.toml`, `.github/workflows/*`, `README.md`
+- **Evidencia**: un PR con commits limpios, hooks pasando, y revisión enfocada.
+
+---
+
+<a id="lograras"></a>
 
 ## 🎯 Lo Que Lograrás en Este Módulo
 
@@ -40,7 +105,9 @@
 
 ---
 
-## 4.1 Conventional Commits: El Estándar de Industria
+<a id="51-conventional-commits"></a>
+
+## 5.1 Conventional Commits: El Estándar de Industria
 
 ### ¿Por Qué Importa el Formato del Commit?
 
@@ -177,7 +244,9 @@ EOF
 
 ---
 
-## 4.2 Pre-commit Hooks: Prevenir Errores Antes del Commit
+<a id="52-pre-commit-hooks"></a>
+
+## 5.2 Pre-commit Hooks: Prevenir Errores Antes del Commit
 
 ### ¿Qué Son los Pre-commit Hooks?
 
@@ -354,7 +423,9 @@ git commit --no-verify -m "hotfix: emergency fix"
 
 ---
 
-## 4.3 Estrategias de Branching
+<a id="53-branching"></a>
+
+## 5.3 Estrategias de Branching
 
 ### Git Flow vs GitHub Flow vs Trunk-Based
 
@@ -451,7 +522,9 @@ hotfix/1.2.1
 
 ---
 
-## 4.4 Comandos Avanzados que Todo Senior Debe Conocer
+<a id="54-comandos-avanzados"></a>
+
+## 5.4 Comandos Avanzados que Todo Senior Debe Conocer
 
 ### Rebase Interactivo: Limpiar Historial
 
@@ -547,7 +620,9 @@ git reset --hard abc123
 
 ---
 
-## 4.5 .gitignore Profesional para MLOps
+<a id="55-gitignore"></a>
+
+## 5.5 .gitignore Profesional para MLOps
 
 ```gitignore
 # .gitignore para proyectos MLOps
@@ -662,7 +737,9 @@ Thumbs.db
 
 ---
 
-## 4.6 Ejercicio Integrador: Setup Completo de Git
+<a id="56-ejercicio"></a>
+
+## 5.6 Ejercicio Integrador: Setup Completo de Git
 
 ### Paso 1: Configurar Git Global
 
@@ -715,7 +792,7 @@ git commit -m "chore: initial project structure"
 # Instalar
 pip install pre-commit
 
-# Copiar el .pre-commit-config.yaml de la sección 4.2
+# Copiar el .pre-commit-config.yaml de la sección 5.2
 
 # Instalar hooks
 pre-commit install
@@ -763,9 +840,13 @@ PRE-COMMIT:
 
  ---
 
-## 🧨 Errores habituales y cómo depurarlos en Git
-
-Git aquí no es solo “guardar versiones”, sino soportar **flujos de trabajo profesionales** con branches, hooks y CI. Estos son los errores más frecuentes en el portafolio y cómo atacarlos.
+<a id="errores-habituales"></a>
+ 
+ ## 🧨 Errores habituales y cómo depurarlos en Git
+ 
+ Git aquí no es solo “guardar versiones”, sino soportar **flujos de trabajo profesionales** con branches, hooks y CI. Estos son los errores más frecuentes en el portafolio y cómo atacarlos.
+ 
+ Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 ### 1) Commits que rompen el formato (Conventional Commits / commitlint / pre-commit)
 
@@ -889,9 +970,11 @@ Git aquí no es solo “guardar versiones”, sino soportar **flujos de trabajo 
 
 Con este enfoque, Git deja de ser “magia negra” y se convierte en una herramienta predecible y aliada de tu flujo MLOps.
 
----
+ ---
+ 
+ <a id="57-autoevaluacion"></a>
 
-## 4.7 Autoevaluación
+ ## 5.7 Autoevaluación
 
 ### Preguntas de Reflexión
 

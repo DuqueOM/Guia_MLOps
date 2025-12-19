@@ -23,15 +23,66 @@ Dominar la creación de features sin introducir **data leakage**, el error más 
 
 ---
 
-## 📋 Contenido
+<a id="00-prerrequisitos"></a>
 
-1. [¿Qué es Data Leakage?](#81-qué-es-data-leakage)
-2. [Tipos de Leakage en ML](#82-tipos-de-leakage)
-3. [Caso Real: CarVision](#83-caso-real-carvision)
-4. [Prevención con Pipelines](#84-prevención-con-pipelines)
-5. [Feature Engineering Seguro](#85-feature-engineering-seguro)
+## 0.0 Prerrequisitos
+
+- Haber completado **[07_SKLEARN_PIPELINES](07_SKLEARN_PIPELINES.md)** (pipelines unificados, serialización).
+- Entender que un score alto en validación puede ser **engañoso** si hay leakage.
+- Tener claro cuál es tu *target* por proyecto (BankChurn: churn, CarVision: price, Telecom: churn/upsell).
 
 ---
+
+<a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+
+## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+
+- **Antes de crear features**: abre **[Protocolo E](study_tools/PROTOCOLO_E.md)** y define tu *output mínimo* (ej: lista de features seguras + reglas anti-leakage).
+- **Mientras depuras leakage**: si te atoras >15 min (métricas irreales, features sospechosas, splits temporales), registra el caso en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**.
+- **Al cerrar la semana**: usa **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)** para auditar tu dataset y tu pipeline de features.
+
+---
+
+<a id="02-entregables-verificables-minimo-viable"></a>
+
+## 0.2 ✅ Entregables verificables (mínimo viable)
+
+Al terminar este módulo, deberías poder mostrar (en al menos 1 proyecto del portafolio):
+
+- [ ] **Checklist anti-leakage** aplicada (qué se permite / qué se prohíbe).
+- [ ] **Features seguras** integradas dentro del pipeline (no código suelto).
+- [ ] **Evidencia**: explicación breve de por qué tus features no usan información del target/futuro.
+
+---
+
+<a id="03-puente-teoria-codigo-portafolio"></a>
+
+## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+
+Para que esto cuente como progreso real, fuerza este mapeo:
+
+- **Concepto**: leakage (target/temporal/contaminación)
+- **Archivo**: `src/<paquete>/features.py`, `src/<paquete>/training.py`, `configs/*.yaml`
+- **Prueba**: comparar métricas con/ sin feature sospechosa y justificar la decisión.
+
+---
+
+## 📋 Contenido
+
+ - **0.0** [Prerrequisitos](#00-prerrequisitos)
+ - **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+ - **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+ - **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+ 1. [¿Qué es Data Leakage?](#81-que-es-data-leakage)
+ 2. [Tipos de Leakage en ML](#82-tipos-de-leakage)
+ 3. [Caso Real: CarVision](#83-caso-real-carvision)
+ 4. [Prevención con Pipelines](#84-prevencion-con-pipelines)
+ 5. [Feature Engineering Seguro](#85-feature-engineering-seguro)
+ 6. [✅ Checkpoint](#checkpoint)
+
+---
+
+<a id="81-que-es-data-leakage"></a>
 
 ## 8.1 ¿Qué es Data Leakage?
 
@@ -86,6 +137,8 @@ df['price_per_mile'] = df['price'] / df['odometer']  # ← LEAKAGE!
 
 ---
 
+<a id="82-tipos-de-leakage"></a>
+
 ## 8.2 Tipos de Leakage
 
 ### 1. Target Leakage (Feature contiene información del target)
@@ -125,6 +178,8 @@ df['avg_purchases_last_3_months'] = ...  # Información del pasado
 ```
 
 ---
+
+<a id="83-caso-real-carvision"></a>
 
 ## 8.3 Caso Real: CarVision
 
@@ -208,6 +263,8 @@ def infer_feature_types(df, target, drop_columns=None, ...):
 
 ---
 
+<a id="84-prevencion-con-pipelines"></a>
+
 ## 8.4 Prevención con Pipelines
 
 ### El Pipeline como Barrera Anti-Leakage
@@ -276,6 +333,8 @@ predictions = pipeline.predict(X_test)
 ```
 
 ---
+
+<a id="85-feature-engineering-seguro"></a>
 
 ## 8.5 Feature Engineering Seguro
 
@@ -352,74 +411,11 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
 
 ---
 
-## ✅ Ejercicio: Detectar Leakage
-
-```python
-# Analiza este código y encuentra todos los casos de leakage
-
-def prepare_data(df):
-    # 1. Normalizar todas las features
-    scaler = StandardScaler()
-    df[['age', 'income']] = scaler.fit_transform(df[['age', 'income']])
-    
-    # 2. Crear features
-    df['income_category'] = pd.cut(df['target_income'], bins=3)
-    df['age_bucket'] = pd.cut(df['age'], bins=[0, 30, 50, 100])
-    
-    # 3. Split
-    X_train, X_test = train_test_split(df.drop('target_income', axis=1))
-    y_train, y_test = train_test_split(df['target_income'])
-    
-    return X_train, X_test, y_train, y_test
-```
-
-<details>
-<summary>📝 Ver Solución</summary>
-
-```python
-# PROBLEMAS DETECTADOS:
-
-# 1. ❌ TRAIN-TEST CONTAMINATION (línea 3-4)
-# scaler.fit_transform se aplica a TODO el dataset antes del split
-# El scaler "ve" estadísticas de test durante entrenamiento
-
-# 2. ❌ TARGET LEAKAGE (línea 7)
-# income_category se calcula usando target_income
-# El modelo aprenderá a "leer" el target desde esta feature
-
-# 3. ❌ SPLIT INCONSISTENTE (líneas 11-12)
-# train_test_split se llama dos veces con diferentes random states
-# X_train no corresponde con y_train
-
-# VERSIÓN CORREGIDA:
-def prepare_data_correct(df):
-    # 1. Split PRIMERO
-    train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
-    
-    # 2. Features SIN leakage
-    for data in [train_df, test_df]:
-        data['age_bucket'] = pd.cut(data['age'], bins=[0, 30, 50, 100])
-        # NO crear income_category - usa el target
-    
-    # 3. Separar X e y
-    X_train = train_df.drop('target_income', axis=1)
-    y_train = train_df['target_income']
-    X_test = test_df.drop('target_income', axis=1)
-    y_test = test_df['target_income']
-    
-    # 4. Escalar SOLO con datos de train
-    scaler = StandardScaler()
-    X_train[['age', 'income']] = scaler.fit_transform(X_train[['age', 'income']])
-    X_test[['age', 'income']] = scaler.transform(X_test[['age', 'income']])
-    
-    return X_train, X_test, y_train, y_test
-```
-
-</details>
-
----
+<a id="checkpoint"></a>
 
 ## ✅ Checkpoint
+
+Si algún punto de esta lista te tomó **>15 minutos** (o te dio un falso positivo de métricas), regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 - [ ] Entiendes qué es data leakage y por qué es peligroso
 - [ ] Puedes identificar los 3 tipos de leakage

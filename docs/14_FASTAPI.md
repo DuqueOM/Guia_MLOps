@@ -1,7 +1,49 @@
-# 15. FastAPI para Producción
-
+# 14. FastAPI para Producción
+ 
+<a id="00-prerrequisitos"></a>
+ 
+## 0.0 Prerrequisitos
+ 
+- Tener un proyecto con FastAPI ejecutable (local o en contenedor).
+- Conocer validación con Pydantic (modelos request/response).
+- Haber completado el módulo 13 (Docker) para empaquetar y ejecutar la API.
+ 
+---
+ 
+<a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+ 
+## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+ 
+- **Antes de empezar**: abre **[Protocolo E](study_tools/PROTOCOLO_E.md)** y define el output mínimo: un servicio que levanta y responde en `/health` y `/predict`.
+- **Durante el debugging**: si te atoras >15 min (schema, serialización, modelo no carga, 4xx/5xx), registra el caso en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**.
+- **Al cierre de semana**: usa **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)** para auditar documentación (OpenAPI), manejo de errores y compatibilidad training-serving.
+ 
+---
+ 
+<a id="02-entregables-verificables-minimo-viable"></a>
+ 
+## 0.2 ✅ Entregables verificables (mínimo viable)
+ 
+- [ ] Endpoint `/health` estable (sin depender de cómputo pesado).
+- [ ] Endpoint `/predict` con request/response validados (Pydantic).
+- [ ] Documentación accesible en `/docs` (Swagger) y `/openapi.json`.
+- [ ] Manejo de errores consistente (`HTTPException` + códigos).
+- [ ] Conversión explícita a tipos nativos (`float`, `int`) para evitar problemas de serialización.
+ 
+---
+ 
+<a id="03-puente-teoria-codigo-portafolio"></a>
+ 
+## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+ 
+- **Concepto**: contrato API (schemas) + loading de modelo (startup) + observabilidad básica
+- **Archivo**: `app/fastapi_app.py`, `app/schemas.py`
+- **Prueba**: `uvicorn app.fastapi_app:app --reload` y `curl http://localhost:8000/health`
+ 
+---
+ 
 ## 🎯 Objetivo del Módulo
-
+ 
 Construir APIs de ML robustas, documentadas y production-ready como las del portafolio.
 
 ```
@@ -21,16 +63,25 @@ Construir APIs de ML robustas, documentadas y production-ready como las del port
 ---
 
 ## 📋 Contenido
-
-1. [Estructura de una API ML](#151-estructura-de-una-api-ml)
-2. [Schemas con Pydantic](#152-schemas-con-pydantic)
-3. [Endpoints de Predicción](#153-endpoints-de-predicción)
-4. [Error Handling](#154-error-handling)
-5. [Código Real del Portafolio](#155-código-real-del-portafolio)
-
+ 
+- **0.0** [Prerrequisitos](#00-prerrequisitos)
+- **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+- **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+- **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+- **14.1** [Estructura de una API ML](#141-estructura-de-una-api-ml)
+- **14.2** [Schemas con Pydantic](#142-schemas-con-pydantic)
+- **14.3** [Endpoints de Predicción](#143-endpoints-de-prediccion)
+- **14.4** [Error Handling](#144-error-handling)
+- **14.5** [Código Real del Portafolio](#145-codigo-real-del-portafolio)
+- [Errores habituales](#errores-habituales)
+- [✅ Checkpoint](#checkpoint)
+- [✅ Ejercicio](#ejercicio)
+ 
 ---
 
-## 15.1 Estructura de una API ML
+<a id="141-estructura-de-una-api-ml"></a>
+
+## 14.1 Estructura de una API ML
 
 ### Anatomía Típica
 
@@ -131,7 +182,9 @@ async def predict(request: PredictionRequest):
 
 ---
 
-## 15.2 Schemas con Pydantic
+<a id="142-schemas-con-pydantic"></a>
+
+## 14.2 Schemas con Pydantic
 
 ### Request/Response Models
 
@@ -216,7 +269,9 @@ class BatchPredictionResponse(BaseModel):
 
 ---
 
-## 15.3 Endpoints de Predicción
+<a id="143-endpoints-de-prediccion"></a>
+
+## 14.3 Endpoints de Predicción
 
 ### Single Prediction
 
@@ -314,7 +369,9 @@ async def predict_batch(request: BatchPredictionRequest):
 
 ---
 
-## 15.4 Error Handling
+<a id="144-error-handling"></a>
+
+## 14.4 Error Handling
 
 ### Custom Exception Handlers
 
@@ -370,7 +427,9 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 ---
 
-## 15.5 Código Real del Portafolio
+<a id="145-codigo-real-del-portafolio"></a>
+
+## 14.5 Código Real del Portafolio
 
 ### app/fastapi_app.py (BankChurn - Simplificado)
 
@@ -495,9 +554,13 @@ if __name__ == "__main__":
 
 ---
 
+<a id="errores-habituales"></a>
+
 ## 🧨 Errores habituales y cómo depurarlos en FastAPI para ML
 
 FastAPI te da mucho “gratis”, pero en APIs de ML los fallos suelen venir de modelos no cargados, esquemas desalineados o problemas de tipos/serialización.
+
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 ### 1) El modelo no se carga (503 constantes)
 
@@ -583,6 +646,8 @@ Con esta disciplina, tu API FastAPI pasará de “funciona solo en local” a es
 
 ---
 
+<a id="ejercicio"></a>
+
 ## ✅ Ejercicio
 
 1. Implementa `/predict/batch` para procesar múltiples clientes
@@ -659,6 +724,18 @@ curl -X POST http://localhost:8000/predict \
 # 3. Ve docs interactivos
 # http://localhost:8000/docs
 ```
+
+---
+
+<a id="checkpoint"></a>
+
+## ✅ Checkpoint
+
+- [ ] `/health` responde rápido (no hace inferencia ni carga pesada)
+- [ ] `/predict` valida request/response con Pydantic
+- [ ] Devuelves tipos nativos (sin `numpy.float32`, sin `NaN/inf`)
+- [ ] Errores esperables se manejan con `HTTPException` y códigos correctos
+- [ ] `/docs` y `/openapi.json` son accesibles
 
 ---
 

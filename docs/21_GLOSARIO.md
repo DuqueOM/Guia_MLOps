@@ -20,6 +20,64 @@
 
 ---
 
+<a id="00-prerrequisitos"></a>
+
+## 0.0 Prerrequisitos
+
+- Este módulo es de **consulta**: úsalo cuando un término te frene en módulos 01–20.
+- Ten a mano el repositorio del portafolio para buscar ejemplos reales (config, pipeline, CI, serving, observabilidad).
+
+---
+
+<a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+
+## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+
+- Cuando un término te bloquee, evita “seguir por intuición”: detente, define, busca un ejemplo y valida.
+- Si te tomó **>15 min**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
+
+---
+
+<a id="02-entregables-verificables-minimo-viable"></a>
+
+## 0.2 ✅ Entregables verificables (mínimo viable)
+
+- [ ] Puedes explicar en 2–3 frases al menos **10 términos críticos** (por ejemplo: pipeline, data leakage, drift, CI/CD, serving, observabilidad).
+- [ ] Puedes mapear cada término a un lugar concreto del repo (por ejemplo: `pyproject.toml`, `tests/`, `.github/workflows/`, `configs/`, `artifacts/`).
+
+---
+
+<a id="03-puente-teoria-codigo-portafolio"></a>
+
+## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+
+- Cada vez que leas un término, conecta: **¿dónde vive esto en tu repo?**
+- Ejemplos típicos:
+  - **API** → `app/` (FastAPI)
+  - **CI/CD** → `.github/workflows/`
+  - **Artefactos** → `artifacts/`
+  - **Config** → `configs/` + Pydantic
+
+---
+
+## 📋 Contenido
+
+- **0.0** [Prerrequisitos](#00-prerrequisitos)
+- **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+- **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+- **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+- **21.1** [Introducción](#211-introduccion)
+- **21.2–21.27** [Glosario A–Z](#212-a)
+- **21.28** [Símbolos y Abreviaciones](#2128-simbolos-y-abreviaciones)
+- **21.29** [Tablas de Referencia Rápida](#2129-tablas-de-referencia-rapida)
+- [Errores habituales](#errores-habituales)
+- [✅ Ejercicio](#ejercicio)
+- [✅ Checkpoint](#checkpoint)
+
+---
+
+<a id="211-introduccion"></a>
+
 ## 📚 Introducción
 
 Este glosario define **todos** los términos técnicos utilizados en la Guía MLOps v5.0 y en los proyectos del portafolio (BankChurn, CarVision, TelecomAI). Cada término incluye:
@@ -38,6 +96,8 @@ Este glosario define **todos** los términos técnicos utilizados en la Guía ML
 4. **Conexión**: Explora los términos relacionados
 
 ---
+
+<a id="212-a"></a>
 
 ## A
 
@@ -173,7 +233,7 @@ artifacts/
 
 ---
 
-## B
+## <a id="213-b"></a> B
 
 ### Backpropagation
 **Definición:** Algoritmo de entrenamiento de redes neuronales que propaga el error hacia atrás calculando gradientes.
@@ -237,7 +297,7 @@ git checkout -b feature/add-mlflow
 
 ---
 
-## C
+## <a id="214-c"></a> C
 
 ### C4 Model
 **Definición:** Visualización de arquitectura en 4 niveles: Context, Container, Component, Code.
@@ -497,7 +557,7 @@ class RatioFeatures(BaseEstimator, TransformerMixin):
 
 ---
 
-## D
+## <a id="215-d"></a> D
 
 ### DAG (Directed Acyclic Graph)
 **Definición:** Grafo dirigido sin ciclos. Representa dependencias entre tareas.
@@ -623,7 +683,7 @@ git add data/dataset.csv.dvc
 
 ---
 
-## E
+## <a id="216-e"></a> E
 
 ### E2E Test
 **Definición:** Test del sistema completo, desde entrada hasta salida final.
@@ -735,7 +795,7 @@ if drift_results['metrics'][0]['result']['dataset_drift']:
 
 ---
 
-## F
+## <a id="217-f"></a> F
 
 ### F1 Score
 **Definición:** Media armónica de Precision y Recall. Balance entre ambas.
@@ -819,7 +879,7 @@ flake8 src/
 
 ---
 
-## G
+## <a id="218-g"></a> G
 
 ### Git
 **Definición:** Control de versiones distribuido.
@@ -873,7 +933,7 @@ jobs:
 
 ---
 
-## H
+## <a id="219-h"></a> H
 
 ### Health Check
 **Definición:** Endpoint que verifica si servicio funciona.
@@ -913,7 +973,7 @@ def health():
 
 ---
 
-## I
+## <a id="220-i"></a> I
 
 ### Image (Docker)
 **Definición:** Template inmutable para crear contenedores.
@@ -961,7 +1021,7 @@ SimpleImputer(strategy='median')
 
 ---
 
-## J
+## <a id="221-j"></a> J
 
 ### Job (GitHub Actions)
 **Definición:** Conjunto de steps en mismo runner.
@@ -978,13 +1038,13 @@ joblib.dump(model, "model.pkl")
 model = joblib.load("model.pkl")
 ```
 
----
-
-## K
-
-### Kubernetes (K8s)
-**Definición:** Orquestador de contenedores para automatizar despliegue y escalado.
-
+ ---
+ 
+ ## <a id="222-k"></a> K
+ 
+ ### Kubernetes (K8s)
+ **Definición:** Orquestador de contenedores para automatizar despliegue y escalado.
+ 
 **Analogía:** Director de orquesta coordinando muchos músicos (contenedores).
 
 **Recursos:** Pod, Deployment, Service, Ingress
@@ -994,15 +1054,15 @@ model = joblib.load("model.pkl")
 ### K-Fold
 **Definición:** Dividir datos en K partes para cross-validation.
 
-**Relacionados:** Cross-Validation, Stratified
-
----
-
-## L
-
-### Latency (Latencia)
-**Definición:** Tiempo de respuesta del sistema. En APIs ML: milisegundos.
-
+ **Relacionados:** Cross-Validation, Stratified
+ 
+ ---
+ 
+ ## <a id="223-l"></a> L
+ 
+ ### Latency (Latencia)
+ **Definición:** Tiempo de respuesta del sistema. En APIs ML: milisegundos.
+ 
 **Analogía:** Tiempo entre pedir comida y que llegue.
 
 **P95:** El 95% de requests responden en menos de X ms.
@@ -1034,13 +1094,13 @@ model = joblib.load("model.pkl")
 **Definición:** Mide qué tan mal son las predicciones. El entrenamiento la minimiza.
 
 **Ejemplos:** MSE (regresión), Cross-Entropy (clasificación)
-
----
-
-## M
-
-### Makefile
-**Definición:** Archivo con comandos abreviados para tareas comunes.
+ 
+ ---
+ 
+## <a id="224-m"></a> M
+ 
+ ### Makefile
+ **Definición:** Archivo con comandos abreviados para tareas comunes.
 
 ```makefile
 test:
@@ -1194,10 +1254,10 @@ mypy src/
 
 ---
 
-## N
-
-### NaN (Not a Number)
-**Definición:** Valor especial para datos faltantes o indefinidos.
+## <a id="225-n"></a> N
+ 
+ ### NaN (Not a Number)
+ **Definición:** Valor especial para datos faltantes o indefinidos.
 
 ```python
 import numpy as np
@@ -1213,10 +1273,10 @@ np.nan
 
 ---
 
-## O
-
-### Observability (Observabilidad)
-**Definición:** Capacidad de entender estado interno de sistema desde outputs externos.
+## <a id="226-o"></a> O
+ 
+ ### Observability (Observabilidad)
+ **Definición:** Capacidad de entender estado interno de sistema desde outputs externos.
 
 **3 Pilares:** Logs, Metrics, Traces
 
@@ -1246,10 +1306,10 @@ Spain  → [0, 1, 0]
 
 ---
 
-## P
-
-### Pipeline (sklearn)
-**Definición:** Secuencia de transformaciones y estimador final encadenados.
+## <a id="227-p"></a> P
+ 
+ ### Pipeline (sklearn)
+ **Definición:** Secuencia de transformaciones y estimador final encadenados.
 
 **Analogía:** Línea de ensamblaje. Cada estación hace una transformación.
 
@@ -1329,11 +1389,11 @@ def test_prediction():
 
 ---
 
-## R
-
-### Random Forest
-
-**Definición técnica:** Algoritmo de ensemble learning que construye múltiples árboles de decisión durante el entrenamiento y combina sus predicciones (votación mayoritaria para clasificación, promedio para regresión). Cada árbol se entrena con un subconjunto aleatorio de datos (bagging) y features (random subspace).
+## <a id="228-r"></a> R
+ 
+ ### Random Forest
+ 
+ **Definición técnica:** Algoritmo de ensemble learning que construye múltiples árboles de decisión durante el entrenamiento y combina sus predicciones (votación mayoritaria para clasificación, promedio para regresión). Cada árbol se entrena con un subconjunto aleatorio de datos (bagging) y features (random subspace).
 
 **Explicación conceptual:** Un solo árbol de decisión puede sobreajustarse fácilmente y es muy sensible a pequeños cambios en los datos. Random Forest resuelve esto con la "sabiduría de las multitudes": entrena cientos de árboles "diversos" (cada uno ve datos diferentes) y promedia sus opiniones. Los errores individuales se cancelan, produciendo un modelo robusto y estable.
 
@@ -1522,7 +1582,7 @@ repos:
 
 ---
 
-## S
+## <a id="229-s"></a> S
 
 ### Scaling (Escalado de Features)
 **Definición:** Normalizar features a rango similar.
@@ -1765,7 +1825,7 @@ if st.button("🔮 Predict Price"):
 
 ---
 
-## T
+## <a id="230-t"></a> T
 
 ### Target
 **Definición:** Variable que queremos predecir. También llamada "label" o "y".
@@ -1841,7 +1901,7 @@ def predict(data: pd.DataFrame) -> np.ndarray:
 
 ---
 
-## U
+## <a id="231-u"></a> U
 
 ### Underfitting (Subajuste)
 **Definición:** Modelo demasiado simple. No captura patrones.
@@ -1870,7 +1930,7 @@ uvicorn app:app --host 0.0.0.0 --port 8000
 
 ---
 
-## V
+## <a id="232-v"></a> V
 
 ### Validation Set
 **Definición:** Datos para ajustar hiperparámetros, separado de train y test.
@@ -1905,7 +1965,7 @@ VotingClassifier([
 
 ---
 
-## W
+## <a id="233-w"></a> W
 
 ### Weights & Biases (W&B)
 **Definición:** Plataforma SaaS para experiment tracking con visualizaciones avanzadas.
@@ -1921,7 +1981,7 @@ VotingClassifier([
 
 ---
 
-## X
+## <a id="234-x"></a> X
 
 ### XGBoost
 **Definición:** Implementación optimizada de gradient boosting. Muy popular en competencias.
@@ -1933,7 +1993,7 @@ model = XGBClassifier(n_estimators=100, learning_rate=0.1)
 
 ---
 
-## Y
+## <a id="235-y"></a> Y
 
 ### YAML
 **Definición:** Formato de serialización legible para configuración.
@@ -1946,7 +2006,7 @@ model:
 
 ---
 
-## Z
+## <a id="236-z"></a> Z
 
 ### Zero-Downtime Deployment
 **Definición:** Actualizar aplicación sin interrumpir servicio.
@@ -1955,7 +2015,7 @@ model:
 
 ---
 
-## Símbolos y Abreviaciones
+## <a id="2128-simbolos-y-abreviaciones"></a> Símbolos y Abreviaciones
 
 | Símbolo | Significado |
 |---------|-------------|
@@ -1975,7 +2035,7 @@ model:
 
 ---
 
-## 📊 Tablas de Referencia Rápida
+## <a id="2129-tablas-de-referencia-rapida"></a> 📊 Tablas de Referencia Rápida
 
 ### Métricas de Clasificación
 
@@ -2002,6 +2062,34 @@ model:
 | Development | Desarrollo | Sintéticos/muestra |
 | Staging | Testing final | Réplica producción |
 | Production | Usuarios reales | Reales |
+
+---
+
+## 🧯 <a id="errores-habituales"></a> Errores habituales
+
+- Confundir términos cercanos (por ejemplo: *latency* vs *throughput*, *drift* vs *data leakage*) y “seguir” sin aclararlo.
+- No aterrizar el término a un ejemplo del repo (config, pipeline, CI, serving, observabilidad).
+- Memorizar definiciones sin poder dar un ejemplo y un anti-ejemplo.
+- Si un término te tomó **>15 min**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de rescate de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
+
+---
+
+## ✅ <a id="ejercicio"></a> Ejercicio
+
+- Elige **12 términos** (4 de datos, 4 de entrenamiento, 4 de serving/infra).
+- Para cada uno:
+  - Escribe una definición de **1–2 frases**.
+  - Añade un ejemplo del repo (ruta/archivo o comando).
+  - Añade un “cómo se rompe” (error típico) y cómo lo detectarías.
+
+---
+
+## 🎤 <a id="checkpoint"></a> Checkpoint
+
+- [ ] Puedo explicar (sin leer) **10 términos críticos** del glosario en 2–3 frases.
+- [ ] Para **5 términos**, puedo apuntar a “dónde vive” en el repo (archivo/carpeta concreta).
+- [ ] Tengo al menos **3 entradas nuevas** en el **Diario de Errores** asociadas a términos que me frenaron.
+- [ ] Puedo distinguir con un ejemplo: *data leakage* vs *drift* vs *overfitting*.
 
 ---
 

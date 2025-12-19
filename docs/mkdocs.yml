@@ -9,7 +9,7 @@ site_url: "https://duqueom.github.io/ML-MLOps-Portfolio/"
 # Repository
 repo_name: "ML-MLOps-Portfolio"
 repo_url: "https://github.com/DuqueOM/ML-MLOps-Portfolio"
-edit_uri: "edit/main/docs/guia_mlops/"
+edit_uri: "edit/main/docs/"
 
 # Theme
 theme:
@@ -142,6 +142,13 @@ nav:
     - "📺 Videos y Cursos por Módulo": RECURSOS_POR_MODULO.md
     - "📓 Notebook Pipelines (07-08)": notebooks/07_08_sklearn_pipelines.ipynb
     - Plantillas: templates/index.md
+    - Study Tools:
+      - "🧠 Study Tools": study_tools/index.md
+      - "Protocolo E": study_tools/PROTOCOLO_E.md
+      - "Diario de Errores": study_tools/DIARIO_ERRORES.md
+      - "Cierre Semanal": study_tools/CIERRE_SEMANAL.md
+      - "Badges y Checkpoints": study_tools/BADGES_CHECKPOINTS.md
+      - "Simulacros Performance-Based": study_tools/SIMULACRO_PERFORMANCE_BASED.md
     - Plan de Estudios: PLAN_ESTUDIOS.md
     - Decisiones Técnicas: DECISIONES_TECH.md
     - Guía Audiovisual: GUIA_AUDIOVISUAL.md

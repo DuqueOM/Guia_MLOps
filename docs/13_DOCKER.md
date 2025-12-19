@@ -1,8 +1,48 @@
-# 14. Docker Avanzado para ML
-
-## 🎯 Objetivo del Módulo
-
-Construir imágenes Docker optimizadas, seguras y pequeñas como las del portafolio.
+# 13. Docker Avanzado para ML
+ 
+ <a id="00-prerrequisitos"></a>
+ 
+ ## 0.0 Prerrequisitos
+ 
+ - Tener Docker instalado y funcionando (`docker --version`).
+ - Poder construir y correr contenedores (`docker build`, `docker run`).
+ - Conocer la estructura `src/`, `app/` y `configs/` usada en los proyectos del portafolio.
+ 
+ ---
+ 
+ <a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+ 
+ ## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+ 
+ - **Antes de empezar**: abre **[Protocolo E](study_tools/PROTOCOLO_E.md)** y define el output mínimo (una imagen `slim` que levanta la API).
+ - **Durante el debugging**: si te atoras >15 min (permisos, build lento, rutas/artefactos), registra el caso en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**.
+ - **Al cierre de semana**: usa **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)** para auditar si tu Dockerfile es reproducible y seguro.
+ 
+ ---
+ 
+ <a id="02-entregables-verificables-minimo-viable"></a>
+ 
+ ## 0.2 ✅ Entregables verificables (mínimo viable)
+ 
+ - [ ] Un Dockerfile optimizado (base `slim`, orden de layers, `.dockerignore`).
+ - [ ] Multi-stage build (builder + runtime) o justificación si no aplica.
+ - [ ] Contenedor corriendo como non-root.
+ - [ ] Imagen con tamaño razonable (objetivo: < 500MB).
+ - [ ] `docker run` levanta el servicio y responde en `/health`.
+ 
+ ---
+ 
+ <a id="03-puente-teoria-codigo-portafolio"></a>
+ 
+ ## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+ 
+ - **Concepto**: imágenes pequeñas + reproducibles + seguras (no-root) + healthchecks
+ - **Archivo**: `Dockerfile`, `.dockerignore`, `docker-compose*.yml`
+ - **Prueba**: `docker build -t <img> .` y `docker run -p 8000:8000 <img>`
+ 
+ ## 🎯 Objetivo del Módulo
+ 
+ Construir imágenes Docker optimizadas, seguras y pequeñas como las del portafolio.
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
@@ -23,15 +63,24 @@ Construir imágenes Docker optimizadas, seguras y pequeñas como las del portafo
 
 ## 📋 Contenido
 
-1. [Dockerfile Básico vs Optimizado](#141-dockerfile-básico-vs-optimizado)
-2. [Multi-Stage Builds](#142-multi-stage-builds)
-3. [Mejores Prácticas](#143-mejores-prácticas)
-4. [Dockerfile Real del Portafolio](#144-dockerfile-real-del-portafolio)
-5. [Docker Compose para ML](#145-docker-compose-para-ml)
+- **0.0** [Prerrequisitos](#00-prerrequisitos)
+- **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+- **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+- **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+- **13.1** [Dockerfile Básico vs Optimizado](#131-dockerfile-basico-vs-optimizado)
+- **13.2** [Multi-Stage Builds](#132-multi-stage-builds)
+- **13.3** [Mejores Prácticas](#133-mejores-practicas)
+- **13.4** [Dockerfile Real del Portafolio](#134-dockerfile-real-del-portafolio)
+- **13.5** [Docker Compose para ML](#135-docker-compose-para-ml)
+- [Errores habituales](#errores-habituales)
+- [✅ Checkpoint](#checkpoint)
+- [✅ Ejercicio](#ejercicio)
 
 ---
 
-## 14.1 Dockerfile Básico vs Optimizado
+<a id="131-dockerfile-basico-vs-optimizado"></a>
+ 
+## 13.1 Dockerfile Básico vs Optimizado
 
 ### ❌ Nivel 1: Básico (No usar en producción)
 
@@ -93,7 +142,9 @@ CMD ["uvicorn", "app.fastapi_app:app", "--host", "0.0.0.0", "--port", "8000"]
 
 ---
 
-## 14.2 Multi-Stage Builds
+## 13.2 Multi-Stage Builds
+
+<a id="132-multi-stage-builds"></a>
 
 ### El Concepto
 
@@ -183,7 +234,9 @@ CMD ["uvicorn", "app.fastapi_app:app", "--host", "0.0.0.0", "--port", "8000"]
 
 ---
 
-## 14.3 Mejores Prácticas
+## 13.3 Mejores Prácticas
+
+<a id="133-mejores-practicas"></a>
 
 ### .dockerignore
 
@@ -267,7 +320,9 @@ USER appuser
 
 ---
 
-## 14.4 Dockerfile Real del Portafolio
+<a id="134-dockerfile-real-del-portafolio"></a>
+
+## 13.4 Dockerfile Real del Portafolio
 
 ### BankChurn-Predictor/Dockerfile
 
@@ -342,7 +397,9 @@ CMD ["uvicorn", "app.fastapi_app:app", "--host", "0.0.0.0", "--port", "8000"]
 
 ---
 
-## 14.5 Docker Compose para ML
+<a id="135-docker-compose-para-ml"></a>
+
+## 13.5 Docker Compose para ML
 
 ### docker-compose.demo.yml (Portafolio)
 
@@ -453,9 +510,13 @@ docker compose -f docker-compose.demo.yml down -v
 
 ---
 
+<a id="errores-habituales"></a>
+
 ## 🧨 Errores habituales y cómo depurarlos en Docker para ML
 
 En ML es muy común tener imágenes gigantes, problemas de permisos o contenedores que “funcionan en mi máquina pero no en producción”.
+
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 ### 1) Imágenes demasiado grandes
 
@@ -547,6 +608,18 @@ Con este enfoque, tus imágenes Docker serán reproducibles, ligeras y listas pa
 
 ---
 
+<a id="checkpoint"></a>
+
+## ✅ Checkpoint
+
+- [ ] Tu Dockerfile usa base `slim` (o alternativa justificada) y evita `COPY . .` sin `.dockerignore`
+- [ ] Tienes `.dockerignore` que excluye `data/`, `notebooks/`, `tests/`, `.venv/`
+- [ ] El contenedor corre como usuario no-root
+- [ ] Puedes construir y correr la imagen (`docker build` + `docker run`)
+- [ ] La API responde a `/health` (o endpoint equivalente)
+
+---
+
 ## 💼 Consejos Profesionales
 
 > **Recomendaciones para destacar en entrevistas y proyectos reales**
@@ -621,6 +694,8 @@ Ver [templates/](templates/index.md) para plantillas listas:
 
 ---
 
+<a id="ejercicio"></a>
+
 ## ✅ Ejercicios
 
 Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 13:
@@ -628,8 +703,6 @@ Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 13:
 - **13.2**: Docker Compose para stack ML
 
 ---
-
-<div align="center">
 
 [← CI/CD GitHub Actions](12_CI_CD.md) | [Siguiente: FastAPI Producción →](14_FASTAPI.md)
 

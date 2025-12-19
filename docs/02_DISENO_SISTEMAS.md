@@ -21,6 +21,70 @@
 
 ---
 
+<a id="00-prerrequisitos"></a>
+
+## 0.0 Prerrequisitos
+
+- Haber completado **[01_PYTHON_MODERNO](01_PYTHON_MODERNO.md)** (al menos type hints + estructura `src/`).
+- Entender el objetivo de los 3 proyectos del portafolio y qué problema de negocio atacan.
+- Poder leer diagramas simples (cajas y flechas) y discutir trade-offs.
+
+---
+
+<a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+
+## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+
+- **Antes de diseñar**: abre **[Protocolo E](study_tools/PROTOCOLO_E.md)** y define tu *output mínimo* (ej: “ML Canvas completo + 2 ADRs”).
+- **Mientras lo haces**: si te atoras >15 min (ej: métricas, restricciones, diagrama), registra el bloqueo en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**.
+- **Al cerrar la semana**: usa **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)** para decidir qué mejorar (claridad, trade-offs, consistencia con código).
+
+---
+
+<a id="02-entregables-verificables-minimo-viable"></a>
+
+## 0.2 ✅ Entregables verificables (mínimo viable)
+
+Al terminar este módulo, deberías poder mostrar (en al menos 1 proyecto del portafolio):
+
+- [ ] **1 ML Canvas** escrito (1 página) con métricas de negocio/modelo/sistema.
+- [ ] **1 diagrama de arquitectura** (C4: Contexto + Contenedores).
+- [ ] **2 ADRs** con alternativas y trade-offs (ej: API vs batch, DVC vs alternativa).
+
+---
+
+<a id="03-puente-teoria-codigo-portafolio"></a>
+
+## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+
+Para que esto cuente como progreso real, fuerza este mapeo:
+
+- **Concepto**: traducción negocio→ML / C4 / ADR
+- **Archivo**: `docs/ML_CANVAS.md`, `docs/ARCHITECTURE.md`, `docs/decisions/ADR-001.md`
+- **Evidencia**: diagrama + decisiones justificadas + métricas cuantificadas (no “mejorar la experiencia”).
+
+---
+
+## 📋 Contenido
+
+- **0.0** [Prerrequisitos](#00-prerrequisitos)
+- **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+- **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+- **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+- [ADR de Inicio: ¿Por Qué Diseñar Antes de Codificar?](#adr-inicio)
+- [2.1 Traducción Negocio → ML](#21-traduccion-negocio--ml)
+- [2.2 ML Canvas](#22-ml-canvas)
+- [2.3 Arquitectura con el Modelo C4](#23-arquitectura-con-el-modelo-c4)
+- [2.4 Diagrama de Flujo de Datos](#24-diagrama-de-flujo-de-datos)
+- [2.5 Architecture Decision Records (ADRs)](#25-architecture-decision-records-adrs)
+- [2.6 Ejercicio Integrador](#26-ejercicio-integrador-disena-tu-sistema)
+- [Errores habituales y cómo depurarlos](#errores-habituales)
+- [2.7 Autoevaluación](#27-autoevaluacion)
+
+---
+
+<a id="adr-inicio"></a>
+
 ## 🎯 ADR de Inicio: ¿Por Qué Diseñar Antes de Codificar?
 
 ```
@@ -54,6 +118,8 @@
 5. **Crear** un diagrama de flujo de datos
 
 ---
+
+<a id="21-traduccion-negocio--ml"></a>
 
 ## 2.1 Traducción Negocio → ML (El Arte del Senior)
 
@@ -143,6 +209,8 @@ Para el proyecto que elegiste (BankChurn, CarVision, TelecomAI o propio):
 5. **Requisito de Sistema**: ¿Batch o real-time? ¿Latencia?
 
 ---
+
+<a id="22-ml-canvas"></a>
 
 ## 2.2 ML Canvas: El Blueprint del Proyecto
 
@@ -282,6 +350,8 @@ El **ML Canvas** es un framework de 1 página que captura todas las decisiones c
 
 ---
 
+<a id="23-arquitectura-con-el-modelo-c4"></a>
+
 ## 2.3 Arquitectura con el Modelo C4
 
 ### ¿Qué es C4?
@@ -392,6 +462,8 @@ C4Component
 
 ---
 
+<a id="24-diagrama-de-flujo-de-datos"></a>
+
 ## 2.4 Diagrama de Flujo de Datos
 
 ### Training Pipeline
@@ -479,6 +551,8 @@ flowchart LR
 ```
 
 ---
+
+<a id="25-architecture-decision-records-adrs"></a>
 
 ## 2.5 Architecture Decision Records (ADRs)
 
@@ -615,6 +689,8 @@ Usaremos **DVC** (Data Version Control) con remote storage en S3/GCS.
 
 ---
 
+<a id="26-ejercicio-integrador-disena-tu-sistema"></a>
+
 ## 2.6 Ejercicio Integrador: Diseña Tu Sistema
 
 ### Entregables
@@ -635,9 +711,13 @@ Para tu proyecto elegido, crea los siguientes archivos en `docs/`:
 
 ---
 
+<a id="errores-habituales"></a>
+
 ## 🧨 Errores habituales y cómo depurarlos en el diseño de sistemas ML
 
 Este módulo es de **arquitectura y diseño**, así que muchos errores no se ven como *stack traces*, sino como **malas decisiones** que explotan meses después. La idea es aprender a detectarlos temprano.
+
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 ### 1) ML Canvas bonito pero inútil (problema de negocio vago)
 
@@ -758,6 +838,8 @@ Este módulo es de **arquitectura y diseño**, así que muchos errores no se ven
 Si recorres este pipeline de pensamiento cada vez que diseñas (o revisas) un sistema, pensarás como un arquitecto Senior incluso en proyectos pequeños.
 
 ---
+
+<a id="27-autoevaluacion"></a>
 
 ## 2.7 Autoevaluación
 

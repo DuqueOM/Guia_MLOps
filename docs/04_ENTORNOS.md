@@ -1,12 +1,12 @@
 # ════════════════════════════════════════════════════════════════════════════════
-# MÓDULO 03: ENTORNOS PROFESIONALES
+# MÓDULO 04: ENTORNOS PROFESIONALES
 # Virtualenv vs Conda vs Poetry vs Docker: Análisis Comparativo
 # Guía MLOps v5.0: Senior Edition | DuqueOM | Noviembre 2025
 # ════════════════════════════════════════════════════════════════════════════════
 
 <div align="center">
 
-# 🔧 MÓDULO 03: Entornos Profesionales
+# 🔧 MÓDULO 04: Entornos Profesionales
 
 ### El Arte de la Reproducibilidad a Nivel de Dependencias
 
@@ -19,6 +19,73 @@
 </div>
 
 ---
+
+<a id="00-prerrequisitos"></a>
+
+## 0.0 Prerrequisitos
+
+- Haber completado **[03_ESTRUCTURA_PROYECTO](03_ESTRUCTURA_PROYECTO.md)** (o al menos entender `pyproject.toml`, `Makefile` y `requirements*`).
+- Poder crear/activar un entorno virtual y ejecutar comandos en terminal.
+- Tener claro el objetivo: reproducibilidad entre tu máquina, CI y (eventualmente) Docker.
+
+---
+
+<a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+
+## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+
+- **Antes de configurar**: abre **[Protocolo E](study_tools/PROTOCOLO_E.md)** y define tu *output mínimo* (ej: “entorno reproducible + lockfile + CI instala igual”).
+- **Mientras depuras**: si te atoras >15 min (pip vs python -m pip, conflicto de versiones, lockfiles), registra el bloqueo en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**.
+- **Al cerrar la semana**: usa **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)** para decidir qué mejorar (pinning, caching en CI, Docker alignment).
+
+---
+
+<a id="02-entregables-verificables-minimo-viable"></a>
+
+## 0.2 ✅ Entregables verificables (mínimo viable)
+
+Al terminar este módulo, deberías poder mostrar (en al menos 1 proyecto del portafolio):
+
+- [ ] **Un flujo reproducible** de instalación (documentado en README o Makefile).
+- [ ] **Un lockfile** que “congele” versiones (`requirements.txt`/`poetry.lock`/`environment.lock`).
+- [ ] **CI instalando el mismo entorno** (sin “version drift”).
+- [ ] **Validación mínima**: `python -c "import pandas; print(pandas.__version__)"` y `pytest` desde la raíz.
+
+---
+
+<a id="03-puente-teoria-codigo-portafolio"></a>
+
+## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+
+Para que esto cuente como progreso real, fuerza este mapeo:
+
+- **Concepto**: reproducibilidad / lockfiles / CI caching / alignment con Docker
+- **Archivo**: `requirements.in`, `requirements.txt`, `pyproject.toml`, `poetry.lock`, `environment.yml`, `.github/workflows/*.yml`, `Dockerfile`
+- **Prueba**: instalación limpia + tests (idealmente en CI) sin cambiar versiones manualmente.
+
+---
+
+## 📋 Contenido
+
+- **0.0** [Prerrequisitos](#00-prerrequisitos)
+- **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+- **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+- **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+- [ADR de Inicio](#adr-inicio)
+- [4.1 El Problema](#41-problema)
+- [4.2 Comparativa](#42-comparativa)
+- [4.3 venv + pip-tools](#43-pip-tools)
+- [4.4 Poetry](#44-poetry)
+- [4.5 Conda](#45-conda)
+- [4.6 Docker Dev](#46-docker-dev)
+- [4.7 Integración con CI/CD](#47-ci-cd)
+- [Errores habituales](#errores-habituales)
+- [4.8 Ejercicio Práctico](#48-ejercicio)
+- [4.9 Autoevaluación](#49-autoevaluacion)
+
+---
+
+<a id="adr-inicio"></a>
 
 ## 🎯 ADR de Inicio: ¿Por Qué Importan los Entornos?
 
@@ -65,7 +132,9 @@
 
 ---
 
-## 3.1 El Problema: "Funciona en Mi Máquina"
+<a id="41-problema"></a>
+
+## 4.1 El Problema: "Funciona en Mi Máquina"
 
 ```
 ╔═══════════════════════════════════════════════════════════════════════════════╗
@@ -126,7 +195,9 @@ flowchart TB
 
 ---
 
-## 3.2 Comparativa de Herramientas
+<a id="42-comparativa"></a>
+
+## 4.2 Comparativa de Herramientas
 
 ### Matriz de Decisión
 
@@ -177,7 +248,9 @@ flowchart TB
 
 ---
 
-## 3.3 Opción 1: venv + pip-tools (Simple y Efectivo)
+<a id="43-pip-tools"></a>
+
+## 4.3 Opción 1: venv + pip-tools (Simple y Efectivo)
 
 ### Setup Básico
 
@@ -290,7 +363,9 @@ clean:
 
 ---
 
-## 3.4 Opción 2: Poetry (Moderno y Robusto)
+<a id="44-poetry"></a>
+
+## 4.4 Opción 2: Poetry (Moderno y Robusto)
 
 ### Instalación
 
@@ -412,7 +487,9 @@ El archivo `poetry.lock` contiene TODAS las versiones exactas de TODAS las depen
 
 ---
 
-## 3.5 Opción 3: Conda (Para Data Science Pesado)
+<a id="45-conda"></a>
+
+## 4.5 Opción 3: Conda (Para Data Science Pesado)
 
 ### Cuándo Conda es la Mejor Opción
 
@@ -507,7 +584,9 @@ mamba install numpy
 
 ---
 
-## 3.6 Opción 4: Docker Dev Containers
+<a id="46-docker-dev"></a>
+
+## 4.6 Opción 4: Docker Dev Containers
 
 ### ¿Por Qué Docker para Desarrollo?
 
@@ -646,7 +725,9 @@ ENV PATH="/home/${USERNAME}/.local/bin:${PATH}"
 
 ---
 
-## 3.7 Integración con CI/CD
+<a id="47-ci-cd"></a>
+
+## 4.7 Integración con CI/CD
 
 ### GitHub Actions con pip
 
@@ -719,9 +800,13 @@ jobs:
 
 ---
 
+<a id="errores-habituales"></a>
+
 ## 🧨 Errores habituales y cómo depurarlos en entornos
 
 Los problemas de este módulo se manifiestan como **inconsistencias entre máquinas**: algo funciona en tu laptop pero no en el servidor, o en CI. Aquí van los patrones más frecuentes y cómo atacarlos.
+
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 ### 1) Entorno virtual mal activado (`pip` instala en el sitio equivocado)
 
@@ -858,7 +943,9 @@ Con este patrón, "funciona en mi máquina" se convierte en "funciona en cualqui
 
 ---
 
-## 3.8 Ejercicio Práctico: Configura Tu Entorno
+<a id="48-ejercicio"></a>
+
+## 4.8 Ejercicio Práctico: Configura Tu Entorno
 
 ### Opción A: pip-tools (Recomendado para empezar)
 
@@ -929,7 +1016,9 @@ poetry run python -c "import pandas; print(pandas.__version__)"
 
 ---
 
-## 3.9 Autoevaluación
+<a id="49-autoevaluacion"></a>
+
+## 4.9 Autoevaluación
 
 ### Checklist de Competencias
 

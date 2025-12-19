@@ -1,12 +1,12 @@
 # ════════════════════════════════════════════════════════════════════════════════
-# MÓDULO 16: DOCUMENTACIÓN Y ÉTICA
+# MÓDULO 19: DOCUMENTACIÓN Y ÉTICA
 # MkDocs, Model Cards y Responsible AI
 # Guía MLOps v5.0: Senior Edition | DuqueOM | Noviembre 2025
 # ════════════════════════════════════════════════════════════════════════════════
 
 <div align="center">
 
-# 📚 MÓDULO 16: Documentación y Ética
+# 📚 MÓDULO 19: Documentación y Ética
 
 ### Tu Trabajo No Existe Si No Está Documentado
 
@@ -20,6 +20,62 @@
 
 ---
 
+<a id="00-prerrequisitos"></a>
+
+## 0.0 Prerrequisitos
+
+- Haber completado el módulo 18 (Infraestructura) para entender despliegue, entornos y artefactos.
+- Saber escribir Markdown básico (headers, listas, links, code fences).
+- Entender que la documentación es parte del producto: se versiona, se prueba y se despliega.
+
+---
+
+<a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+
+## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+
+- **Antes de empezar**: define tu “mínimo viable” (README + Model Card + un sitio de docs o estructura en `docs/`).
+- **Durante**: por cada sección (MkDocs, Model Card, Responsible AI), produce un artefacto real en tu repo.
+- **Si te atoras >15 min** (MkDocs no compila, links rotos, README desactualizado), regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
+
+---
+
+<a id="02-entregables-verificables-minimo-viable"></a>
+
+## 0.2 ✅ Entregables verificables (mínimo viable)
+
+- [ ] Tu `README` tiene un `Quick Start` que funciona en una máquina limpia.
+- [ ] Tienes una **Model Card** completa (propósito, datos, métricas, limitaciones, mantenimiento).
+- [ ] Puedes ejecutar `mkdocs serve` (o equivalente) y navegar la documentación localmente.
+- [ ] Incluyes al menos un checklist de Responsible AI (fairness, privacidad, accountability).
+
+---
+
+<a id="03-puente-teoria-codigo-portafolio"></a>
+
+## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+
+- **MkDocs**: convierte tu repo en un producto navegable (arquitectura, API, runbooks, decisiones).
+- **Model Card**: convierte tu modelo en un “contrato” (qué hace, con qué datos, qué no hace, cómo mantenerlo).
+- **Responsible AI**: convierte ética en proceso (checklists en PRs, releases, revisiones de cambios).
+
+---
+
+## 📋 Contenido
+
+- **0.0** [Prerrequisitos](#00-prerrequisitos)
+- **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+- **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+- **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+- **19.1** [MkDocs con Material Theme](#191-mkdocs-con-material-theme)
+- **19.2** [Model Card Profesional](#192-model-card-profesional)
+- **19.3** [Responsible AI Checklist](#193-responsible-ai-checklist)
+- **19.4** [README Profesional](#194-readme-profesional)
+- **19.5** [Ejercicio: Crea Tu Documentación](#195-ejercicio-crea-tu-documentacion)
+- [Errores habituales](#errores-habituales)
+- [✅ Ejercicio](#ejercicio)
+- [✅ Checkpoint](#checkpoint)
+
 ## 🎯 Lo Que Lograrás
 
 1. **Crear** documentación técnica con MkDocs
@@ -29,7 +85,9 @@
 
 ---
 
-## 16.1 MkDocs con Material Theme
+<a id="191-mkdocs-con-material-theme"></a>
+
+## 19.1 MkDocs con Material Theme
 
 ### Estructura de Docs
 
@@ -154,7 +212,9 @@ mkdocs gh-deploy
 
 ---
 
-## 16.2 Model Card Profesional
+<a id="192-model-card-profesional"></a>
+
+## 19.2 Model Card Profesional
 
 ```markdown
 # Model Card: BankChurn Predictor
@@ -283,7 +343,9 @@ mkdocs gh-deploy
 
 ---
 
-## 16.3 Responsible AI Checklist
+<a id="193-responsible-ai-checklist"></a>
+
+## 19.3 Responsible AI Checklist
 
 ```
 ╔═══════════════════════════════════════════════════════════════════════════════╗
@@ -319,7 +381,9 @@ mkdocs gh-deploy
 
 ---
 
-## 16.4 README Profesional
+<a id="194-readme-profesional"></a>
+
+## 19.4 README Profesional
 
 ```markdown
 # 🏦 BankChurn Predictor
@@ -376,9 +440,13 @@ MIT © Tu Nombre
 
 ---
 
+<a id="errores-habituales"></a>
+
 ## 🧨 Errores habituales y cómo depurarlos en documentación ML
 
 La documentación suele quedarse para el final, y eso genera READMEs desactualizados y Model Cards incompletas.
+
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 ### 1) README que no refleja el estado real del proyecto
 
@@ -457,7 +525,9 @@ Con esta mentalidad, tu documentación pasa de ser un "nice to have" a convertir
 
 ---
 
-## 16.5 Ejercicio: Crea Tu Documentación
+<a id="195-ejercicio-crea-tu-documentacion"></a>
+
+## 19.5 Ejercicio: Crea Tu Documentación
 
 ### Checklist
 
@@ -550,9 +620,9 @@ Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
 
 ## 📋 Plantillas Relacionadas
 
-Ver [templates/](templates/index.md) para plantillas listas:
-- [model_card_template.md](templates/model_card_template.md) — Documentación completa de modelos
-- [dataset_card_template.md](templates/dataset_card_template.md) — Documentación de datasets
+Ver [templates/](../templates/index.md) para plantillas listas:
+- [model_card_template.md](../templates/model_card_template.md) — Documentación completa de modelos
+- [dataset_card_template.md](../templates/dataset_card_template.md) — Documentación de datasets
 
 ---
 
@@ -574,13 +644,24 @@ Documentar tu trabajo también incluye crear demos visuales profesionales.
 
 ---
 
-## ✅ Ejercicios
+<a id="ejercicio"></a>
+
+## ✅ Ejercicio
 
 Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 19:
 - **19.1**: Crear Model Card
 - **19.2**: Crear Dataset Card
 
 ---
+
+<a id="checkpoint"></a>
+
+## ✅ Checkpoint
+
+- [ ] El `README` tiene un `Quick Start` que se ejecuta sin pasos ocultos.
+- [ ] El repo enlaza a documentación navegable (MkDocs o estructura clara en `docs/`).
+- [ ] La Model Card describe propósito, datos, métricas, limitaciones y mantenimiento.
+- [ ] Tienes un checklist mínimo de Responsible AI y sabes cuándo aplicarlo en PRs/releases.
 
 ## 🔜 Siguiente Paso
 

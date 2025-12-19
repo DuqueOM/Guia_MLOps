@@ -1,7 +1,49 @@
-# 17. Observabilidad para ML
-
+# 16. Observabilidad para ML
+ 
+<a id="00-prerrequisitos"></a>
+ 
+## 0.0 Prerrequisitos
+ 
+- Haber completado el módulo 14 (FastAPI) y entender endpoints `/health` y `/predict`.
+- Haber completado el módulo 13 (Docker) para poder levantar servicios en contenedores.
+- Conocer logging básico en Python.
+ 
+---
+ 
+<a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+ 
+## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+ 
+- **Antes de empezar**: abre **[Protocolo E](study_tools/PROTOCOLO_E.md)** y define el output mínimo: métricas visibles en Prometheus + logs JSON + un reporte de drift.
+- **Durante el debugging**: si te atoras >15 min (scrape, paneles vacíos, labels, parseo de logs, drift CI), registra el caso en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**.
+- **Al cierre de semana**: usa **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)** para auditar alertas accionables y señal útil (no solo dashboards bonitos).
+ 
+---
+ 
+<a id="02-entregables-verificables-minimo-viable"></a>
+ 
+## 0.2 ✅ Entregables verificables (mínimo viable)
+ 
+- [ ] Endpoint `/metrics` expuesto y scrapeado por Prometheus.
+- [ ] Dashboard (Grafana o equivalente) con latencia, throughput y error rate.
+- [ ] Logs estructurados en JSON con campos de negocio (por ejemplo, `model`, `request_id`, `prediction`).
+- [ ] Drift detection ejecutable (local o CI) con artefacto de salida (HTML/JSON).
+- [ ] Al menos 1 alerta accionable (por ejemplo, error rate o latencia P99).
+ 
+---
+ 
+<a id="03-puente-teoria-codigo-portafolio"></a>
+ 
+## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+ 
+- **Concepto**: señales de oro + instrumentación + ML monitoring
+- **Archivo**: `app/metrics.py`, `src/logging_config.py`, `monitoring/check_drift.py`
+- **Prueba**: `curl http://localhost:8000/metrics` y revisión de reportes/artefactos
+ 
+---
+ 
 ## 🎯 Objetivo del Módulo
-
+ 
 Implementar monitoreo completo: logs, métricas, y drift detection como en el portafolio.
 
 ```
@@ -13,20 +55,30 @@ Implementar monitoreo completo: logs, métricas, y drift detection como en el po
 ║  OBSERVABILIDAD = LOGS + METRICS + TRACES + ML MONITORING                    ║
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
+ 
 ```
 
 ---
 
 ## 📋 Contenido
 
-1. [Las 4 Señales de Oro](#171-las-4-señales-de-oro)
-2. [Prometheus + Grafana](#172-prometheus--grafana)
-3. [Logging Estructurado](#173-logging-estructurado)
-4. [Model Monitoring](#174-model-monitoring)
+- **0.0** [Prerrequisitos](#00-prerrequisitos)
+- **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+- **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+- **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+- **16.1** [Las 4 Señales de Oro](#161-las-4-senales-de-oro)
+- **16.2** [Prometheus + Grafana](#162-prometheus-grafana)
+- **16.3** [Logging Estructurado](#163-logging-estructurado)
+- **16.4** [Model Monitoring](#164-model-monitoring)
+- [Errores habituales](#errores-habituales)
+- [✅ Checkpoint](#checkpoint)
+- [✅ Ejercicio](#ejercicio)
 
 ---
 
-## 17.1 Las 4 Señales de Oro
+<a id="161-las-4-senales-de-oro"></a>
+ 
+## 16.1 Las 4 Señales de Oro
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -58,7 +110,9 @@ Implementar monitoreo completo: logs, métricas, y drift detection como en el po
 
 ---
 
-## 17.2 Prometheus + Grafana
+<a id="162-prometheus-grafana"></a>
+ 
+## 16.2 Prometheus + Grafana
 
 ### Configuración del Portafolio
 
@@ -153,7 +207,9 @@ async def predict(request: PredictionRequest):
 
 ---
 
-## 17.3 Logging Estructurado
+<a id="163-logging-estructurado"></a>
+ 
+## 16.3 Logging Estructurado
 
 ### Configuración Profesional
 
@@ -264,7 +320,9 @@ async def predict(request: PredictionRequest):
 
 ---
 
-## 17.4 Model Monitoring (Drift Detection)
+<a id="164-model-monitoring"></a>
+ 
+## 16.4 Model Monitoring (Drift Detection)
 
 ### Script de Drift Detection
 
@@ -463,9 +521,13 @@ jobs:
 
 ---
 
+<a id="errores-habituales"></a>
+ 
 ## 🧨 Errores habituales y cómo depurarlos en Observabilidad ML
 
 En observabilidad ML es habitual tener dashboards bonitos pero poca señal útil, o scripts de drift que fallan en silencio.
+
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 ### 1) Métricas que no aparecen en Prometheus/Grafana
 
@@ -611,12 +673,19 @@ Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
 
 ---
 
+<a id="ejercicio"></a>
+ 
 ## ✅ Ejercicios
 
 Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 16:
 - **16.1**: Logging estructurado JSON
 
-**Checkpoint:**
+---
+
+<a id="checkpoint"></a>
+ 
+## ✅ Checkpoint
+
 - [ ] Tienes endpoint `/metrics` en tu API
 - [ ] Logs en formato JSON estructurado
 - [ ] Script de drift detection funcional

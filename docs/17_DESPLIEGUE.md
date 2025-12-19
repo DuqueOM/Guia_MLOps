@@ -1,12 +1,12 @@
 # ════════════════════════════════════════════════════════════════════════════════
-# MÓDULO 12: SERVERLESS VS CONTENEDORES
+# MÓDULO 17: SERVERLESS VS CONTENEDORES
 # Cuándo Usar Lambda, ECS o Kubernetes
 # Guía MLOps v5.0: Senior Edition | DuqueOM | Noviembre 2025
 # ════════════════════════════════════════════════════════════════════════════════
 
 <div align="center">
 
-# 🌐 MÓDULO 12: Serverless vs Contenedores
+# 🌐 MÓDULO 17: Serverless vs Contenedores
 
 ### La Decisión que Define tu Arquitectura
 
@@ -20,31 +20,66 @@
 
 ---
 
-## 🎯 ADR: ¿Dónde Desplegar?
+## 📋 Contenido
 
-```
-╔═══════════════════════════════════════════════════════════════════════════════╗
-║  ADR-008: Selección de Plataforma de Despliegue                               ║
-╠═══════════════════════════════════════════════════════════════════════════════╣
-║                                                                               ║
-║  OPCIONES:                                                                    ║
-║  1. Serverless (AWS Lambda, GCP Cloud Functions)                              ║
-║  2. Contenedores Managed (ECS, Cloud Run)                                     ║
-║  3. Kubernetes (EKS, GKE, self-managed)                                       ║
-║                                                                               ║
-║  FACTORES DE DECISIÓN:                                                        ║
-║  • Tráfico esperado (requests/mes)                                            ║
-║  • Requisitos de latencia                                                     ║
-║  • Tamaño del equipo de Ops                                                   ║
-║  • Presupuesto                                                                ║
-║  • Complejidad del modelo (GPU, memoria)                                      ║
-║                                                                               ║
-╚═══════════════════════════════════════════════════════════════════════════════╝
-```
+- **0.0** [Prerrequisitos](#00-prerrequisitos)
+- **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+- **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+- **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+- **17.1** [Matriz de Decisión](#171-matriz-de-decision)
+- **17.2** [Opción 1: Serverless (AWS Lambda)](#172-opcion-1-serverless-aws-lambda)
+- **17.3** [Opción 2: Contenedores Managed](#173-opcion-2-contenedores-managed-aws-ecs-gcp-cloud-run)
+- **17.4** [Opción 3: Kubernetes](#174-opcion-3-kubernetes)
+- **17.5** [Análisis de Costos (FinOps)](#175-analisis-de-costos-finops)
+- **17.6** [Decisión para BankChurn](#176-decision-para-bankchurn)
+- [Errores habituales](#errores-habituales)
+- [✅ Ejercicio](#ejercicio)
+- [✅ Checkpoint](#checkpoint)
+
+<a id="00-prerrequisitos"></a>
+
+## 0.0 Prerrequisitos
+
+- Haber completado el módulo 13 (Docker) para entender imágenes, redes y puertos.
+- Haber completado el módulo 14 (FastAPI) y contar con un endpoint `/health`.
+- Conocer los conceptos de latencia, throughput y costo (FinOps básico).
 
 ---
 
-## 12.1 Matriz de Decisión
+<a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+
+## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+
+- **Antes de elegir**: define tu escenario (tráfico, latencia, costo y equipo Ops).
+- **Durante el estudio**: convierte la teoría en una decisión explícita (ADR) y un deploy mínimo (Cloud Run/ECS o Lambda).
+- **Si te atoras >15 min** con puertos, healthchecks, cold starts o tamaño de imagen, registra el caso en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
+
+---
+
+<a id="02-entregables-verificables-minimo-viable"></a>
+
+## 0.2 ✅ Entregables verificables (mínimo viable)
+
+- [ ] ADR (decisión y trade-offs) para tu caso (por ejemplo: MVP en Cloud Run).
+- [ ] Deploy funcional (Cloud Run/ECS o Lambda) con `/health` y un endpoint de predicción.
+- [ ] Healthcheck verificado en plataforma (readiness/liveness o equivalente).
+- [ ] Plan de rollback (documentado y probado al menos una vez).
+
+---
+
+<a id="03-puente-teoria-codigo-portafolio"></a>
+
+## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+
+- **Teoría**: serverless vs contenedores vs Kubernetes
+- **Práctica**: Dockerfile + deploy en Cloud Run/ECS + runbooks
+- **Prueba**: `curl /health` en el endpoint desplegado + revisión de logs/healthchecks
+
+---
+
+<a id="171-matriz-de-decision"></a>
+
+## 17.1 Matriz de Decisión
 
 ```
 ╔═══════════════════════════════════════════════════════════════════════════════╗
@@ -71,7 +106,9 @@
 
 ---
 
-## 12.2 Opción 1: Serverless (AWS Lambda)
+<a id="172-opcion-1-serverless-aws-lambda"></a>
+
+## 17.2 Opción 1: Serverless (AWS Lambda)
 
 ### Cuándo Usar
 
@@ -179,7 +216,9 @@ custom:
 
 ---
 
-## 12.3 Opción 2: Contenedores Managed (AWS ECS / GCP Cloud Run)
+<a id="173-opcion-2-contenedores-managed-aws-ecs-gcp-cloud-run"></a>
+
+## 17.3 Opción 2: Contenedores Managed (AWS ECS / GCP Cloud Run)
 
 ### Cuándo Usar
 
@@ -256,7 +295,9 @@ gcloud run deploy bankchurn-api \
 
 ---
 
-## 12.4 Opción 3: Kubernetes
+<a id="174-opcion-3-kubernetes"></a>
+
+## 17.4 Opción 3: Kubernetes
 
 ### Cuándo Usar
 
@@ -359,7 +400,9 @@ spec:
 
 ---
 
-## 12.5 Análisis de Costos (FinOps)
+<a id="175-analisis-de-costos-finops"></a>
+
+## 17.5 Análisis de Costos (FinOps)
 
 ```
 ╔═══════════════════════════════════════════════════════════════════════════════╗
@@ -405,7 +448,9 @@ spec:
 
 ---
 
-## 12.6 Decisión para BankChurn
+<a id="176-decision-para-bankchurn"></a>
+
+## 17.6 Decisión para BankChurn
 
 ### Recomendación por Fase
 
@@ -440,9 +485,13 @@ spec:
 
 ---
 
+<a id="errores-habituales"></a>
+
 ## 🧨 Errores habituales y cómo depurarlos en despliegue ML
 
 En despliegue ML es muy fácil elegir mal la plataforma o romper detalles como puertos, healthchecks o tamaños de imagen.
+
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 
 ### 1) Elegir la plataforma equivocada (costos o latencia inesperados)
 
@@ -524,7 +573,9 @@ Con esta disciplina, pasar de local a producción se vuelve un proceso repetible
 
 ---
 
-## 12.7 Ejercicio: Deploy a Cloud Run
+<a id="ejercicio"></a>
+
+## 17.7 Ejercicio: Deploy a Cloud Run
 
 ```bash
 # 1. Build imagen
@@ -549,106 +600,31 @@ curl -X POST https://bankchurn-xxx.run.app/api/v1/predict \
 
 ---
 
-## 📋 Operaciones y Runbooks
+## ✅ Ejercicios
 
-### Estructura de un Runbook ML
-
-```markdown
-# Runbook: [Nombre del Servicio]
-
-## Información del Servicio
-- **Propósito**: Predicción de churn
-- **Owner**: ML Team
-- **Criticality**: Tier 2
-
-## Endpoints
-| Endpoint | Descripción | SLO |
-|----------|-------------|-----|
-| /health | Health check | 99.9% |
-| /predict | Predicción | p99 < 200ms |
-
-## Alertas Comunes
-
-### Alta Latencia (> 500ms)
-1. Verificar métricas: `kubectl top pods`
-2. Revisar logs: `kubectl logs -f deploy/bankchurn-api`
-3. Escalar si es necesario: `kubectl scale deploy/bankchurn-api --replicas=5`
-
-### Error Rate > 5%
-1. Verificar modelo: ¿Cambió la distribución de inputs?
-2. Revisar logs de errores
-3. Rollback si es necesario: `kubectl rollout undo deploy/bankchurn-api`
-
-## Procedimientos de Emergencia
-- **Rollback**: `make rollback VERSION=v1.0.0`
-- **Escalar**: `kubectl scale deploy/bankchurn-api --replicas=10`
-- **Deshabilitar**: `kubectl scale deploy/bankchurn-api --replicas=0`
-```
-
-### SLOs para APIs ML
-
-```yaml
-# Ejemplo de SLOs
-slos:
-  availability:
-    target: 99.5%
-    window: 30d
-  
-  latency:
-    p50: 50ms
-    p95: 150ms
-    p99: 300ms
-  
-  error_rate:
-    target: < 1%
-    
-  prediction_quality:
-    accuracy_drift: < 5%  # vs baseline
-```
-
-### Checklist de Operaciones
-
-- [ ] **Monitoreo activo**: Dashboards y alertas configurados
-- [ ] **Runbook documentado**: Procedimientos de respuesta
-- [ ] **Rollback probado**: Capacidad de volver a versión anterior
-- [ ] **Escalado automático**: HPA configurado
-- [ ] **Logs centralizados**: Acceso a logs históricos
-- [ ] **On-call definido**: Rotación y escalamiento
-
-> 📖 Ver ejemplo completo en el [Runbook del Portafolio](../OPERATIONS_PORTFOLIO.md).
+Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 17:
+- **17.1**: Dockerfile multi-stage
+- **17.2**: Docker Compose para stack ML
 
 ---
 
-## 💼 Consejos Profesionales
+<a id="checkpoint"></a>
 
-> **Recomendaciones para destacar en entrevistas y proyectos reales**
+## ✅ Checkpoint
 
-### Para Entrevistas
+- [ ] Puedes explicar (en 60s) por qué tu caso usa Lambda vs Cloud Run/ECS vs Kubernetes.
+- [ ] Tu servicio desplegado responde `/health` en la plataforma elegida.
+- [ ] El healthcheck/readiness/liveness está configurado y pasa en producción.
+- [ ] Tienes un plan de rollback (y sabes ejecutarlo).
+- [ ] Registraste en runbook qué hacer ante latencia alta y error rate alto.
 
-1. **Deployment Strategies**: Blue-green, canary, rolling. Pros y cons de cada uno.
+---
 
-2. **A/B Testing**: Cómo evaluar modelos en producción con tráfico real.
+## 🔜 Siguiente Paso
 
-3. **Rollback**: Siempre ten plan de rollback automático.
+Con la plataforma elegida, es hora de gestionar **infraestructura como código**.
 
-### Para Proyectos Reales
-
-| Situación | Consejo |
-|-----------|---------|
-| Nuevo modelo | Canary deployment con 5% de tráfico |
-| Alta disponibilidad | Múltiples réplicas + load balancer |
-| Modelo grande | Considera serverless o batch serving |
-| Costos | Autoscaling basado en tráfico real |
-
-### Checklist Pre-Deployment
-
-- [ ] Tests pasando en staging
-- [ ] Métricas baseline documentadas
-- [ ] Runbook actualizado
-- [ ] Rollback probado
-- [ ] Alertas configuradas
-- [ ] Comunicación a stakeholders
-
+**[Ir a Módulo 18: Infraestructura como Código →](18_INFRAESTRUCTURA.md)**
 
 ---
 

@@ -48,11 +48,17 @@ Este archivo es la página de inicio para MkDocs. Para la documentación complet
 ## 🚀 Quick Start con MkDocs
 
 ```bash
-cd ML-MLOps-Portfolio/docs/guia_mlops
+cd Guia_MLOps/docs
 pip install -r requirements.txt
 mkdocs serve
 # Abrir http://localhost:8000
 ```
+
+---
+
+## 🧠 Study Tools (Protocolo de Estudio)
+
+**[→ Abrir Study Tools](study_tools/index.md)**
 
 ---
 

@@ -23,15 +23,66 @@ tu Python sea consistente en todo el stack.
 
 ---
 
-## 📋 Contenido
+<a id="00-prerrequisitos"></a>
 
-1. [Type Hints: Tu Contrato con el Futuro](#11-type-hints-tu-contrato-con-el-futuro)
-2. [Pydantic: Validación Automática](#12-pydantic-validación-automática)
-3. [src/ Layout: Estructura Profesional](#13-src-layout-estructura-profesional)
-4. [Principios SOLID para ML](#14-principios-solid-para-ml)
-5. [Ejercicios Prácticos](#15-ejercicios-prácticos)
+## 0.0 Prerrequisitos
+
+- Python básico: funciones, clases, módulos.
+- Terminal: ejecutar comandos y navegar carpetas.
+- Entorno listo para ejecutar el portafolio (si todavía no lo tienes, usa el módulo **[04_ENTORNOS](04_ENTORNOS.md)**).
+- Opcional (pero recomendado): entender qué significa instalar un paquete en modo editable (`pip install -e .`).
 
 ---
+
+<a id="01-protocolo-e-como-estudiar-este-modulo"></a>
+
+## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
+
+- **Antes de leer**: abre **[Protocolo E](study_tools/PROTOCOLO_E.md)** y define tu *output mínimo* de la sesión.
+- **Mientras implementas**: si te atoras >15 min, registra el bloqueo en **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**.
+- **Al cerrar la semana**: usa **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)** para decidir en qué mejorar (calidad, reproducibilidad, etc.).
+
+---
+
+<a id="02-entregables-verificables-minimo-viable"></a>
+
+## 0.2 ✅ Entregables verificables (mínimo viable)
+
+Al terminar este módulo, deberías poder mostrar (en al menos 1 proyecto del portafolio):
+
+- [ ] **Type hints** en funciones públicas (carga de datos, features, train, predict)
+- [ ] **`mypy` corriendo** sobre `src/` sin errores críticos
+- [ ] **Config con Pydantic** (cargando YAML y validando rangos)
+- [ ] **`src/` layout real** (paquete instalable)
+- [ ] **Instalación editable**: `pip install -e ".[dev]"` y `pytest` corriendo desde raíz
+
+---
+
+<a id="03-puente-teoria-codigo-portafolio"></a>
+
+## 0.3 🧩 Puente teoría ↔ código (Portafolio)
+
+Para que esto cuente como progreso real, fuerza este mapeo:
+
+- **Concepto**: typing / Pydantic / packaging
+- **Archivo**: `src/<paquete>/config.py`, `src/<paquete>/training.py`, `pyproject.toml`
+- **Prueba**: `mypy src/` + `pytest`
+- **Evidencia**: checklist del módulo + 1 entrada en Diario si hubo bloqueo
+## 📋 Contenido
+
+- **0.0** [Prerrequisitos](#00-prerrequisitos)
+- **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
+- **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
+- **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+1. [Type Hints: Tu Contrato con el Futuro](#11-type-hints-tu-contrato-con-el-futuro)
+2. [Pydantic: Validación Automática](#12-pydantic-validation-automatica)
+3. [src/ Layout: Estructura Profesional](#13-src-layout-estructura-profesional)
+4. [Principios SOLID para ML](#14-principios-solid-para-ml)
+5. [Ejercicios Prácticos](#15-ejercicios-practicos)
+
+---
+
+<a id="11-type-hints-tu-contrato-con-el-futuro"></a>
 
 ## 1.1 Type Hints: Tu Contrato con el Futuro
 
@@ -63,38 +114,38 @@ tu Python sea consistente en todo el stack.
 # ❌ ANTES: ¿Qué recibe? ¿Qué retorna? 
 # (Esto es lo que encontrarías en un notebook)
 
-def prepare_features(df, num_cols, cat_cols, target):
-    X = df.drop(columns=[target])
-    y = df[target]
+def prepare_features(df, num_cols, cat_cols, target):  # Define una función sin type hints: no sabemos tipos esperados ni retornos.
+    X = df.drop(columns=[target])  # Separa features (X) eliminando la columna objetivo del DataFrame.
+    y = df[target]  # Extrae el target (y) como una Serie; asume que `target` existe y está bien escrito.
     
-    preprocessor = ColumnTransformer([
-        ('num', StandardScaler(), num_cols),
-        ('cat', OneHotEncoder(), cat_cols)
-    ])
+    preprocessor = ColumnTransformer([  # Crea un transformador por columnas: aplica pipelines distintos a columnas numéricas vs categóricas.
+        ('num', StandardScaler(), num_cols),  # (nombre, transformer, columnas): escala numéricas a media=0, var=1 (ayuda a muchos modelos).
+        ('cat', OneHotEncoder(), cat_cols)  # One-hot a categóricas; por defecto puede fallar si aparece una categoría nueva en inferencia.
+    ])  # Termina la definición del ColumnTransformer (aún no se ha entrenado/ajustado).
     
-    X_transformed = preprocessor.fit_transform(X)
-    return X_transformed, y, preprocessor
+    X_transformed = preprocessor.fit_transform(X)  # Ajusta (fit) el preprocesador usando X y luego transforma X; devuelve una matriz (a menudo sparse).
+    return X_transformed, y, preprocessor  # Retorna features transformadas, el target y el preprocesador ya ajustado (para usar igual en valid/test/inferencia).
 ```
 
 ```python
 # ✅ DESPUÉS: Código real de BankChurn-Predictor/src/bankchurn/training.py
 
-from __future__ import annotations  # Permite usar tipos modernos en Python 3.9+
+from __future__ import annotations  # Posponer evaluación de anotaciones: permite forward refs y reduce problemas de import/ciclos.
 
-from pathlib import Path
-from typing import List, Tuple
+from pathlib import Path  # Paths tipados/seguros (mejor que strings) para rutas de archivos/directorios.
+from typing import List, Tuple  # Tipos genéricos para anotar colecciones y retornos compuestos.
 
-import numpy as np
-import pandas as pd
-from numpy.typing import NDArray
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+import numpy as np  # NumPy: arrays y tipos numéricos; útil para tipar dtypes concretos.
+import pandas as pd  # Pandas: DataFrame/Series, estructuras típicas para datos tabulares.
+from numpy.typing import NDArray  # Tipo estático para arrays NumPy: ayuda a mypy a entender shapes/dtypes (hasta cierto punto).
+from sklearn.compose import ColumnTransformer  # Enrutador de transformaciones por grupo de columnas (numéricas/categóricas/etc.).
+from sklearn.preprocessing import OneHotEncoder, StandardScaler  # Transformadores estándar de scikit-learn.
 
 def prepare_features(
-    df: pd.DataFrame,
-    num_cols: List[str],
-    cat_cols: List[str],
-    target: str
+    df: pd.DataFrame,  # Input tabular: se asume que contiene features + columna objetivo.
+    num_cols: List[str],  # Lista de nombres de columnas numéricas: se usará para escalar.
+    cat_cols: List[str],  # Lista de nombres de columnas categóricas: se usará para one-hot.
+    target: str  # Nombre de la columna objetivo (label) que se va a separar en y.
 ) -> Tuple[NDArray[np.float64], pd.Series, ColumnTransformer]:
     """Prepara features para entrenamiento.
     
@@ -114,16 +165,16 @@ def prepare_features(
     Tuple[NDArray, pd.Series, ColumnTransformer]
         Features transformadas, target, y preprocessor fitted.
     """
-    X = df.drop(columns=[target])
-    y = df[target]
+    X = df.drop(columns=[target])  # Construye X eliminando la columna objetivo: evita leakage obvio (target dentro de features).
+    y = df[target]  # Construye y como Serie: etiqueta que el modelo intentará predecir.
     
-    preprocessor = ColumnTransformer([
-        ('num', StandardScaler(), num_cols),
-        ('cat', OneHotEncoder(handle_unknown='ignore'), cat_cols)
-    ])
+    preprocessor = ColumnTransformer([  # Define el pipeline de preprocesamiento: se “fija” aquí para ser reproducible.
+        ('num', StandardScaler(), num_cols),  # Escalado numérico: útil para modelos lineales/NN; inofensivo para muchos casos.
+        ('cat', OneHotEncoder(handle_unknown='ignore'), cat_cols)  # ignore evita crash en inferencia si llega una categoría nueva.
+    ])  # Nota MLOps: guardar este objeto es clave para que producción use la misma transformación que entrenamiento.
     
-    X_transformed = preprocessor.fit_transform(X)
-    return X_transformed, y, preprocessor
+    X_transformed = preprocessor.fit_transform(X)  # Ajusta el preprocesador (learn stats/categorías) y transforma X al espacio numérico.
+    return X_transformed, y, preprocessor  # Retorna tuple explícita y tipada: mypy/IDE verifican contratos y ayudan en refactors.
 ```
 
 ### Los Tipos Esenciales para ML
@@ -240,6 +291,8 @@ mypy src/  # Verifica tipos en todo el código
 ```
 
 ---
+
+<a id="12-pydantic-validation-automatica"></a>
 
 ## 1.2 Pydantic: Validación Automática
 
@@ -469,6 +522,8 @@ except ValidationError as e:
 
 ---
 
+<a id="13-src-layout-estructura-profesional"></a>
+
 ## 1.3 src/ Layout: Estructura Profesional
 
 ### La Analogía de la Casa
@@ -646,6 +701,8 @@ pytest tests/
 
 ---
 
+<a id="14-principios-solid-para-ml"></a>
+
 ## 1.4 Principios SOLID para ML
 
 ### Single Responsibility: Un Módulo, Una Tarea
@@ -722,6 +779,8 @@ def evaluate_model(
 ```
 
 ---
+
+<a id="15-ejercicios-practicos"></a>
 
 ## 1.5 Ejercicios Prácticos
 
@@ -961,6 +1020,8 @@ myproject/
 
 En este módulo suelen aparecer siempre los mismos problemas. La idea no es solo evitarlos, sino **saber reconocerlos rápido** en tus propios proyectos.
 
+Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
+
 ### 1) Type hints + mypy: errores ruidosos en pandas/sklearn
 
 **Síntomas típicos**
@@ -968,7 +1029,6 @@ En este módulo suelen aparecer siempre los mismos problemas. La idea no es solo
 - `Function is missing a type annotation for parameter 'df'`
 - `Incompatible return value type (got "DataFrame", expected "Series")`
 - Cientos de warnings en librerías externas (`pandas.*`, `sklearn.*`).
-
 **Proceso para identificarlos**
 
 - Ejecuta siempre:

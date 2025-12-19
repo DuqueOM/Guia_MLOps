@@ -33,6 +33,8 @@
 >
 > **Ruta 0 → Senior/Staff**: Usa la sección **"Ruta 0 → Senior/Staff (macro-módulos)"** del [SYLLABUS](SYLLABUS.md) como mapa de alto nivel, y este plan de 8 semanas como cronograma concreto.
 
+> **Sistema recomendado**: aplica **[Protocolo E](study_tools/PROTOCOLO_E.md)**, registra bloqueos en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y cierra cada semana con **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)**.
+
 ---
 
 ## 📚 Semana 1: Python Moderno + Estructura
