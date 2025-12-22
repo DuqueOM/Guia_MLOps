@@ -78,7 +78,9 @@ Para que esto cuente como progreso real, fuerza este mapeo:
 2. [Pydantic: Validación Automática](#12-pydantic-validation-automatica)
 3. [src/ Layout: Estructura Profesional](#13-src-layout-estructura-profesional)
 4. [Principios SOLID para ML](#14-principios-solid-para-ml)
-5. [Ejercicios Prácticos](#15-ejercicios-practicos)
+5. [OOP para ML: Protocolos y ABC](#15-oop-para-ml) ⭐ NUEVO
+6. [Pandera: Validación de DataFrames](#16-pandera-validacion-dataframes) ⭐ NUEVO
+7. [Ejercicios Prácticos](#17-ejercicios-practicos)
 
 ---
 
@@ -780,9 +782,205 @@ def evaluate_model(
 
 ---
 
-<a id="15-ejercicios-practicos"></a>
+<a id="15-oop-para-ml"></a>
 
-## 1.5 Ejercicios Prácticos
+## 1.5 OOP para ML: Protocolos y Clases Abstractas
+
+> **CRÍTICO**: Sin entender OOP profesional, NO podrás leer el código del Portafolio.
+
+### El Problema: Código No Intercambiable
+
+```python
+# ❌ CÓDIGO JUNIOR: Cada trainer tiene API diferente
+class TrainerA:
+    def entrenar(self, X, y): ...  # español
+    def predecir(self, X): ...
+
+class TrainerB:
+    def fit_model(self, features, labels): ...  # nombres diferentes
+    def get_predictions(self, features): ...
+
+# ¿Cómo escribo código genérico que funcione con ambos?
+# Imposible sin reescribir todo.
+```
+
+### La Solución: Protocol y ABC
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════
+# PROTOCOL: Duck Typing verificable por mypy (para sklearn y librerías externas)
+# ═══════════════════════════════════════════════════════════════════════════
+from typing import Protocol, runtime_checkable
+from numpy.typing import ArrayLike
+
+@runtime_checkable
+class Predictor(Protocol):
+    """Si tiene fit() y predict() con estas firmas, ES un Predictor."""
+    
+    def fit(self, X: ArrayLike, y: ArrayLike) -> "Predictor": ...
+    def predict(self, X: ArrayLike) -> ArrayLike: ...
+
+# sklearn cumple automáticamente sin modificar nada:
+from sklearn.ensemble import RandomForestClassifier
+assert isinstance(RandomForestClassifier(), Predictor)  # True!
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ABC: Contrato que OBLIGA implementación (para TUS clases)
+# ═══════════════════════════════════════════════════════════════════════════
+from abc import ABC, abstractmethod
+import pandas as pd
+
+class BaseTrainer(ABC):
+    """Clase base para todos los trainers del portafolio.
+    
+    BankChurn, CarVision y TelecomAI DEBEN implementar estos métodos.
+    Si no lo hacen, Python da error al instanciar.
+    """
+    
+    @abstractmethod
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "BaseTrainer":
+        """Entrena el modelo."""
+        pass
+    
+    @abstractmethod
+    def predict(self, X: pd.DataFrame) -> pd.Series:
+        """Genera predicciones."""
+        pass
+    
+    @abstractmethod
+    def evaluate(self, X: pd.DataFrame, y: pd.Series) -> dict[str, float]:
+        """Evalúa el modelo."""
+        pass
+    
+    # Método concreto que usa los abstractos
+    def fit_and_evaluate(
+        self, 
+        X_train: pd.DataFrame, y_train: pd.Series,
+        X_test: pd.DataFrame, y_test: pd.Series
+    ) -> dict[str, float]:
+        """Entrena y evalúa en un paso."""
+        self.fit(X_train, y_train)
+        return self.evaluate(X_test, y_test)
+
+
+# Implementación concreta:
+class ChurnTrainer(BaseTrainer):
+    """Trainer de BankChurn - DEBE implementar fit, predict, evaluate."""
+    
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "ChurnTrainer":
+        self._pipeline = self._build_pipeline()
+        self._pipeline.fit(X, y)
+        return self
+    
+    def predict(self, X: pd.DataFrame) -> pd.Series:
+        return pd.Series(self._pipeline.predict(X))
+    
+    def evaluate(self, X: pd.DataFrame, y: pd.Series) -> dict[str, float]:
+        y_pred = self.predict(X)
+        return {"accuracy": accuracy_score(y, y_pred)}
+```
+
+### Puente al Portafolio
+
+Crear `common_utils/base.py` con `BaseTrainer` para que los 3 proyectos compartan la misma interfaz.
+
+---
+
+<a id="16-pandera-validacion-dataframes"></a>
+
+## 1.6 Pandera: Validación de DataFrames
+
+> **CRÍTICO**: Sin Pandera, los errores de datos aparecen en sklearn, no donde ocurrieron.
+
+### El Problema: DataFrames que Mienten
+
+```python
+# ❌ CÓDIGO JUNIOR: Asume que el DataFrame es correcto
+def train_model(df: pd.DataFrame) -> Pipeline:
+    X = df.drop("Exited", axis=1)  # ¿Y si "Exited" no existe?
+    y = df["Exited"]               # ¿Y si tiene valores como 2, -1, None?
+    
+    pipeline.fit(X, y)
+    return pipeline
+
+# Todo parece funcionar... hasta que llegan datos corruptos:
+bad_data = pd.DataFrame({
+    "Age": [-5, 25, 200],        # Edad negativa y 200 años
+    "Balance": [1000, -500, 0],  # Balance negativo
+    "Exited": [0, 2, None],      # Valor 2 y None (no binario)
+})
+model = train_model(bad_data)  # NO DA ERROR, pero modelo es basura
+```
+
+### La Solución: Pandera Schema
+
+```python
+import pandera as pa
+from pandera.typing import DataFrame, Series
+
+class BankChurnSchema(pa.DataFrameModel):
+    """Schema para datos de Bank Churn - producción."""
+    
+    CreditScore: Series[int] = pa.Field(ge=300, le=850, description="FICO score")
+    Age: Series[int] = pa.Field(ge=18, le=100, description="Edad del cliente")
+    Balance: Series[float] = pa.Field(ge=0, description="Balance en cuenta")
+    NumOfProducts: Series[int] = pa.Field(ge=1, le=4)
+    Exited: Series[int] = pa.Field(isin=[0, 1], description="Target binario")
+    
+    class Config:
+        strict = True   # Rechaza columnas extra
+        coerce = True   # Convierte tipos automáticamente
+
+
+@pa.check_types  # Decorador que valida entrada automáticamente
+def train_model(df: DataFrame[BankChurnSchema]) -> Pipeline:
+    """DataFrame GARANTIZADO válido por Pandera."""
+    X = df.drop("Exited", axis=1)
+    y = df["Exited"]
+    # Ahora podemos confiar en que los datos son correctos
+    ...
+
+
+# Error CLARO si datos son inválidos:
+# SchemaError: Column 'Age' failed check: greater_than_or_equal_to(18)
+```
+
+### Schemas del Portafolio
+
+```python
+# src/bankchurn/schemas.py
+
+class RawDataSchema(pa.DataFrameModel):
+    """Schema permisivo para datos crudos (permite nulos)."""
+    CreditScore: Series[float] = pa.Field(nullable=True)
+    Age: Series[float] = pa.Field(nullable=True, ge=0)
+    class Config:
+        strict = False  # Permite columnas extra (RowNumber, etc.)
+
+
+class ProcessedDataSchema(pa.DataFrameModel):
+    """Schema estricto para datos listos para entrenar."""
+    CreditScore: Series[int] = pa.Field(ge=300, le=850)
+    Age: Series[int] = pa.Field(ge=18, le=100)
+    Exited: Series[int] = pa.Field(isin=[0, 1])
+    class Config:
+        strict = True  # No permite columnas extra
+
+
+@pa.check_types
+def preprocess(raw: DataFrame[RawDataSchema]) -> DataFrame[ProcessedDataSchema]:
+    """Pipeline validado: entrada permisiva, salida estricta."""
+    df = raw.dropna()
+    df = df.drop(columns=["RowNumber", "CustomerId", "Surname"])
+    return df
+```
+
+---
+
+<a id="17-ejercicios-practicos"></a>
+
+## 1.7 Ejercicios Prácticos
 
 ### Ejercicio 1: Añadir Type Hints
 

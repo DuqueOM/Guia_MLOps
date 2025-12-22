@@ -157,293 +157,320 @@ Esta tabla conecta cada concepto teórico con la herramienta práctica y su ubic
 
 ---
 
-### 🗓️ MES 1: FUNDAMENTOS (Semanas 1-4)
+### 🗓️ MES 1: FUNDAMENTOS PYTHON PROFESIONAL (Semanas 1-4)
 
-> **Objetivo**: Establecer las bases de código profesional y entorno de desarrollo.
+> **Objetivo**: Dominar Python a nivel Staff Engineer — el código del Portafolio NO se puede entender sin esto.
 
-#### 📖 Semana 1: Python Moderno + Tipado
+---
 
-**🎯 Objetivo**: Escribir código Python con tipado estático y validación de datos.
+#### 📖 Semana 1: Type Hints + Pydantic
 
-##### 🔰 Para Principiantes: Analogías
+**🎯 Objetivo**: Código con contratos explícitos y configuración validada.
 
-| Concepto | Analogía | Por qué importa |
-|----------|----------|-----------------|
-| **Type Hints** | Como etiquetas en cajas de mudanza: `caja_libros: list[str]` te dice qué hay adentro sin abrirla | Evita bugs en producción, el IDE te ayuda más |
-| **Pydantic** | Como un formulario con validación automática: si pones texto donde va un número, te rechaza | Valida datos de entrada en APIs automáticamente |
-| **Dataclasses** | Como un molde para galletas: defines la forma una vez y creas muchas iguales | Reduce código repetitivo para estructuras de datos |
+##### 📐 Teoría Fundamental
 
-##### 💻 Práctica Empírica
+| Concepto | Definición | Impacto en MLOps |
+|----------|------------|------------------|
+| **Tipado Estático** | Declarar tipos en tiempo de escritura | mypy detecta errores ANTES de ejecutar |
+| **Validación en Frontera** | Verificar datos al ENTRAR al sistema | Errores claros vs crashes crípticos |
+| **Fail Fast** | Fallar inmediatamente con error descriptivo | Costo de bug: $1 (código) vs $1000 (producción) |
 
-```bash
-# 1. Crear entorno virtual
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-# .venv\Scripts\activate   # Windows
+##### 🔧 Práctica de Ingeniería
 
-# 2. Instalar dependencias base
-pip install pydantic mypy ruff
+```python
+# ═══════════════════════════════════════════════════════════════════════════
+# EL PROBLEMA: Código Junior sin tipos
+# ═══════════════════════════════════════════════════════════════════════════
+def train(data, config):  # ¿Qué tipos? ¿Qué retorna?
+    pass  # Error aparece 3 capas después
 
-# 3. Crear archivo de configuración tipado
-mkdir -p src
-cat > src/config.py << 'EOF'
+# ═══════════════════════════════════════════════════════════════════════════
+# LA SOLUCIÓN: Código Staff con contratos
+# ═══════════════════════════════════════════════════════════════════════════
+from typing import Tuple
+import pandas as pd
 from pydantic import BaseModel, Field
 
-class ModelConfig(BaseModel):
-    """Configuración del modelo con validación automática."""
-    n_estimators: int = Field(default=100, ge=1, le=1000)
-    max_depth: int | None = Field(default=None, ge=1)
-    random_state: int = 42
-EOF
+class TrainConfig(BaseModel):
+    test_size: float = Field(default=0.2, ge=0.01, le=0.5)
+    n_estimators: int = Field(default=100, ge=10)
 
-# 4. Verificar tipos con mypy
-mypy src/config.py --strict
-
-# 5. Formatear con ruff
-ruff check src/ --fix
-ruff format src/
+def train(
+    data: pd.DataFrame,
+    config: TrainConfig
+) -> Tuple[Pipeline, dict[str, float]]:
+    """Contrato claro: mypy verifica, Pydantic valida."""
+    ...
 ```
 
-**📦 Ubicación en Portafolio**: `BankChurn-Predictor/src/bankchurn/config.py`
+##### 💻 Comandos Exactos
+
+```bash
+pip install pydantic mypy ruff
+mypy src/bankchurn/training.py --strict  # 0 errores = listo
+```
+
+**📦 Puente al Portafolio**: `BankChurn-Predictor/src/bankchurn/config.py`
+
+**📝 Tarea**: Tipar TODAS las funciones públicas de `training.py`
 
 ---
 
-#### 📖 Semana 2: Diseño de Sistemas + Arquitectura
+#### 📖 Semana 2: OOP para ML — Protocolos y ABC
 
-**🎯 Objetivo**: Diseñar sistemas ML antes de escribir código.
+**🎯 Objetivo**: Escribir código intercambiable y extensible con OOP profesional.
 
-##### 🔰 Para Principiantes: Analogías
+##### 📐 Teoría Fundamental
 
-| Concepto | Analogía | Por qué importa |
-|----------|----------|-----------------|
-| **ML Canvas** | Como el plano de un arquitecto antes de construir una casa | Evita construir el modelo equivocado |
-| **C4 Model** | Como Google Maps con zoom: ves la ciudad, el barrio, la calle y la casa | Comunicas arquitectura a diferentes audiencias |
-| **ADR** | Como un diario de decisiones: "Elegí X porque Y" | Justificas decisiones técnicas en entrevistas |
+| Concepto | Definición | Uso en el Portafolio |
+|----------|------------|---------------------|
+| **Protocol** | Duck typing verificable por mypy | Compatibilidad con sklearn sin herencia |
+| **ABC (Abstract Base Class)** | Contrato que OBLIGA implementación | BaseTrainer para los 3 proyectos |
+| **Polimorfismo** | Mismo método, diferentes implementaciones | `trainer.fit()` funciona igual en BankChurn, CarVision, TelecomAI |
 
-##### 💻 Práctica Empírica
+##### 🔧 Práctica de Ingeniería
 
-```bash
-# 1. Crear estructura de documentación
-mkdir -p docs/architecture
+```python
+# ═══════════════════════════════════════════════════════════════════════════
+# EL PROBLEMA: 3 trainers con APIs diferentes
+# ═══════════════════════════════════════════════════════════════════════════
+class TrainerA:
+    def entrenar(self, X, y): ...  # español
+class TrainerB:
+    def fit_model(self, data): ...  # diferente firma
 
-# 2. Crear ML Canvas
-cat > docs/architecture/ML_CANVAS.md << 'EOF'
-# ML Canvas: BankChurn Predictor
+# ═══════════════════════════════════════════════════════════════════════════
+# LA SOLUCIÓN: ABC define el contrato
+# ═══════════════════════════════════════════════════════════════════════════
+from abc import ABC, abstractmethod
+import pandas as pd
 
-## 1. Problema de Negocio
-- **Objetivo**: Predecir clientes con riesgo de abandono
-- **Métrica de éxito**: Reducir churn en 15%
+class BaseTrainer(ABC):
+    """Todos los trainers del portafolio heredan de aquí."""
+    
+    @abstractmethod
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "BaseTrainer":
+        """Entrenar modelo."""
+        pass
+    
+    @abstractmethod
+    def predict(self, X: pd.DataFrame) -> pd.Series:
+        """Predecir."""
+        pass
 
-## 2. Datos
-- **Fuente**: Base de datos transaccional
-- **Volumen**: 10K clientes, actualización mensual
+# Protocol para sklearn (sin herencia):
+from typing import Protocol, runtime_checkable
 
-## 3. Modelo
-- **Tipo**: Clasificación binaria
-- **Baseline**: Reglas de negocio actuales (60% accuracy)
-- **Target**: 85% accuracy, 0.75 F1-score
-EOF
+@runtime_checkable
+class Predictor(Protocol):
+    def fit(self, X, y): ...
+    def predict(self, X): ...
 
-# 3. Crear ADR (Architecture Decision Record)
-cat > docs/architecture/ADR_001_RANDOM_FOREST.md << 'EOF'
-# ADR 001: Usar RandomForest como modelo base
-
-## Estado: Aceptado
-
-## Contexto
-Necesitamos un modelo interpretable para el equipo de negocio.
-
-## Decisión
-Usamos RandomForestClassifier por:
-1. Maneja features categóricas y numéricas
-2. Proporciona feature importance
-3. No requiere escalado de features
-EOF
+# sklearn cumple automáticamente:
+from sklearn.ensemble import RandomForestClassifier
+assert isinstance(RandomForestClassifier(), Predictor)  # True
 ```
 
-**📦 Ubicación en Portafolio**: `docs/DECISIONES_TECH.md`
+**📦 Puente al Portafolio**: Crear `common_utils/base.py` con `BaseTrainer`
+
+**📝 Tarea**: Hacer que `ChurnTrainer` herede de `BaseTrainer`
 
 ---
 
-#### 📖 Semana 3: Estructura de Proyecto + Entornos
+#### 📖 Semana 3: Pandas de Producción + Pandera
 
-**🎯 Objetivo**: Organizar código como un proyecto profesional.
+**🎯 Objetivo**: Validar DataFrames ANTES de que causen errores en el pipeline.
 
-##### 🔰 Para Principiantes: Analogías
+##### 📐 Teoría Fundamental
 
-| Concepto | Analogía | Por qué importa |
-|----------|----------|-----------------|
-| **src/ layout** | Como organizar una cocina: cada utensilio tiene su lugar fijo | Cualquiera encuentra el código rápido |
-| **pyproject.toml** | Como la receta maestra que lista todos los ingredientes | Instalación reproducible en cualquier máquina |
-| **Makefile** | Como un control remoto: `make train`, `make test` | Comandos complejos en una palabra |
+| Concepto | Definición | Por qué es crítico |
+|----------|------------|-------------------|
+| **Schema** | Contrato de estructura de datos | Define qué columnas, tipos y rangos son válidos |
+| **Pandera** | Validación de DataFrames con decoradores | Error claro: "Age debe ser >= 18" vs crash en sklearn |
+| **Data Contract** | Acuerdo entre productor y consumidor de datos | El pipeline de features ESPERA cierta estructura |
 
-##### 💻 Práctica Empírica
+##### 🔧 Práctica de Ingeniería
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════
+# EL PROBLEMA: Código Junior asume DataFrame correcto
+# ═══════════════════════════════════════════════════════════════════════════
+def train(df):
+    X = df.drop("Exited", axis=1)  # ¿Y si "Exited" no existe?
+    y = df["Exited"]  # ¿Y si tiene valores inválidos como 2 o -1?
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LA SOLUCIÓN: Pandera valida en la frontera
+# ═══════════════════════════════════════════════════════════════════════════
+import pandera as pa
+from pandera.typing import DataFrame, Series
+
+class BankChurnSchema(pa.DataFrameModel):
+    CreditScore: Series[int] = pa.Field(ge=300, le=850)
+    Age: Series[int] = pa.Field(ge=18, le=100)
+    Balance: Series[float] = pa.Field(ge=0)
+    Exited: Series[int] = pa.Field(isin=[0, 1])
+    
+    class Config:
+        strict = True  # No permite columnas extra
+
+@pa.check_types
+def train(df: DataFrame[BankChurnSchema]) -> Pipeline:
+    """DataFrame GARANTIZADO válido por Pandera."""
+    X = df.drop("Exited", axis=1)
+    y = df["Exited"]
+    ...
+```
+
+##### 💻 Comandos Exactos
 
 ```bash
-# 1. Crear estructura profesional
-mkdir -p src/bankchurn tests/unit tests/integration data/raw data/processed models
+pip install pandera
+# Crear src/bankchurn/schemas.py con los schemas
+pytest tests/test_schemas.py -v
+```
 
-# 2. Crear pyproject.toml
-cat > pyproject.toml << 'EOF'
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+**📦 Puente al Portafolio**: `BankChurn-Predictor/src/bankchurn/schemas.py`
 
-[project]
-name = "bankchurn"
-version = "0.1.0"
-requires-python = ">=3.10"
-dependencies = [
-    "pandas>=2.0.0",
-    "scikit-learn>=1.3.0",
-    "pydantic>=2.5.0",
-]
+**📝 Tarea**: Crear `RawDataSchema` (permisivo) y `ProcessedDataSchema` (estricto)
 
-[project.optional-dependencies]
-dev = ["pytest>=7.4.0", "pytest-cov>=4.1.0", "mypy>=1.8.0", "ruff>=0.1.9"]
-EOF
+---
 
-# 3. Crear Makefile
-cat > Makefile << 'EOF'
-.PHONY: install test train lint
+#### 📖 Semana 4: Estructura de Proyecto + Git Profesional
 
-install:
-	pip install -e ".[dev]"
+**🎯 Objetivo**: Organizar código como paquete instalable con calidad automatizada.
 
-test:
-	pytest tests/ -v --cov=src --cov-report=term-missing
+##### 📐 Teoría Fundamental
 
-train:
-	python -m bankchurn.train
+| Concepto | Definición | Beneficio |
+|----------|------------|-----------|
+| **src/ Layout** | Código en `src/package/` | Fuerza `pip install -e .` — evita "funciona en mi máquina" |
+| **pyproject.toml** | Metadata estándar del proyecto | Un archivo para deps, tools, builds |
+| **Pre-commit** | Hooks que corren antes de commit | Calidad GARANTIZADA en cada commit |
 
-lint:
-	ruff check src/ tests/ --fix && mypy src/ --strict
-EOF
+##### 🔧 Práctica de Ingeniería
 
-# 4. Instalar en modo editable
+```
+BankChurn-Predictor/
+├── src/bankchurn/          # Código fuente
+│   ├── __init__.py         # Exporta API pública
+│   ├── config.py           # Pydantic
+│   ├── schemas.py          # Pandera  
+│   ├── training.py         # Trainer
+│   └── cli.py              # CLI
+├── tests/                  # Tests (espejo de src/)
+├── configs/config.yaml     # Config externa
+├── pyproject.toml          # Metadata
+├── Makefile                # Comandos
+└── .pre-commit-config.yaml # Hooks
+```
+
+##### 💻 Comandos Exactos
+
+```bash
+# Instalar en modo editable
 pip install -e ".[dev]"
-```
 
-**📦 Ubicación en Portafolio**: `BankChurn-Predictor/pyproject.toml`
+# Verificar import funciona
+python -c "from bankchurn import ChurnTrainer; print('OK')"
 
----
-
-#### 📖 Semana 4: Git Profesional + Pre-commit
-
-**🎯 Objetivo**: Automatizar calidad de código con hooks de Git.
-
-##### 🔰 Para Principiantes: Analogías
-
-| Concepto | Analogía | Por qué importa |
-|----------|----------|-----------------|
-| **Conventional Commits** | Como escribir asuntos de email claros: `feat: añadir login` | Changelog automático, CI/CD inteligente |
-| **Pre-commit hooks** | Como revisor automático antes de enviar | Código limpio garantizado en cada commit |
-| **Branching strategy** | Como líneas de producción paralelas | Desarrollo sin romper versión estable |
-
-##### 💻 Práctica Empírica
-
-```bash
-# 1. Instalar pre-commit
+# Configurar pre-commit
 pip install pre-commit
-
-# 2. Crear configuración
-cat > .pre-commit-config.yaml << 'EOF'
-repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-added-large-files
-
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.9
-    hooks:
-      - id: ruff
-        args: [--fix]
-      - id: ruff-format
-EOF
-
-# 3. Instalar hooks
 pre-commit install
-
-# 4. Ejecutar en todos los archivos
 pre-commit run --all-files
 
-# 5. Commit convencional
-git add .
-git commit -m "feat(config): add Pydantic model configuration"
+# Commit convencional
+git commit -m "feat(training): add type hints to ChurnTrainer"
 ```
 
-**📦 Ubicación en Portafolio**: `.pre-commit-config.yaml`
+**📦 Puente al Portafolio**: `BankChurn-Predictor/pyproject.toml`
+
+**📝 Tarea**: `pip install -e ".[dev]"` + `pytest` + `mypy` pasan sin errores
 
 ---
 
-### 🗓️ MES 2: DATOS & VERSIONADO (Semanas 5-8)
+### 🗓️ MES 2: DATOS & PIPELINES (Semanas 5-8)
 
-> **Objetivo**: Dominar versionado de datos y pipelines reproducibles.
+> **Objetivo**: Dominar versionado de datos, pipelines reproducibles y preprocesamiento profesional.
 
-#### 📖 Semana 5: DVC Fundamentos + Remote Storage
+---
+
+#### 📖 Semana 5: DVC — Versionado de Datos
 
 **🎯 Objetivo**: Versionar datos como se versiona código.
 
-##### 🔰 Para Principiantes: Analogías
+##### 📐 Teoría Fundamental
 
-| Concepto | Analogía | Por qué importa |
-|----------|----------|-----------------|
-| **DVC** | Como Git pero para archivos grandes: datasets, modelos | Reproducibilidad: "dame los datos de hace 3 meses" |
-| **Remote storage** | Como Dropbox para ML: S3, GCS, Azure | Compartir datos pesados entre equipos |
-| **.dvc files** | Como un recibo de paquetería: dice qué hay y dónde | Git trackea el recibo, no el paquete |
+| Concepto | Definición | Por qué es crítico |
+|----------|------------|-------------------|
+| **Reproducibilidad** | Obtener EXACTAMENTE el mismo resultado | "Dame los datos de hace 3 meses" |
+| **Data Lineage** | Rastrear origen y transformaciones de datos | Debugging y compliance |
+| **Content-addressable** | Archivos identificados por hash, no por nombre | Detecta cambios automáticamente |
 
-##### 💻 Práctica Empírica
+##### 🔧 Práctica de Ingeniería
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════
+# EL PROBLEMA: Datos en carpetas con fechas
+# ═══════════════════════════════════════════════════════════════════════════
+# data/
+# ├── customers_v1.csv
+# ├── customers_v2_final.csv
+# ├── customers_v2_final_REAL.csv  # ← ¿Cuál es el bueno?
+# ├── customers_backup_juan.csv
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LA SOLUCIÓN: DVC trackea por contenido
+# ═══════════════════════════════════════════════════════════════════════════
+# data/
+# └── customers.csv.dvc  # ← Git trackea esto (puntero)
+# El archivo real está en remote storage, identificado por hash MD5
+```
+
+##### 💻 Comandos Exactos
 
 ```bash
-# 1. Instalar DVC
-pip install dvc dvc-s3
-
-# 2. Inicializar DVC
+# Inicializar DVC
 dvc init
-
-# 3. Añadir datos al tracking
 dvc add data/raw/bank_customers.csv
 
-# 4. Ver qué se creó
+# Ver el puntero creado
 cat data/raw/bank_customers.csv.dvc
+# outs:
+#   - md5: d41d8cd98f00b204e9800998ecf8427e
+#     path: bank_customers.csv
 
-# 5. Commitear el .dvc (no los datos)
+# Commitear puntero (no datos)
 git add data/raw/bank_customers.csv.dvc data/raw/.gitignore
 git commit -m "data: add raw customer data v1"
 
-# 6. Configurar remote
-dvc remote add -d myremote /tmp/dvc-storage
+# Configurar remote y push
+dvc remote add -d storage s3://my-bucket/dvc
 dvc push
-
-# 7. Simular colaborador: descargar datos
-dvc pull
 ```
 
-**📦 Ubicación en Portafolio**: `data/*.dvc`, `.dvc/config`
+**📦 Puente al Portafolio**: `BankChurn-Predictor/data/*.dvc`, `.dvc/config`
+
+**📝 Tarea**: `dvc pull` en una carpeta nueva debe traer exactamente los mismos datos
 
 ---
 
-#### 📖 Semana 6: Pipelines DVC + Reproducibilidad
+#### � Semana 6: Pipelines DVC + Reproducibilidad
 
-**🎯 Objetivo**: Crear pipelines de datos reproducibles.
+**🎯 Objetivo**: Crear pipelines de datos reproducibles con DAGs.
 
-##### 🔰 Para Principiantes: Analogías
+##### 📐 Teoría Fundamental
 
-| Concepto | Analogía | Por qué importa |
-|----------|----------|-----------------|
-| **dvc.yaml** | Como receta con pasos ordenados | Ejecuta todo con un comando |
-| **dvc.lock** | Como foto del estado actual | Garantiza mismo resultado |
-| **dvc repro** | Como "repetir receta" | Solo rehace lo que cambió |
+| Concepto | Definición | Por qué es crítico |
+|----------|------------|-------------------|
+| **DAG** | Directed Acyclic Graph — pasos ordenados sin ciclos | Solo re-ejecuta lo que cambió |
+| **Determinismo** | Mismo input → mismo output siempre | Reproducibilidad científica |
+| **Idempotencia** | Ejecutar N veces = ejecutar 1 vez | Safe to retry |
 
-##### 💻 Práctica Empírica
+##### 🔧 Práctica de Ingeniería
 
-```bash
-# 1. Crear pipeline DVC
-cat > dvc.yaml << 'EOF'
+```yaml
+# dvc.yaml — Define el pipeline completo
 stages:
   prepare:
     cmd: python src/bankchurn/prepare.py
@@ -464,95 +491,94 @@ stages:
     metrics:
       - metrics.json:
           cache: false
-EOF
-
-# 2. Ejecutar pipeline completo
-dvc repro
-
-# 3. Ver DAG del pipeline
-dvc dag
-
-# 4. Comparar métricas entre versiones
-dvc metrics diff
 ```
 
-**📦 Ubicación en Portafolio**: `dvc.yaml`, `dvc.lock`
+##### 💻 Comandos Exactos
+
+```bash
+dvc repro           # Ejecuta pipeline completo
+dvc dag             # Visualiza el DAG
+dvc metrics show    # Muestra métricas
+dvc metrics diff    # Compara entre versiones
+```
+
+**📦 Puente al Portafolio**: `BankChurn-Predictor/dvc.yaml`, `dvc.lock`
+
+**📝 Tarea**: `dvc repro` ejecuta sin errores y genera `metrics.json`
 
 ---
 
-#### 📖 Semana 7: sklearn Pipelines Básicos
+#### 📖 Semana 7: sklearn Pipelines — Sin Data Leakage
 
-**🎯 Objetivo**: Crear pipelines de ML que previenen data leakage.
+**🎯 Objetivo**: Crear pipelines ML que previenen data leakage.
 
-##### 🔰 Para Principiantes: Analogías
+##### � Teoría Fundamental
 
-| Concepto | Analogía | Por qué importa |
-|----------|----------|-----------------|
-| **Pipeline** | Línea de ensamblaje: cada estación hace una tarea | Evita errores manuales |
-| **Data leakage** | Hacer trampa en examen: usar respuestas para estudiar | Modelo falla en producción |
-| **fit_transform** | "Aprender y aplicar" | Train: fit_transform, Test: solo transform |
+| Concepto | Definición | Por qué es crítico |
+|----------|------------|-------------------|
+| **Data Leakage** | Información del test contamina el train | Modelo parece bueno pero falla en producción |
+| **fit vs transform** | fit aprende estadísticas, transform las aplica | fit SOLO en train, transform en train Y test |
+| **Pipeline** | Cadena de transformaciones como un objeto | Encapsula preprocessing + modelo |
 
-##### 💻 Práctica Empírica
+##### � Práctica de Ingeniería
 
-```bash
-cat > src/bankchurn/pipeline.py << 'EOF'
+```python
+# ═══════════════════════════════════════════════════════════════════════════
+# EL PROBLEMA: Data Leakage (error de principiante)
+# ═══════════════════════════════════════════════════════════════════════════
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)  # ❌ fit en TODO X (incluye test)
+X_train, X_test = train_test_split(X_scaled)  # Leakage!
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LA SOLUCIÓN: Pipeline encapsula todo
+# ═══════════════════════════════════════════════════════════════════════════
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.impute import SimpleImputer
-from sklearn.ensemble import RandomForestClassifier
 
-def create_pipeline() -> Pipeline:
-    """Crea pipeline de preprocesamiento + modelo."""
-    return Pipeline([
-        ("imputer", SimpleImputer(strategy="median")),
-        ("scaler", StandardScaler()),
-        ("classifier", RandomForestClassifier(n_estimators=100, random_state=42))
-    ])
-EOF
+pipeline = Pipeline([
+    ("imputer", SimpleImputer(strategy="median")),
+    ("scaler", StandardScaler()),
+    ("classifier", RandomForestClassifier())
+])
 
-# Ejecutar
-python -c "
-from src.bankchurn.pipeline import create_pipeline
-from sklearn.datasets import make_classification
-from sklearn.model_selection import train_test_split
+# Split ANTES de cualquier fit
+X_train, X_test, y_train, y_test = train_test_split(X, y)
 
-X, y = make_classification(n_samples=1000, n_features=20, random_state=42)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+# fit_transform SOLO en train
+pipeline.fit(X_train, y_train)  # ✅ Aprende de train
 
-pipe = create_pipeline()
-pipe.fit(X_train, y_train)
-print(f'Accuracy: {pipe.score(X_test, y_test):.3f}')
-"
+# transform implícito en predict (usa estadísticas de train)
+predictions = pipeline.predict(X_test)  # ✅ Sin leakage
 ```
 
-**📦 Ubicación en Portafolio**: `BankChurn-Predictor/src/bankchurn/pipeline.py`
+**📦 Puente al Portafolio**: `BankChurn-Predictor/src/bankchurn/pipeline.py`
+
+**📝 Tarea**: Crear `create_pipeline()` que retorna Pipeline completo
 
 ---
 
 #### 📖 Semana 8: ColumnTransformer + Custom Transformers
 
-**🎯 Objetivo**: Procesar diferentes tipos de columnas correctamente.
+**🎯 Objetivo**: Procesar diferentes tipos de columnas con transformadores custom.
 
-##### 🔰 Para Principiantes: Analogías
+##### � Teoría Fundamental
 
-| Concepto | Analogía | Por qué importa |
-|----------|----------|-----------------|
-| **ColumnTransformer** | Equipo de especialistas: uno para números, otro para texto | Cada dato recibe tratamiento correcto |
-| **Custom Transformer** | Crear tu propia herramienta | Lógica de negocio en el pipeline |
+| Concepto | Definición | Por qué es crítico |
+|----------|------------|-------------------|
+| **ColumnTransformer** | Aplica transformaciones diferentes por grupo de columnas | Numéricas: escalar, Categóricas: one-hot |
+| **BaseEstimator + TransformerMixin** | Clases base para transformadores sklearn-compatible | Tu transformer funciona en Pipeline |
+| **fit/transform API** | Contrato estándar de sklearn | Interoperabilidad garantizada |
 
-##### 💻 Práctica Empírica
+##### � Práctica de Ingeniería
 
-```bash
-cat > src/bankchurn/transformers.py << 'EOF'
+```python
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
 import numpy as np
 
 class OutlierClipper(BaseEstimator, TransformerMixin):
-    """Recorta outliers usando IQR."""
+    """Custom transformer que recorta outliers usando IQR."""
+    
     def __init__(self, factor: float = 1.5):
         self.factor = factor
     
@@ -561,43 +587,42 @@ class OutlierClipper(BaseEstimator, TransformerMixin):
         IQR = Q3 - Q1
         self.lower_ = Q1 - self.factor * IQR
         self.upper_ = Q3 + self.factor * IQR
-        return self
+        return self  # ← Siempre retorna self
     
     def transform(self, X):
         return np.clip(X, self.lower_, self.upper_)
 
-def create_preprocessor(numeric_features, categorical_features):
-    numeric_transformer = Pipeline([
+# Uso en ColumnTransformer:
+preprocessor = ColumnTransformer([
+    ("num", Pipeline([
         ("imputer", SimpleImputer(strategy="median")),
         ("outlier", OutlierClipper()),
         ("scaler", StandardScaler())
-    ])
-    
-    categorical_transformer = Pipeline([
+    ]), numerical_columns),
+    ("cat", Pipeline([
         ("imputer", SimpleImputer(strategy="most_frequent")),
         ("encoder", OneHotEncoder(handle_unknown="ignore"))
-    ])
-    
-    return ColumnTransformer([
-        ("num", numeric_transformer, numeric_features),
-        ("cat", categorical_transformer, categorical_features)
-    ])
-EOF
+    ]), categorical_columns)
+])
 ```
 
-**📦 Ubicación en Portafolio**: `CarVision-Market-Intelligence/src/carvision/features.py`
+**📦 Puente al Portafolio**: `CarVision-Market-Intelligence/src/carvision/features.py`
+
+**📝 Tarea**: Crear `OutlierClipper` y `FeatureEngineer` como transformers custom
 
 ---
 
-### 🗓️ MES 3: ML ENGINEERING (Semanas 9-12)
+### �️ MES 3: ML ENGINEERING (Semanas 9-12)
 
 > **Objetivo**: Dominar entrenamiento profesional y tracking de experimentos.
+
+---
 
 #### 📖 Semana 9: Ingeniería de Features
 
 **🎯 Objetivo**: Crear features robustos sin data leakage.
 
-##### 🔰 Para Principiantes: Analogías
+##### � Teoría Fundamental
 
 | Concepto | Analogía | Por qué importa |
 |----------|----------|-----------------|
