@@ -13,6 +13,7 @@ __pycache__/
 # Virtualenv
 .venv/
 venv/
+.vscode/
 
 # Jupyter
 .ipynb_checkpoints/
