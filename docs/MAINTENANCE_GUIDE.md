@@ -3,9 +3,9 @@
 > **Meta-documento**: Esta guía describe cómo mantener **la guía MLOps en sí misma** actualizada y funcional.
 > 
 > ⚠️ **¿Buscas contenido sobre operaciones de sistemas ML en producción?** Ver:
-> - [17_DESPLIEGUE.md → Operaciones y Runbooks](17_DESPLIEGUE.md#-operaciones-y-runbooks)
+> - [17_DESPLIEGUE.md](17_DESPLIEGUE.md)
 > - [16_OBSERVABILIDAD.md](16_OBSERVABILIDAD.md) — Monitoreo y alertas
-> - [Runbook del Portafolio](../OPERATIONS_PORTFOLIO.md) — Operaciones end-to-end del portafolio
+> - [Runbook del Portafolio](https://github.com/DuqueOM/ML-MLOps-Portfolio/blob/main/docs/OPERATIONS_PORTFOLIO.md) — Operaciones end-to-end del portafolio
 
 *Última actualización: Diciembre 2025*
 
@@ -26,7 +26,7 @@
 ## 📅 Calendario de Mantenimiento
 
 ### Mensual
-- [ ] Verificar que todos los links funcionan (`./scripts/check_links.sh`)
+- [ ] Verificar que todos los links funcionan (`./scripts/validate_guide.sh`)
 - [ ] Actualizar versiones de dependencias en `requirements.txt`
 - [ ] Ejecutar tests de todos los módulos
 - [ ] Verificar que videos de RECURSOS_POR_MODULO.md siguen disponibles

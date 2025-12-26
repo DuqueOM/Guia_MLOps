@@ -115,68 +115,68 @@ Para que esto cuente como progreso real, fuerza este mapeo:
 # ❌ CÓDIGO PROBLEMÁTICO (muy común en notebooks convertidos a producción)
 
 # === ENTRENAMIENTO ===
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.preprocessing import StandardScaler, OneHotEncoder  # Importa transformadores de sklearn.
 
 # Ajustar scaler en datos de entrenamiento
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train[num_cols])  # ← fit aquí
+scaler = StandardScaler()                                  # Crea instancia: aún no tiene parámetros learned.
+X_train_scaled = scaler.fit_transform(X_train[num_cols])   # fit_transform: calcula mean/std Y transforma.
 
-encoder = OneHotEncoder()
-X_train_encoded = encoder.fit_transform(X_train[cat_cols])  # ← fit aquí
+encoder = OneHotEncoder()                                  # Crea encoder para convertir categorías a binario.
+X_train_encoded = encoder.fit_transform(X_train[cat_cols]) # fit: aprende categorías únicas; transform: aplica.
 
 # Entrenar modelo
-model = RandomForestClassifier()
-model.fit(X_train_processed, y_train)
+model = RandomForestClassifier()                           # Crea el modelo de clasificación.
+model.fit(X_train_processed, y_train)                      # Entrena con datos ya transformados.
 
 # Guardar modelo... pero ¿y el scaler? ¿y el encoder?
-joblib.dump(model, "model.pkl")  # ← Solo guarda el modelo!
+joblib.dump(model, "model.pkl")  # ← ¡ERROR! Solo guarda el modelo, NO los transformadores.
 
 # === PRODUCCIÓN (meses después, otro desarrollador) ===
-model = joblib.load("model.pkl")
+model = joblib.load("model.pkl")                           # Carga solo el modelo.
 
 # ¿Cómo transformo los datos nuevos?
-# 🤷 No tengo el scaler ni el encoder fitted
-# 🤷 Incluso si los tuviera, ¿cómo sé qué columnas usar?
-# 🤷 ¿Era StandardScaler o MinMaxScaler?
+# 🤷 No tengo el scaler ni el encoder fitted             # Los transformadores se perdieron.
+# 🤷 Incluso si los tuviera, ¿cómo sé qué columnas usar? # No hay documentación de las columnas.
+# 🤷 ¿Era StandardScaler o MinMaxScaler?                 # Imposible saber qué se usó.
 
 # "Solución" del desarrollador desesperado:
-scaler = StandardScaler()
-X_new_scaled = scaler.fit_transform(X_new[num_cols])  # ← fit en datos NUEVOS!
-# ⚠️ Ahora mean y std son DIFERENTES a los de entrenamiento
-# ⚠️ Las predicciones son BASURA
+scaler = StandardScaler()                                  # Crea NUEVO scaler (sin los parámetros originales).
+X_new_scaled = scaler.fit_transform(X_new[num_cols])       # fit en datos NUEVOS: mean/std DIFERENTES.
+# ⚠️ Ahora mean y std son DIFERENTES a los de entrenamiento → training-serving skew.
+# ⚠️ Las predicciones son BASURA porque la escala es inconsistente.
 
 # ============================================================================
 # ✅ SOLUCIÓN: Pipeline Unificado
 # ============================================================================
 
 # === ENTRENAMIENTO ===
-from sklearn.pipeline import Pipeline
-from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline              # Pipeline: encadena pasos secuenciales.
+from sklearn.compose import ColumnTransformer      # ColumnTransformer: aplica transformaciones por grupo de columnas.
 
 # Definir pipeline completo
-pipeline = Pipeline([
-    ('preprocessor', ColumnTransformer([
-        ('num', StandardScaler(), num_cols),
-        ('cat', OneHotEncoder(handle_unknown='ignore'), cat_cols)
+pipeline = Pipeline([                              # Lista de tuplas (nombre, objeto).
+    ('preprocessor', ColumnTransformer([           # Primer paso: preprocesamiento por columnas.
+        ('num', StandardScaler(), num_cols),       # Escala numéricas (aprende mean/std de train).
+        ('cat', OneHotEncoder(handle_unknown='ignore'), cat_cols)  # One-hot categorícas; ignore evita crash.
     ])),
-    ('model', RandomForestClassifier())
+    ('model', RandomForestClassifier())            # Segundo paso: el modelo.
 ])
 
 # Un solo fit entrena TODO
-pipeline.fit(X_train, y_train)
+pipeline.fit(X_train, y_train)                     # fit() propaga por todos los pasos: transforma Y entrena.
 
 # Guardar TODO junto
-joblib.dump(pipeline, "pipeline.pkl")  # ← Scaler + Encoder + Model
+joblib.dump(pipeline, "pipeline.pkl")              # Serializa Scaler + Encoder + Model en UN archivo.
 
 # === PRODUCCIÓN ===
-pipeline = joblib.load("pipeline.pkl")
+pipeline = joblib.load("pipeline.pkl")             # Carga todo: transformadores YA fitted + modelo.
 
 # Una sola llamada hace TODO (con los parámetros de entrenamiento)
-predictions = pipeline.predict(X_new)  # ← Transforma Y predice
+predictions = pipeline.predict(X_new)              # predict() internamente transforma X_new y luego predice.
 
-# ✅ El scaler usa mean/std del entrenamiento
-# ✅ El encoder conoce las categorías del entrenamiento
-# ✅ Las predicciones son consistentes
+# ✅ El scaler usa mean/std del entrenamiento      → Consistencia garantizada.
+# ✅ El encoder conoce las categorías del entrenamiento → No crash por categorías nuevas.
+# ✅ Las predicciones son consistentes             → Sin training-serving skew.
 ```
 
 ---
@@ -207,38 +207,38 @@ Columnas categóricas (Geography, Gender):
 ### ColumnTransformer: La Solución Elegante
 
 ```python
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer        # Enruta transformaciones por grupos de columnas.
+from sklearn.preprocessing import StandardScaler, OneHotEncoder  # Transformadores estándar.
+from sklearn.impute import SimpleImputer             # Imputa valores faltantes (NaN).
+from sklearn.pipeline import Pipeline                # Encadena pasos secuenciales.
 
 # Definir qué columnas son de cada tipo
-num_cols = ["CreditScore", "Age", "Tenure", "Balance", "NumOfProducts", "EstimatedSalary"]
-cat_cols = ["Geography", "Gender"]
+num_cols = ["CreditScore", "Age", "Tenure", "Balance", "NumOfProducts", "EstimatedSalary"]  # Numéricas.
+cat_cols = ["Geography", "Gender"]                   # Categóricas: valores discretos/textuales.
 
 # Pipeline para numéricas: Imputar NaN → Escalar
-num_pipeline = Pipeline([
-    ('imputer', SimpleImputer(strategy='median')),  # NaN → mediana
-    ('scaler', StandardScaler())                     # Normalizar
+num_pipeline = Pipeline([                            # Pipeline DENTRO de ColumnTransformer.
+    ('imputer', SimpleImputer(strategy='median')),   # Rellena NaN con mediana (robusto a outliers).
+    ('scaler', StandardScaler())                     # Normaliza a mean=0, std=1.
 ])
 
 # Pipeline para categóricas: Imputar NaN → One-Hot
 cat_pipeline = Pipeline([
-    ('imputer', SimpleImputer(strategy='constant', fill_value='Unknown')),
-    ('encoder', OneHotEncoder(handle_unknown='ignore'))  # Categorías nuevas → ignorar
+    ('imputer', SimpleImputer(strategy='constant', fill_value='Unknown')),  # NaN → string "Unknown".
+    ('encoder', OneHotEncoder(handle_unknown='ignore'))  # ignore: categorías nuevas → vector de ceros.
 ])
 
 # ColumnTransformer: Aplica cada pipeline a sus columnas
 preprocessor = ColumnTransformer(
-    transformers=[
-        ('num', num_pipeline, num_cols),  # (nombre, transformer, columnas)
-        ('cat', cat_pipeline, cat_cols)
+    transformers=[                                   # Lista de transformadores.
+        ('num', num_pipeline, num_cols),             # (nombre, transformer, columnas_a_transformar).
+        ('cat', cat_pipeline, cat_cols)              # Cada grupo se procesa independientemente.
     ],
-    remainder='drop'  # Columnas no listadas se eliminan
+    remainder='drop'                                 # 'drop': elimina columnas no listadas. 'passthrough': las deja.
 )
 
 # Resultado: Un solo objeto que sabe transformar todo
-X_processed = preprocessor.fit_transform(X_train)
+X_processed = preprocessor.fit_transform(X_train)   # fit: aprende parámetros; transform: aplica.
 ```
 
 ### Visualización del Flujo

@@ -1,10 +1,14 @@
 # 📅 SYLLABUS — Guía MLOps (Portfolio Edition)
-
-> **Programa completo de 8 semanas para construir el portafolio ML-MLOps-Portfolio desde cero**
-
----
-
-> 📌 **Navegación**: Este documento complementa el [Índice Principal (00_INDICE.md)](00_INDICE.md) con detalles de macro-módulos y progresión 0 → Senior/Staff. Para la estructura módulo por módulo, consulta el índice.
+ 
+ > Ruta principal (recomendada): **24 semanas (6 meses)**.
+ >
+ > Ruta acelerada: **8 semanas**.
+ >
+ > 🗺️ **Mapa 1:1 Portafolio → Guía**: [MAPA_PORTAFOLIO_1TO1.md](MAPA_PORTAFOLIO_1TO1.md)
+ 
+ ---
+ 
+ > 📌 **Navegación**: Este documento complementa el [Índice Principal (00_INDICE.md)](00_INDICE.md) con detalles de macro-módulos y progresión 0 → Senior/Staff. Para la estructura módulo por módulo, consulta el índice.
 
 ---
 
@@ -21,11 +25,11 @@ Al completar este programa serás capaz de:
 
 ---
 
-## 📊 Estructura del Programa (12 Módulos)
-
-| Módulo | Nombre | Duración | Mini-Proyecto |
-|:------:|:-------|:--------:|:--------------|
-| 00 | Introducción | 0.5 días | Setup inicial |
+ ## 📊 Estructura del Programa (12 Módulos) — Ruta acelerada (8 semanas)
+ 
+ | Módulo | Nombre | Duración | Mini-Proyecto |
+ |:------:|:-------|:--------:|:--------------|
+ | 00 | Introducción | 0.5 días | Setup inicial |
 | 01 | Python Moderno | 2 días | Librería `utils/` |
 | 02 | Ingeniería de Datos | 4 días | ETL reproducible |
 | 03 | Feature Engineering | 3 días | Transformadores `.pkl` |
@@ -38,9 +42,11 @@ Al completar este programa serás capaz de:
 | 10 | Observabilidad | 2 días | Logging + alertas |
 | 11 | Mantenimiento & Auditoría | 2 días | Runbooks |
 
- **Tiempo total estimado**: 32 días (~6-8 semanas a ritmo moderado)
-
- ---
+  **Tiempo total estimado (ruta acelerada)**: 32 días (~6-8 semanas a ritmo moderado)
+ 
+ > Si sigues la **ruta principal (24 semanas)**, usa este mismo mapa pero con más práctica, debugging y entregables (ver `README.md` del repo y el `00_INDICE.md`).
+ 
+  ---
 
  ## 🧭 Ruta 0 → Senior/Staff (macro-módulos)
 

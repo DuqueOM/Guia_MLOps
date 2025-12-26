@@ -46,9 +46,9 @@
  
 Construir dashboards interactivos profesionales como el de CarVision.
 ```
- ╔══════════════════════════════════════════════════════════════════════════════╗
- ║                                                                              ║
- ║  Streamlit = La forma más rápida de crear UIs para ML                        ║
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║  Streamlit = La forma más rápida de crear UIs para ML                        ║
 ║                                                                              ║
 ║  ✅ Python puro (sin HTML/CSS/JS)                                            ║
 ║  ✅ Reactivo (cambios automáticos)                                           ║
@@ -112,20 +112,20 @@ Construir dashboards interactivos profesionales como el de CarVision.
 ```python
 # app/streamlit_app.py - Estructura básica
 
-import streamlit as st
-import pandas as pd
-import joblib
-from pathlib import Path
+import streamlit as st                   # Framework para dashboards interactivos.
+import pandas as pd                      # DataFrames para datos.
+import joblib                            # Cargar modelos serializados.
+from pathlib import Path                 # Rutas multiplataforma.
 
 # ═══════════════════════════════════════════════════════════════════════════
 # PAGE CONFIG (debe ser la primera llamada Streamlit)
 # ═══════════════════════════════════════════════════════════════════════════
 
-st.set_page_config(
-    page_title="CarVision Market Intelligence",
-    page_icon="🚗",
-    layout="wide",
-    initial_sidebar_state="expanded"
+st.set_page_config(                      # Configura metadata de la página.
+    page_title="CarVision Market Intelligence",  # Título en tab del browser.
+    page_icon="🚗",                      # Favicon.
+    layout="wide",                       # Usa todo el ancho de pantalla.
+    initial_sidebar_state="expanded"     # Sidebar abierto por defecto.
 )
 
 
@@ -133,21 +133,21 @@ st.set_page_config(
 # CACHING: Cargar datos y modelo UNA vez
 # ═══════════════════════════════════════════════════════════════════════════
 
-@st.cache_data  # Cache para datos (inmutables)
-def load_data():
+@st.cache_data                           # Decorator: cachea resultado de la función.
+def load_data():                         # Se ejecuta UNA vez; luego retorna del cache.
     """Carga dataset - cached para performance."""
     path = Path("data/raw/vehicles_us.csv")
     if path.exists():
-        return pd.read_csv(path)
-    return None
+        return pd.read_csv(path)         # CSV → DataFrame.
+    return None                          # None si no existe (manejo graceful).
 
 
-@st.cache_resource  # Cache para recursos (modelo, conexiones)
-def load_model():
+@st.cache_resource                       # cache_resource: para objetos no serializables.
+def load_model():                        # Modelos, conexiones DB, etc.
     """Carga modelo - cached para no recargar en cada interacción."""
     path = Path("artifacts/model.joblib")
     if path.exists():
-        return joblib.load(path)
+        return joblib.load(path)         # Deserializa el pipeline completo.
     return None
 
 
@@ -156,26 +156,26 @@ def load_model():
 # ═══════════════════════════════════════════════════════════════════════════
 
 def main():
-    st.title("�� CarVision Market Intelligence")
+    st.title("🚗 CarVision Market Intelligence")  # Título principal H1.
     st.markdown("*Análisis de mercado y predicción de precios de vehículos*")
     
-    # Cargar datos
-    df = load_data()
+    # Cargar datos (desde cache después de primera carga)
+    df = load_data()                     # Instantáneo gracias al cache.
     model = load_model()
     
-    if df is None:
-        st.error("❌ No se encontró el dataset")
+    if df is None:                       # Validación defensiva.
+        st.error("❌ No se encontró el dataset")  # Muestra error en rojo.
         return
     
     # Tabs para organizar contenido
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4 = st.tabs([   # Crea 4 pestañas.
         "📊 Overview",
         "📈 Market Analysis", 
         "🎯 Model Metrics",
         "💰 Price Predictor"
     ])
     
-    with tab1:
+    with tab1:                           # Context manager: contenido del tab.
         render_overview(df)
     
     with tab2:
@@ -188,7 +188,7 @@ def main():
         render_price_predictor(model, df)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":               # Solo ejecuta si es script principal.
     main()
 ```
 
@@ -204,15 +204,15 @@ if __name__ == "__main__":
 # @st.cache_data: Para DATOS (DataFrames, listas, dicts)
 # Se serializa y almacena. Inmutable.
 
-@st.cache_data(ttl=3600)  # TTL: 1 hora
+@st.cache_data(ttl=3600)                 # ttl=3600: cache expira después de 1 hora (segundos).
 def load_data():
-    df = pd.read_csv("data.csv")
-    return df
+    df = pd.read_csv("data.csv")         # Operación costosa: solo se ejecuta 1 vez.
+    return df                            # Resultado se serializa y almacena.
 
-@st.cache_data
-def compute_statistics(df):
+@st.cache_data                           # Sin ttl: cache infinito hasta reiniciar app.
+def compute_statistics(df):              # df es parte del "cache key".
     """Cálculos pesados - cached."""
-    return {
+    return {                             # Diccionario serializable.
         "mean": df["price"].mean(),
         "median": df["price"].median(),
         "std": df["price"].std(),
@@ -220,15 +220,15 @@ def compute_statistics(df):
 
 
 # @st.cache_resource: Para RECURSOS (modelos, conexiones DB)
-# No se serializa. Se mantiene la referencia.
+# No se serializa. Se mantiene la referencia al objeto.
 
-@st.cache_resource
+@st.cache_resource                       # Para objetos que NO se pueden serializar.
 def load_model():
-    return joblib.load("model.joblib")
+    return joblib.load("model.joblib")   # Pipeline sklearn: objeto complejo.
 
-@st.cache_resource
+@st.cache_resource                       # Conexiones DB: mantener viva la conexión.
 def get_db_connection():
-    return create_engine("postgresql://...")
+    return create_engine("postgresql://...")  # Engine SQLAlchemy.
 ```
 
 ### Patrón: Separar Carga de Visualización

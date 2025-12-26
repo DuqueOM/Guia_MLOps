@@ -1514,7 +1514,7 @@ Recall = TP / (TP + FN) → Maximizar TP, minimizar FN
 - Comandos de diagnóstico y recuperación
 - Escalamiento y contactos
 
-**En el portafolio:** Ver [17_DESPLIEGUE.md → Operaciones y Runbooks](17_DESPLIEGUE.md#-operaciones-y-runbooks).
+**En el portafolio:** Ver [17_DESPLIEGUE.md](17_DESPLIEGUE.md).
 
 **Relacionados:** SLO, SLA, Incident Response, On-call
 

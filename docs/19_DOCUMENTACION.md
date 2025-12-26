@@ -117,38 +117,38 @@ mkdocs.yml                  # Configuración
 ### mkdocs.yml
 
 ```yaml
-site_name: BankChurn Predictor
-site_description: API para predicción de churn bancario
+site_name: BankChurn Predictor          # Nombre del sitio en el header.
+site_description: API para predicción de churn bancario  # Meta description para SEO.
 site_author: Tu Nombre
-site_url: https://username.github.io/bankchurn
+site_url: https://username.github.io/bankchurn  # URL base del sitio publicado.
 
 theme:
-  name: material
-  language: es
-  palette:
-    - scheme: default
-      primary: indigo
-      accent: indigo
+  name: material                        # Material for MkDocs: tema moderno y responsive.
+  language: es                          # Idioma de la UI.
+  palette:                              # Colores del tema (toggle light/dark).
+    - scheme: default                   # Modo claro.
+      primary: indigo                   # Color primario.
+      accent: indigo                    # Color de acentos (links, botones).
       toggle:
-        icon: material/brightness-7
+        icon: material/brightness-7     # Icono del toggle.
         name: Cambiar a modo oscuro
-    - scheme: slate
+    - scheme: slate                     # Modo oscuro.
       primary: indigo
       accent: indigo
       toggle:
         icon: material/brightness-4
         name: Cambiar a modo claro
-  features:
-    - navigation.tabs
-    - navigation.sections
-    - navigation.expand
-    - search.suggest
-    - content.code.copy
-    - content.tabs.link
+  features:                             # Features del tema Material.
+    - navigation.tabs                   # Tabs en el header para secciones.
+    - navigation.sections               # Secciones colapsables en sidebar.
+    - navigation.expand                 # Expande subsecciones automáticamente.
+    - search.suggest                    # Autocompletado en búsqueda.
+    - content.code.copy                 # Botón para copiar código.
+    - content.tabs.link                 # Sincroniza tabs entre páginas.
 
-nav:
+nav:                                    # Estructura de navegación del sitio.
   - Home: index.md
-  - Getting Started:
+  - Getting Started:                    # Sección con subpáginas.
     - Instalación: getting-started/installation.md
     - Quick Start: getting-started/quickstart.md
     - Configuración: getting-started/configuration.md
@@ -164,32 +164,32 @@ nav:
     - Testing: development/testing.md
   - Model Card: model/model-card.md
 
-markdown_extensions:
-  - pymdownx.highlight:
-      anchor_linenums: true
-  - pymdownx.superfences:
+markdown_extensions:                    # Extensiones de Markdown adicionales.
+  - pymdownx.highlight:                 # Syntax highlighting para código.
+      anchor_linenums: true             # Links a líneas específicas.
+  - pymdownx.superfences:               # Bloques de código avanzados.
       custom_fences:
-        - name: mermaid
+        - name: mermaid                 # Soporte para diagramas Mermaid.
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.tabbed:
+  - pymdownx.tabbed:                    # Tabs dentro del contenido.
       alternate_style: true
-  - admonition
-  - pymdownx.details
-  - attr_list
-  - md_in_html
-  - tables
+  - admonition                          # Boxes de nota/warning/tip.
+  - pymdownx.details                    # Secciones colapsables.
+  - attr_list                           # Atributos HTML en Markdown.
+  - md_in_html                          # Markdown dentro de HTML.
+  - tables                              # Tablas Markdown.
 
 plugins:
-  - search
-  - mkdocstrings:
+  - search                              # Búsqueda integrada.
+  - mkdocstrings:                       # Auto-documentación desde docstrings.
       handlers:
         python:
           options:
-            show_source: true
+            show_source: true           # Muestra código fuente en docs.
 
 extra:
-  social:
+  social:                               # Links a redes sociales en footer.
     - icon: fontawesome/brands/github
       link: https://github.com/username/bankchurn
 ```
@@ -198,16 +198,16 @@ extra:
 
 ```bash
 # Instalar
-pip install mkdocs mkdocs-material mkdocstrings[python]
+pip install mkdocs mkdocs-material mkdocstrings[python]  # mkdocs-material: tema popular. mkdocstrings: autodoc de Python.
 
 # Desarrollo local
-mkdocs serve
+mkdocs serve                          # Inicia servidor en localhost:8000 con hot-reload.
 
 # Build
-mkdocs build
+mkdocs build                          # Genera HTML estático en carpeta site/.
 
 # Deploy a GitHub Pages
-mkdocs gh-deploy
+mkdocs gh-deploy                      # Construye y hace push a branch gh-pages automáticamente.
 ```
 
 ---
@@ -440,9 +440,7 @@ MIT © Tu Nombre
 
 ---
 
-<a id="errores-habituales"></a>
-
-## 🧨 Errores habituales y cómo depurarlos en documentación ML
+## 🧨 Errores habituales y cómo depurarlos en documentación ML {#errores-habituales}
 
 La documentación suele quedarse para el final, y eso genera READMEs desactualizados y Model Cards incompletas.
 
@@ -525,9 +523,7 @@ Con esta mentalidad, tu documentación pasa de ser un "nice to have" a convertir
 
 ---
 
-<a id="195-ejercicio-crea-tu-documentacion"></a>
-
-## 19.5 Ejercicio: Crea Tu Documentación
+## 19.5 Ejercicio: Crea Tu Documentación {#195-ejercicio-crea-tu-documentacion}
 
 ### Checklist
 
@@ -620,9 +616,9 @@ Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
 
 ## 📋 Plantillas Relacionadas
 
-Ver [templates/](../templates/index.md) para plantillas listas:
-- [model_card_template.md](../templates/model_card_template.md) — Documentación completa de modelos
-- [dataset_card_template.md](../templates/dataset_card_template.md) — Documentación de datasets
+Ver [templates/](templates/index.md) para plantillas listas:
+- [model_card_template.md](templates/model_card_template.md) — Documentación completa de modelos
+- [dataset_card_template.md](templates/dataset_card_template.md) — Documentación de datasets
 
 ---
 

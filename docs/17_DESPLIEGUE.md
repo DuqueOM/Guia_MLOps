@@ -143,42 +143,42 @@ lambda_function/
 
 ```python
 # handler.py - AWS Lambda Handler
-import json
-import joblib
-import pandas as pd
-from pathlib import Path
+import json                              # Parse/serialize JSON.
+import joblib                            # Cargar modelo sklearn.
+import pandas as pd                      # DataFrame para predicción.
+from pathlib import Path                 # Rutas multiplataforma.
 
 # Cargar modelo al inicio (fuera del handler para reutilizar)
-MODEL_PATH = Path(__file__).parent / "model" / "pipeline.pkl"
-model = joblib.load(MODEL_PATH)
+MODEL_PATH = Path(__file__).parent / "model" / "pipeline.pkl"  # Ruta relativa al handler.
+model = joblib.load(MODEL_PATH)          # Se carga UNA vez (warm start reutiliza).
 
-def lambda_handler(event, context):
+def lambda_handler(event, context):      # Punto de entrada de Lambda. context: metadata del runtime.
     """AWS Lambda handler."""
     try:
-        # Parse input
-        if isinstance(event.get("body"), str):
-            body = json.loads(event["body"])
+        # Parse input - Lambda puede recibir body como string o dict
+        if isinstance(event.get("body"), str):  # API Gateway envía body como string.
+            body = json.loads(event["body"])    # Deserializa JSON.
         else:
-            body = event.get("body", event)
+            body = event.get("body", event)     # Invocación directa: body es dict.
         
         # Crear DataFrame
-        df = pd.DataFrame([body])
+        df = pd.DataFrame([body])               # Lista con 1 elemento → 1 fila.
         
         # Predecir
-        proba = model.predict_proba(df)[0, 1]
-        prediction = "churn" if proba >= 0.5 else "no_churn"
+        proba = model.predict_proba(df)[0, 1]   # [0,1]: fila 0, clase positiva.
+        prediction = "churn" if proba >= 0.5 else "no_churn"  # Umbral 0.5.
         
-        return {
-            "statusCode": 200,
+        return {                                # Response format para API Gateway.
+            "statusCode": 200,                  # HTTP 200 OK.
             "headers": {"Content-Type": "application/json"},
-            "body": json.dumps({
+            "body": json.dumps({                # body DEBE ser string JSON.
                 "churn_probability": round(proba, 4),
                 "prediction": prediction,
             })
         }
     except Exception as e:
         return {
-            "statusCode": 500,
+            "statusCode": 500,                  # 500: Internal Server Error.
             "body": json.dumps({"error": str(e)})
         }
 ```
@@ -187,31 +187,31 @@ def lambda_handler(event, context):
 
 ```yaml
 # serverless.yml
-service: bankchurn-predictor
+service: bankchurn-predictor             # Nombre del servicio (prefijo de recursos).
 
 provider:
-  name: aws
-  runtime: python3.11
-  region: us-east-1
-  memorySize: 1024
-  timeout: 30
+  name: aws                              # Cloud provider.
+  runtime: python3.11                    # Versión de Python.
+  region: us-east-1                      # Región de AWS.
+  memorySize: 1024                       # MB de RAM (más RAM = más CPU proporcional).
+  timeout: 30                            # Timeout en segundos (máx 15 min).
 
 functions:
-  predict:
-    handler: handler.lambda_handler
-    events:
-      - http:
-          path: predict
-          method: post
-          cors: true
+  predict:                               # Nombre de la función Lambda.
+    handler: handler.lambda_handler      # módulo.función a ejecutar.
+    events:                              # Triggers que invocan la función.
+      - http:                            # API Gateway HTTP trigger.
+          path: predict                  # Ruta: /predict
+          method: post                   # Método HTTP.
+          cors: true                     # Habilita CORS automáticamente.
 
 plugins:
-  - serverless-python-requirements
+  - serverless-python-requirements      # Plugin para empaquetar deps de Python.
 
 custom:
   pythonRequirements:
-    dockerizePip: true
-    slim: true
+    dockerizePip: true                   # Compila deps en Docker (para binarios nativos).
+    slim: true                           # Elimina archivos innecesarios (reduce tamaño).
 ```
 
 ---
@@ -570,6 +570,83 @@ Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario
 4. Ajusta la plataforma elegida si tus patrones de tráfico o equipo no encajan con la decisión inicial.
 
 Con esta disciplina, pasar de local a producción se vuelve un proceso repetible y menos doloroso.
+
+---
+
+## 17.6.1 Kubernetes Ingress con TLS y Rate Limiting
+
+> **Referencia del portafolio**: `k8s/ingress.yaml`
+
+### Ingress con cert-manager (TLS automático)
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ml-portfolio-ingress
+  annotations:
+    # TLS con cert-manager
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # Rate limiting con nginx-ingress
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+    nginx.ingress.kubernetes.io/limit-connections: "5"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - ml-api.example.com
+    secretName: ml-api-tls
+  rules:
+  - host: ml-api.example.com
+    http:
+      paths:
+      - path: /bankchurn
+        pathType: Prefix
+        backend:
+          service:
+            name: bankchurn-service
+            port:
+              number: 80
+      - path: /carvision
+        pathType: Prefix
+        backend:
+          service:
+            name: carvision-service
+            port:
+              number: 80
+```
+
+### ClusterIssuer para Let's Encrypt
+
+```yaml
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: tu-email@example.com
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+```
+
+### Verificación
+
+```bash
+# Verificar ingress
+kubectl get ingress ml-portfolio-ingress
+
+# Verificar certificado TLS
+kubectl get certificate ml-api-tls
+
+# Test con curl
+curl -v https://ml-api.example.com/bankchurn/health
+```
 
 ---
 

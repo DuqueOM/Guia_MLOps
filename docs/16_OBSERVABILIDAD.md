@@ -145,65 +145,126 @@ scrape_configs:
 ```python
 # app/metrics.py
 
-from prometheus_client import Counter, Histogram, Gauge, generate_latest
-from fastapi import Response
+from prometheus_client import Counter, Histogram, Gauge, generate_latest  # Tipos de métricas Prometheus.
+from fastapi import Response              # Response para retornar texto plano.
 
-# Métricas
-PREDICTIONS_TOTAL = Counter(
-    'predictions_total',
-    'Total de predicciones realizadas',
-    ['model', 'result']
+# Métricas - Se definen a nivel módulo (globales)
+PREDICTIONS_TOTAL = Counter(              # Counter: solo incrementa (total acumulado).
+    'predictions_total',                  # Nombre de la métrica (snake_case).
+    'Total de predicciones realizadas',   # Descripción (aparece en /metrics).
+    ['model', 'result']                   # Labels: permiten filtrar por modelo/resultado.
 )
 
-PREDICTION_LATENCY = Histogram(
-    'prediction_latency_seconds',
+PREDICTION_LATENCY = Histogram(           # Histogram: distribución de valores (latencias).
+    'prediction_latency_seconds',         # Convención: unidad en el nombre (_seconds).
     'Latencia de predicciones',
-    ['model'],
-    buckets=[0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0]
+    ['model'],                            # Label para filtrar por modelo.
+    buckets=[0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0]  # Rangos para calcular percentiles.
 )
 
-MODEL_LOADED = Gauge(
-    'model_loaded',
+MODEL_LOADED = Gauge(                     # Gauge: valor que sube/baja (estado actual).
+    'model_loaded',                       # 1 si cargado, 0 si no.
     'Indica si el modelo está cargado',
     ['model']
 )
 
-PREDICTION_PROBABILITY = Histogram(
-    'prediction_probability',
+PREDICTION_PROBABILITY = Histogram(       # Histogram para monitorear distribución de predicciones.
+    'prediction_probability',             # Útil para detectar drift en predicciones.
     'Distribución de probabilidades predichas',
     ['model'],
-    buckets=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    buckets=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]  # Buckets cada 10%.
 )
 
 
 # Endpoint de métricas
-@app.get("/metrics")
+@app.get("/metrics")                      # Prometheus hace scrape a este endpoint.
 async def metrics():
     return Response(
-        content=generate_latest(),
-        media_type="text/plain"
+        content=generate_latest(),        # generate_latest(): serializa todas las métricas.
+        media_type="text/plain"           # Prometheus espera text/plain.
     )
 
 
 # Uso en predicción
-import time
+import time                               # Para medir latencia.
 
 @app.post("/predict")
 async def predict(request: PredictionRequest):
-    start = time.time()
+    start = time.time()                   # Timestamp antes de predecir.
     
     # ... predicción ...
     proba = model.predict_proba(df)[0, 1]
     prediction = int(proba >= 0.5)
     
     # Registrar métricas
-    latency = time.time() - start
-    PREDICTION_LATENCY.labels(model="bankchurn").observe(latency)
-    PREDICTIONS_TOTAL.labels(model="bankchurn", result=str(prediction)).inc()
-    PREDICTION_PROBABILITY.labels(model="bankchurn").observe(proba)
+    latency = time.time() - start         # Calcula latencia en segundos.
+    PREDICTION_LATENCY.labels(model="bankchurn").observe(latency)  # observe(): registra en histogram.
+    PREDICTIONS_TOTAL.labels(model="bankchurn", result=str(prediction)).inc()  # inc(): incrementa counter.
+    PREDICTION_PROBABILITY.labels(model="bankchurn").observe(proba)  # Registra prob para detectar drift.
     
     return {"prediction": prediction, "probability": proba}
 ```
+
+### 16.2.1 Prometheus Alerting Rules
+
+> **Referencia del portafolio**: `infra/prometheus-rules.yaml`
+
+```yaml
+# prometheus-rules.yaml
+groups:
+  - name: ml-service-alerts
+    rules:
+      # Latencia alta
+      - alert: HighPredictionLatency
+        expr: histogram_quantile(0.99, rate(prediction_latency_seconds_bucket[5m])) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latencia P99 alta en {{ $labels.model }}"
+          description: "P99 latencia es {{ $value }}s (umbral: 200ms)"
+          runbook_url: "https://docs.example.com/runbooks/high-latency"
+
+      # Error rate alto
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Error rate alto en {{ $labels.service }}"
+          description: "Error rate es {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.example.com/runbooks/high-error-rate"
+
+      # Drift detectado
+      - alert: DataDriftDetected
+        expr: ml_drift_score > 0.15
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Data drift detectado en {{ $labels.model }}"
+          description: "Drift score es {{ $value }} (umbral: 0.15)"
+          runbook_url: "https://docs.example.com/runbooks/data-drift"
+
+      # Servicio caído
+      - alert: ServiceDown
+        expr: up{job=~"bankchurn|carvision|telecomai"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Servicio {{ $labels.job }} está caído"
+```
+
+### Buenas prácticas para alertas
+
+| Práctica | Descripción |
+|----------|-------------|
+| **Accionable** | Cada alerta debe tener un runbook con pasos concretos |
+| **Umbral realista** | Basar umbrales en datos históricos, no en intuición |
+| **Severidad apropiada** | `critical` solo para lo que requiere acción inmediata |
+| **Evitar ruido** | Usar `for:` para evitar alertas por spikes temporales |
 
 ---
 
@@ -517,6 +578,277 @@ jobs:
               body: 'Drift detection workflow failed. Check the artifacts.',
               labels: ['drift', 'monitoring']
             })
+```
+
+---
+
+<a id="165-runbooks-de-alertas"></a>
+
+## 16.5 Runbooks de Alertas ⭐ NUEVO
+
+Un **runbook** documenta los pasos exactos para responder a una alerta. Sin runbooks, las alertas son ruido; con runbooks, son acción.
+
+### 16.5.1 Estructura de un Runbook
+
+```markdown
+# 🚨 Runbook: HighPredictionLatency
+
+## Resumen
+| Campo | Valor |
+|-------|-------|
+| Alerta | `HighPredictionLatency` |
+| Severidad | Warning → Critical si persiste >15m |
+| Impacto | UX degradada, timeouts en clientes |
+| On-call | @ml-platform-team |
+
+## Diagnóstico Rápido (< 2 min)
+
+1. **Verificar si es puntual o sostenido**
+   ```bash
+   # Ver P99 de últimos 15 min
+   curl -s "http://prometheus:9090/api/v1/query?query=histogram_quantile(0.99,rate(prediction_latency_seconds_bucket[15m]))" | jq
+   ```
+
+2. **Verificar recursos del servicio**
+   ```bash
+   docker stats bankchurn-api --no-stream
+   # CPU > 80%? Memory > 85%?
+   ```
+
+3. **Verificar logs recientes**
+   ```bash
+   docker logs bankchurn-api --tail 100 --since 5m | grep -i error
+   ```
+
+## Causas Comunes y Soluciones
+
+### Causa 1: Modelo demasiado grande en memoria
+**Síntomas**: Memory alta, swap activo
+**Solución**:
+```bash
+# Escalar horizontalmente
+kubectl scale deployment bankchurn --replicas=3
+
+# O reiniciar para liberar memoria
+docker restart bankchurn-api
+```
+
+### Causa 2: Spike de tráfico
+**Síntomas**: Request rate 3x+ del baseline
+**Solución**:
+```bash
+# Verificar rate actual
+curl -s "http://prometheus:9090/api/v1/query?query=rate(http_requests_total[5m])"
+
+# Escalar si es necesario
+kubectl autoscale deployment bankchurn --min=2 --max=10 --cpu-percent=70
+```
+
+### Causa 3: Datos de entrada anómalos
+**Síntomas**: Latencia solo en algunos requests
+**Solución**:
+```bash
+# Revisar payloads problemáticos en logs
+docker logs bankchurn-api | grep "latency_ms.*[0-9]{4}" | tail 20
+
+# Añadir validación de input más estricta
+```
+
+## Escalación
+- Si no se resuelve en **15 min** → Escalar a @senior-ml-engineer
+- Si impacto en revenue → Escalar a @on-call-manager
+- Si es recurrente (3+ veces/semana) → Crear ticket para investigación root cause
+
+## Post-mortem
+Después de resolver, documentar:
+- [ ] Timeline del incidente
+- [ ] Root cause
+- [ ] Acciones para prevenir recurrencia
+```
+
+### 16.5.2 Runbook: Data Drift Detectado
+
+```markdown
+# 🚨 Runbook: DataDriftDetected
+
+## Resumen
+| Campo | Valor |
+|-------|-------|
+| Alerta | `DataDriftDetected` |
+| Severidad | Warning |
+| Impacto | Predicciones potencialmente degradadas |
+| Urgencia | 24-48h para investigar |
+
+## Diagnóstico
+
+1. **Revisar reporte de drift**
+   ```bash
+   # Ver último reporte
+   ls -la artifacts/drift/
+   # Abrir HTML en browser para análisis visual
+   open artifacts/drift/drift_report_*.html
+   ```
+
+2. **Identificar features con drift**
+   ```bash
+   cat artifacts/drift/drift_metrics_*.json | jq '.drifted_features'
+   ```
+
+3. **Verificar si hay cambio en fuente de datos**
+   - ¿Cambió el proveedor de datos?
+   - ¿Hay un nuevo segmento de usuarios?
+   - ¿Hay un bug en el pipeline de datos?
+
+## Árbol de Decisión
+
+```
+¿Drift > 30% de features?
+├── SÍ → Probable cambio en fuente de datos
+│        → Investigar pipeline de ingesta
+│        → Considerar retrain urgente
+│
+└── NO → Drift localizado
+         ├── ¿Features críticas?
+         │   ├── SÍ → Retrain en 1-2 días
+         │   └── NO → Monitorear 1 semana
+         │
+         └── ¿Drift estacional esperado?
+             ├── SÍ → Documentar, no acción
+             └── NO → Investigar causa
+```
+
+## Acciones según severidad
+
+| Drift Share | Acción |
+|-------------|--------|
+| < 10% | Monitorear, no acción inmediata |
+| 10-30% | Investigar en 48h, considerar retrain |
+| > 30% | Retrain urgente, posible rollback a modelo anterior |
+
+## Comandos de Retrain
+
+```bash
+# 1. Verificar datos disponibles
+ls -la data/recent/
+
+# 2. Disparar retrain
+python main.py --mode train --experiment-name "retrain-$(date +%Y%m%d)"
+
+# 3. Comparar métricas
+python scripts/compare_models.py --baseline production --candidate new
+
+# 4. Si mejora, promover
+python scripts/promote_model.py --model-name bankchurn --stage Production
+```
+```
+
+### 16.5.3 Runbook: Service Down
+
+```markdown
+# 🚨 Runbook: ServiceDown
+
+## Resumen
+| Campo | Valor |
+|-------|-------|
+| Alerta | `ServiceDown` |
+| Severidad | CRITICAL |
+| Impacto | Servicio completamente inaccesible |
+| SLA | Responder < 5 min |
+
+## Diagnóstico Inmediato (< 1 min)
+
+```bash
+# 1. Verificar estado de contenedores
+docker ps -a | grep -E "(bankchurn|carvision|telecom)"
+
+# 2. Ver último log
+docker logs --tail 50 <container_name>
+
+# 3. Health check manual
+curl -v http://localhost:8001/health
+```
+
+## Recuperación Rápida
+
+### Opción A: Reiniciar servicio
+```bash
+docker restart bankchurn-api
+# Esperar 30s y verificar
+curl http://localhost:8001/health
+```
+
+### Opción B: Recrear contenedor
+```bash
+docker compose -f docker-compose.demo.yml up -d bankchurn
+```
+
+### Opción C: Rollback a versión anterior
+```bash
+# Si el problema es por deploy reciente
+docker pull ghcr.io/duqueom/bankchurn:previous-tag
+docker compose up -d
+```
+
+## Causas Comunes
+
+| Causa | Diagnóstico | Solución |
+|-------|-------------|----------|
+| OOM Kill | `docker logs` muestra `Killed` | Aumentar memory limit |
+| Puerto ocupado | `netstat -tlnp | grep 8001` | Matar proceso conflictivo |
+| Modelo no encontrado | Log: `FileNotFoundError` | Verificar volumen montado |
+| Crash en startup | Exit code 1 | Ver logs completos |
+
+## Comunicación
+- Notificar en #incidents-ml dentro de 5 min
+- Si > 15 min: Actualizar status page
+- Si > 30 min: Escalar a management
+```
+
+### 16.5.4 Template de Runbook
+
+```markdown
+# 🚨 Runbook: [NOMBRE_ALERTA]
+
+## Resumen
+| Campo | Valor |
+|-------|-------|
+| Alerta | `[nombre]` |
+| Severidad | [Warning/Critical] |
+| Impacto | [Descripción del impacto en usuarios/negocio] |
+| SLA | [Tiempo máximo de respuesta] |
+| Owner | [@team o @persona] |
+
+## Diagnóstico
+1. [Paso 1 con comando]
+2. [Paso 2 con comando]
+3. [Paso 3]
+
+## Causas Comunes
+| Causa | Síntomas | Solución |
+|-------|----------|----------|
+| [Causa 1] | [Cómo identificarla] | [Comandos/pasos] |
+| [Causa 2] | [Cómo identificarla] | [Comandos/pasos] |
+
+## Escalación
+- [Cuándo escalar]
+- [A quién escalar]
+
+## Referencias
+- [Links a dashboards relevantes]
+- [Links a documentación]
+```
+
+### 16.5.5 Organización de Runbooks en el Repo
+
+```
+docs/runbooks/
+├── README.md                    # Índice de runbooks
+├── high-latency.md             # Latencia alta
+├── high-error-rate.md          # Tasa de error
+├── service-down.md             # Servicio caído
+├── data-drift.md               # Drift detectado
+├── model-degradation.md        # Degradación de métricas
+└── disk-full.md                # Disco lleno (artifacts/logs)
 ```
 
 ---

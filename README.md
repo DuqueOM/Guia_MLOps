@@ -8,15 +8,15 @@
 
 ## 📋 Tabla de Contenidos
 
-1. [¿Qué Lograrás?](#-qué-lograrás)
-2. [Estructura del Programa (24 Semanas)](#-estructura-del-programa-24-semanas)
-3. [Tabla de Mapeo: Concepto → Herramienta → Portafolio](#-tabla-de-mapeo-concepto--herramienta--portafolio)
-4. [Roadmap Visual](#-roadmap-visual)
-5. [Contenido por Mes](#-contenido-por-mes)
-6. [Exámenes de Hito (6 Milestones)](#-exámenes-de-hito-6-milestones)
-7. [Guía de Troubleshooting](#-guía-de-troubleshooting)
-8. [Quick Start](#-quick-start)
-9. [Estructura de Carpetas](#-estructura-de-carpetas)
+1. [¿Qué Lograrás?](#qué-lograrás)
+2. [Estructura del Programa (24 Semanas)](#estructura-del-programa-24-semanas)
+3. [Tabla de Mapeo: Concepto → Herramienta → Portafolio](#tabla-de-mapeo-concepto--herramienta--portafolio)
+4. [Roadmap Visual](#roadmap-visual)
+5. [Contenido por Mes](#contenido-por-mes)
+6. [Exámenes de Hito (6 Milestones)](#exámenes-de-hito-6-milestones)
+7. [Guía de Troubleshooting](#guía-de-troubleshooting)
+8. [Quick Start](#quick-start)
+9. [Estructura de Carpetas](#estructura-de-carpetas)
 
 ---
 
@@ -449,15 +449,15 @@ dvc remote add -d storage s3://my-bucket/dvc
 dvc push
 ```
 
-**📦 Puente al Portafolio**: `BankChurn-Predictor/data/*.dvc`, `.dvc/config`
+📦 Puente al Portafolio: `BankChurn-Predictor/data/*.dvc`, `.dvc/config`
 
-**📝 Tarea**: `dvc pull` en una carpeta nueva debe traer exactamente los mismos datos
+📝 Tarea: `dvc pull` en una carpeta nueva debe traer exactamente los mismos datos
 
 ---
 
-#### � Semana 6: Pipelines DVC + Reproducibilidad
+#### 📖 Semana 6: Pipelines DVC + Reproducibilidad
 
-**🎯 Objetivo**: Crear pipelines de datos reproducibles con DAGs.
+🎯 Objetivo: Crear pipelines de datos reproducibles con DAGs.
 
 ##### 📐 Teoría Fundamental
 
@@ -502,17 +502,17 @@ dvc metrics show    # Muestra métricas
 dvc metrics diff    # Compara entre versiones
 ```
 
-**📦 Puente al Portafolio**: `BankChurn-Predictor/dvc.yaml`, `dvc.lock`
+📦 Puente al Portafolio: `BankChurn-Predictor/dvc.yaml`, `dvc.lock`
 
-**📝 Tarea**: `dvc repro` ejecuta sin errores y genera `metrics.json`
+📝 Tarea: `dvc repro` ejecuta sin errores y genera `metrics.json`
 
 ---
 
 #### 📖 Semana 7: sklearn Pipelines — Sin Data Leakage
 
-**🎯 Objetivo**: Crear pipelines ML que previenen data leakage.
+🎯 Objetivo: Crear pipelines ML que previenen data leakage.
 
-##### � Teoría Fundamental
+##### 📐 Teoría Fundamental
 
 | Concepto | Definición | Por qué es crítico |
 |----------|------------|-------------------|
@@ -520,7 +520,7 @@ dvc metrics diff    # Compara entre versiones
 | **fit vs transform** | fit aprende estadísticas, transform las aplica | fit SOLO en train, transform en train Y test |
 | **Pipeline** | Cadena de transformaciones como un objeto | Encapsula preprocessing + modelo |
 
-##### � Práctica de Ingeniería
+##### 🔧 Práctica de Ingeniería
 
 ```python
 # ═══════════════════════════════════════════════════════════════════════════
@@ -551,17 +551,17 @@ pipeline.fit(X_train, y_train)  # ✅ Aprende de train
 predictions = pipeline.predict(X_test)  # ✅ Sin leakage
 ```
 
-**📦 Puente al Portafolio**: `BankChurn-Predictor/src/bankchurn/pipeline.py`
+📦 Puente al Portafolio: `BankChurn-Predictor/src/bankchurn/pipeline.py`
 
-**📝 Tarea**: Crear `create_pipeline()` que retorna Pipeline completo
+📝 Tarea: Crear `create_pipeline()` que retorna Pipeline completo
 
 ---
 
 #### 📖 Semana 8: ColumnTransformer + Custom Transformers
 
-**🎯 Objetivo**: Procesar diferentes tipos de columnas con transformadores custom.
+🎯 Objetivo: Procesar diferentes tipos de columnas con transformadores custom.
 
-##### � Teoría Fundamental
+##### 📐 Teoría Fundamental
 
 | Concepto | Definición | Por qué es crítico |
 |----------|------------|-------------------|
@@ -569,7 +569,7 @@ predictions = pipeline.predict(X_test)  # ✅ Sin leakage
 | **BaseEstimator + TransformerMixin** | Clases base para transformadores sklearn-compatible | Tu transformer funciona en Pipeline |
 | **fit/transform API** | Contrato estándar de sklearn | Interoperabilidad garantizada |
 
-##### � Práctica de Ingeniería
+##### 🔧 Práctica de Ingeniería
 
 ```python
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -606,13 +606,13 @@ preprocessor = ColumnTransformer([
 ])
 ```
 
-**📦 Puente al Portafolio**: `CarVision-Market-Intelligence/src/carvision/features.py`
+📦 Puente al Portafolio: `CarVision-Market-Intelligence/src/carvision/features.py`
 
-**📝 Tarea**: Crear `OutlierClipper` y `FeatureEngineer` como transformers custom
+📝 Tarea: Crear `OutlierClipper` y `FeatureEngineer` como transformers custom
 
 ---
 
-### �️ MES 3: ML ENGINEERING (Semanas 9-12)
+### 🗓️ MES 3: ML ENGINEERING (Semanas 9-12)
 
 > **Objetivo**: Dominar entrenamiento profesional y tracking de experimentos.
 
@@ -620,9 +620,9 @@ preprocessor = ColumnTransformer([
 
 #### 📖 Semana 9: Ingeniería de Features
 
-**🎯 Objetivo**: Crear features robustos sin data leakage.
+🎯 Objetivo: Crear features robustos sin data leakage.
 
-##### � Teoría Fundamental
+##### 📐 Teoría Fundamental
 
 | Concepto | Analogía | Por qué importa |
 |----------|----------|-----------------|
@@ -1978,7 +1978,7 @@ curl -X POST http://localhost:8000/predict \
 Guia_MLOps/
 ├── README.md                    # 👈 Este archivo (índice maestro)
 ├── docs/
-│   ├── 00_INDICE.md            # Índice original (8 semanas)
+│   ├── 00_INDICE.md            # Índice (ruta 24 semanas + ruta acelerada 8 semanas)
 │   ├── 01_PYTHON_MODERNO.md    # Módulo: Python profesional
 │   ├── 02_DISENO_SISTEMAS.md   # Módulo: Arquitectura ML
 │   ├── 03_ESTRUCTURA_PROYECTO.md
@@ -2026,7 +2026,8 @@ Guia_MLOps/
 | Recurso | Descripción | Link |
 |---------|-------------|------|
 | **SYLLABUS.md** | Programa detallado macro-módulos | [docs/SYLLABUS.md](docs/SYLLABUS.md) |
-| **PLAN_ESTUDIOS.md** | Cronograma día a día (8 semanas) | [docs/PLAN_ESTUDIOS.md](docs/PLAN_ESTUDIOS.md) |
+| **MAPA_PORTAFOLIO_1TO1.md** | Mapa 1:1 (Portafolio → Guía → Tareas/Evidencia) | [docs/MAPA_PORTAFOLIO_1TO1.md](docs/MAPA_PORTAFOLIO_1TO1.md) |
+| **PLAN_ESTUDIOS.md** | Cronograma día a día (ruta acelerada 8 semanas) | [docs/PLAN_ESTUDIOS.md](docs/PLAN_ESTUDIOS.md) |
 | **EJERCICIOS.md** | Problemas prácticos | [docs/EJERCICIOS.md](docs/EJERCICIOS.md) |
 | **GLOSARIO.md** | 100+ términos MLOps | [docs/21_GLOSARIO.md](docs/21_GLOSARIO.md) |
 | **Speech Portafolio** | Guión 5-7 min | [docs/APENDICE_A_SPEECH_PORTAFOLIO.md](docs/APENDICE_A_SPEECH_PORTAFOLIO.md) |

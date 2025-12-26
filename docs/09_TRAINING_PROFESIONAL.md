@@ -99,22 +99,22 @@ Para que esto cuente como progreso real, fuerza este mapeo:
 ```python
 # src/bankchurn/training.py - Estructura REAL del portafolio
 
-from __future__ import annotations
+from __future__ import annotations       # Permite usar tipos como "Pipeline | None" en Python 3.10+.
 
-import logging
-from pathlib import Path
-from typing import Dict, Tuple
+import logging                           # Logging para trazabilidad del entrenamiento.
+from pathlib import Path                 # Manejo de rutas multiplataforma.
+from typing import Dict, Tuple           # Type hints para documentar tipos.
 
-import joblib
-import mlflow
-import numpy as np
-import pandas as pd
-from sklearn.model_selection import StratifiedKFold, train_test_split
-from sklearn.pipeline import Pipeline
+import joblib                            # Serialización de modelos sklearn.
+import mlflow                            # Tracking de experimentos.
+import numpy as np                       # Arrays numéricos.
+import pandas as pd                      # DataFrames para datos tabulares.
+from sklearn.model_selection import StratifiedKFold, train_test_split  # Split y CV.
+from sklearn.pipeline import Pipeline    # Pipeline unificado.
 
-from .config import BankChurnConfig
+from .config import BankChurnConfig      # Configuración Pydantic del proyecto.
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)     # Logger con nombre del módulo.
 
 
 class ChurnTrainer:

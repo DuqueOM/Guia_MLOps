@@ -1,6 +1,10 @@
-# 📅 Plan de Estudios — 8 Semanas
+# 📅 Plan de Estudios — Ruta Acelerada (8 Semanas)
 
 > **Roadmap detallado para completar el portafolio MLOps**
+
+> 📌 Ruta principal (recomendada): **24 semanas (6 meses)** — ver `README.md` del repo y el [Índice Principal](00_INDICE.md).
+>
+> 🗺️ Mapa 1:1 Portafolio → Guía: [MAPA_PORTAFOLIO_1TO1.md](MAPA_PORTAFOLIO_1TO1.md)
 
 ---
 

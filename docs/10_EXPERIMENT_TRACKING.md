@@ -210,36 +210,36 @@ class MLflowConfig(BaseModel):
 ### API Básica
 
 ```python
-import mlflow
+import mlflow                            # Cliente de MLflow para tracking.
 
 # Iniciar un run
-with mlflow.start_run(run_name="experiment-1"):
+with mlflow.start_run(run_name="experiment-1"):  # Context manager: auto-cierra el run al salir.
     
     # 1. LOG PARAMETERS (hiperparámetros, config)
-    mlflow.log_param("n_estimators", 200)
-    mlflow.log_param("max_depth", 10)
-    mlflow.log_params({  # Múltiples a la vez
+    mlflow.log_param("n_estimators", 200)        # log_param: registra UN parámetro (key-value).
+    mlflow.log_param("max_depth", 10)            # Los params son strings/números, no objetos.
+    mlflow.log_params({                          # log_params: registra MÚLTIPLES a la vez.
         "learning_rate": 0.1,
         "model_type": "random_forest"
     })
     
     # 2. LOG METRICS (resultados)
-    mlflow.log_metric("f1_score", 0.65)
-    mlflow.log_metric("auc_roc", 0.88)
-    mlflow.log_metrics({  # Múltiples a la vez
+    mlflow.log_metric("f1_score", 0.65)          # log_metric: registra UNA métrica numérica.
+    mlflow.log_metric("auc_roc", 0.88)           # Las métricas se pueden comparar en la UI.
+    mlflow.log_metrics({                         # log_metrics: múltiples a la vez.
         "precision": 0.70,
         "recall": 0.61
     })
     
     # 3. LOG ARTIFACTS (archivos)
-    mlflow.log_artifact("configs/config.yaml")
-    mlflow.log_artifact("artifacts/training_results.json")
+    mlflow.log_artifact("configs/config.yaml")   # log_artifact: sube archivo al servidor MLflow.
+    mlflow.log_artifact("artifacts/training_results.json")  # Útil para reproducir el experimento.
     
     # 4. LOG MODEL (modelo serializado con metadata)
-    mlflow.sklearn.log_model(
-        pipeline,
-        artifact_path="model",
-        registered_model_name="BankChurnClassifier"
+    mlflow.sklearn.log_model(                    # sklearn: "flavor" específico para modelos sklearn.
+        pipeline,                                # El objeto Pipeline fitted.
+        artifact_path="model",                   # Subcarpeta dentro de artifacts del run.
+        registered_model_name="BankChurnClassifier"  # Si existe, crea nueva versión; si no, lo crea.
     )
 ```
 

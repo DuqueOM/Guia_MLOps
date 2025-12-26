@@ -2,9 +2,20 @@
 
 > **De Python Básico a Senior/Staff en MLOps**
 > 
-> Programa completo de 8 semanas para construir el portafolio ML-MLOps-Portfolio desde cero.
+> Ruta principal (recomendada): **24 semanas (6 meses)**.
+> 
+> Ruta acelerada: **8 semanas**.
+>
+> 🗺️ **Mapa 1:1 Portafolio → Guía**: [MAPA_PORTAFOLIO_1TO1.md](MAPA_PORTAFOLIO_1TO1.md)
 
 ---
+
+## ⏱️ Rutas (24 semanas vs 8 semanas)
+
+| Ruta | Dedicación sugerida | Para quién | Cómo seguirla |
+|------|---------------------|------------|---------------|
+| **24 semanas (principal)** | 8–10 h/sem | Si quieres profundidad, margen para debugging real y prácticas de infra/ops | Usa este índice (módulos 01–23) + el `README.md` del repo como roadmap 24 semanas. |
+| **8 semanas (acelerada)** | 15–20 h/sem | Si ya tienes base fuerte o necesitas una versión rápida para demo/entrevista | Usa este índice + [PLAN_ESTUDIOS.md](PLAN_ESTUDIOS.md) como cronograma diario. |
 
 ## 🎯 ¿Qué Lograrás?
 
@@ -59,17 +70,34 @@ Al completar esta guía serás capaz de:
 
 | Si eres... | Ruta recomendada |
 |------------|------------------|
-| **Principiante** | Seguir módulos 01-23 en orden, 8 semanas |
-| **DS con experiencia** | Saltar a Fase 2 (módulo 07), revisar Fase 1 como referencia |
-| **Preparando entrevista** | Ir directo a módulos 20-23 + Simulacros |
+| **Principiante** | Ruta principal **24 semanas** (recomendada). Si vas intensivo: ruta acelerada **8 semanas** |
+| **DS con experiencia** | Ruta acelerada **8 semanas** (reforzando módulos 11–18 para “production mindset”) |
+| **Preparando entrevista** | Ir directo a **MAPA 1:1** + módulos 20–23 + Simulacros |
 
 ---
 
 ## 📊 Roadmap Visual
 
+### Ruta principal (24 semanas / 6 meses)
+
 ```
 ╔══════════════════════════════════════════════════════════════════════════════════╗
-║                           RUTA DE APRENDIZAJE (8 SEMANAS)                        ║
+║                         RUTA PRINCIPAL (24 SEMANAS / 6 MESES)                   ║
+╠══════════════════════════════════════════════════════════════════════════════════╣
+║  MES 1 (Sem 1-4):   Fundamentos (01–05)                                          ║
+║  MES 2 (Sem 5-8):   Datos + DVC + Pipelines (06–07)                              ║
+║  MES 3 (Sem 9-12):  Features + Training + MLflow (08–10)                         ║
+║  MES 4 (Sem 13-16): Testing + CI/CD (11–12)                                      ║
+║  MES 5 (Sem 17-20): Docker + APIs + Dashboard + Observabilidad (13–16)           ║
+║  MES 6 (Sem 21-24): Deploy + IaC + Docs + Integración (17–23)                    ║
+╚══════════════════════════════════════════════════════════════════════════════════╝
+```
+
+### Ruta acelerada (8 semanas)
+
+```
+╔══════════════════════════════════════════════════════════════════════════════════╗
+║                             RUTA ACELERADA (8 SEMANAS)                           ║
 ╠══════════════════════════════════════════════════════════════════════════════════╣
 ║                                                                                  ║
 ║  FASE 1: FUNDAMENTOS (Semanas 1-2)          FASE 2: ML ENGINEERING (Semanas 3-4) ║
@@ -236,6 +264,7 @@ Al completar esta guía serás capaz de:
 | [Plantillas](PLANTILLAS.md) | Templates reutilizables |
 | [Guía Audiovisual](GUIA_AUDIOVISUAL.md) | Cómo crear demos y videos |
 | [Guía de Mantenimiento](MAINTENANCE_GUIDE.md) | Operaciones y runbooks |
+| 🔧 **[Guía de Scripts Operacionales](GUIA_SCRIPTS_OPERACIONALES.md)** | **Scripts de demo, testing, auditoría y Makefile del portafolio** ⭐ NUEVO |
 | 📺 **[Recursos por Módulo](RECURSOS_POR_MODULO.md)** | **Videos YouTube, Coursera y documentación por módulo** |
 
 ---

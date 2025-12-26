@@ -33,8 +33,8 @@
 - [5.4 Comandos Avanzados](#54-comandos-avanzados)
 - [5.5 .gitignore profesional](#55-gitignore)
 - [5.6 Ejercicio integrador](#56-ejercicio)
-- [Errores habituales](#errores-habituales)
-- [5.7 Autoevaluación](#57-autoevaluacion)
+- [Errores habituales](#-errores-habituales-y-cómo-depurarlos-en-git)
+- [5.7 Autoevaluación](#57-autoevaluación)
 
 ---
 
@@ -283,110 +283,110 @@ EOF
 
 ```bash
 # Instalar pre-commit
-pip install pre-commit
+pip install pre-commit                     # Instala el framework de pre-commit hooks.
 
 # Instalar hooks en el repo
-pre-commit install
-pre-commit install --hook-type commit-msg  # Para commitlint
+pre-commit install                         # Crea .git/hooks/pre-commit que ejecuta los hooks.
+pre-commit install --hook-type commit-msg  # Añade hook para validar mensaje de commit.
 
 # Ejecutar en todos los archivos (primera vez)
-pre-commit run --all-files
+pre-commit run --all-files                 # Útil para verificar todo el repo de una vez.
 ```
 
 ### .pre-commit-config.yaml Completo
 
 ```yaml
 # .pre-commit-config.yaml
-repos:
+repos:                                   # Lista de repositorios con hooks.
   # ════════════════════════════════════════════════════════════════════
   # FORMATEO Y LINTING
   # ════════════════════════════════════════════════════════════════════
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.6
+  - repo: https://github.com/astral-sh/ruff-pre-commit  # Ruff: linter + formatter rápido.
+    rev: v0.1.6                          # Versión específica (inmutable).
     hooks:
-      - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
-      - id: ruff-format
+      - id: ruff                         # Hook de linting.
+        args: [--fix, --exit-non-zero-on-fix]  # --fix: auto-corrige; falla si hubo cambios.
+      - id: ruff-format                  # Hook de formateo (reemplaza Black).
 
   # ════════════════════════════════════════════════════════════════════
   # TYPE CHECKING
   # ════════════════════════════════════════════════════════════════════
-  - repo: https://github.com/pre-commit/mirrors-mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy  # mypy: verificador de tipos estático.
     rev: v1.7.0
     hooks:
       - id: mypy
-        args: [--ignore-missing-imports]
-        additional_dependencies:
-          - pydantic>=2.0.0
-          - types-PyYAML
+        args: [--ignore-missing-imports]  # Ignora libs sin stubs de tipos.
+        additional_dependencies:          # Deps adicionales que mypy necesita.
+          - pydantic>=2.0.0              # Para entender modelos Pydantic.
+          - types-PyYAML                 # Stubs de tipos para PyYAML.
 
   # ════════════════════════════════════════════════════════════════════
   # GENERAL
   # ════════════════════════════════════════════════════════════════════
-  - repo: https://github.com/pre-commit/pre-commit-hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks  # Hooks básicos oficiales.
     rev: v4.5.0
     hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-        args: [--unsafe]  # Para YAML con tags como !ref
-      - id: check-json
-      - id: check-toml
-      - id: check-added-large-files
-        args: [--maxkb=1000]
-      - id: check-merge-conflict
-      - id: detect-private-key
-      - id: no-commit-to-branch
+      - id: trailing-whitespace          # Elimina espacios al final de líneas.
+      - id: end-of-file-fixer            # Asegura newline al final de archivos.
+      - id: check-yaml                   # Valida sintaxis YAML.
+        args: [--unsafe]                 # Para YAML con tags como !ref.
+      - id: check-json                   # Valida sintaxis JSON.
+      - id: check-toml                   # Valida sintaxis TOML.
+      - id: check-added-large-files      # Previene commits de archivos grandes.
+        args: [--maxkb=1000]             # Máximo 1MB.
+      - id: check-merge-conflict         # Detecta marcadores de merge sin resolver.
+      - id: detect-private-key           # Detecta llaves privadas accidentales.
+      - id: no-commit-to-branch          # Bloquea commits directos a branches protegidos.
         args: [--branch, main, --branch, master]
 
   # ════════════════════════════════════════════════════════════════════
   # SEGURIDAD
   # ════════════════════════════════════════════════════════════════════
-  - repo: https://github.com/Yelp/detect-secrets
+  - repo: https://github.com/Yelp/detect-secrets  # Detecta secretos (API keys, passwords).
     rev: v1.4.0
     hooks:
       - id: detect-secrets
-        args: [--baseline, .secrets.baseline]
+        args: [--baseline, .secrets.baseline]  # Baseline: secretos conocidos/falsos positivos.
 
-  - repo: https://github.com/PyCQA/bandit
+  - repo: https://github.com/PyCQA/bandit         # Bandit: análisis de seguridad de Python.
     rev: 1.7.5
     hooks:
       - id: bandit
-        args: [-c, pyproject.toml]
-        additional_dependencies: ["bandit[toml]"]
+        args: [-c, pyproject.toml]               # Lee config de pyproject.toml.
+        additional_dependencies: ["bandit[toml]"] # Soporte para leer TOML.
 
   # ════════════════════════════════════════════════════════════════════
   # CONVENTIONAL COMMITS
   # ════════════════════════════════════════════════════════════════════
-  - repo: https://github.com/compilerla/conventional-pre-commit
+  - repo: https://github.com/compilerla/conventional-pre-commit  # Valida formato de commits.
     rev: v3.0.0
     hooks:
       - id: conventional-pre-commit
-        stages: [commit-msg]
-        args: [feat, fix, docs, style, refactor, test, perf, ci, build, chore]
+        stages: [commit-msg]                     # Se ejecuta al escribir mensaje de commit.
+        args: [feat, fix, docs, style, refactor, test, perf, ci, build, chore]  # Tipos permitidos.
 
   # ════════════════════════════════════════════════════════════════════
   # JUPYTER NOTEBOOKS
   # ════════════════════════════════════════════════════════════════════
-  - repo: https://github.com/kynan/nbstripout
+  - repo: https://github.com/kynan/nbstripout    # Limpia notebooks antes de commit.
     rev: 0.6.1
     hooks:
-      - id: nbstripout  # Limpia outputs de notebooks
+      - id: nbstripout                           # Elimina outputs → reduce tamaño y conflictos.
 
   # ════════════════════════════════════════════════════════════════════
   # DOCKER
   # ════════════════════════════════════════════════════════════════════
-  - repo: https://github.com/hadolint/hadolint
+  - repo: https://github.com/hadolint/hadolint   # Hadolint: linter para Dockerfiles.
     rev: v2.12.0
     hooks:
       - id: hadolint-docker
-        args: [--ignore, DL3008, --ignore, DL3013]
+        args: [--ignore, DL3008, --ignore, DL3013]  # Ignora warnings específicos.
 
 # Configuración global
 default_language_version:
-  python: python3.11
+  python: python3.11                             # Versión de Python para todos los hooks.
 
-ci:
+ci:                                              # Config para pre-commit.ci (CI en la nube).
   autofix_commit_msg: "style: auto-fix by pre-commit hooks"
   autoupdate_commit_msg: "chore: update pre-commit hooks"
 ```
@@ -404,21 +404,21 @@ skips = ["B101"]  # Skip assert warnings in tests
 
 ```bash
 # Ejecutar en archivos staged
-pre-commit run
+pre-commit run                         # Solo verifica archivos en staging (git add).
 
 # Ejecutar en todos los archivos
-pre-commit run --all-files
+pre-commit run --all-files             # Verifica TODO el repositorio.
 
 # Ejecutar hook específico
-pre-commit run ruff --all-files
-pre-commit run mypy --all-files
+pre-commit run ruff --all-files        # Solo el hook "ruff" en todos los archivos.
+pre-commit run mypy --all-files        # Solo mypy (útil para debugging).
 
 # Actualizar hooks a últimas versiones
-pre-commit autoupdate
+pre-commit autoupdate                  # Actualiza rev: a las últimas versiones.
 
 # Skip hooks temporalmente (emergencia)
-git commit --no-verify -m "hotfix: emergency fix"
-# ⚠️ USAR SOLO EN EMERGENCIAS
+git commit --no-verify -m "hotfix: emergency fix"  # Ignora TODOS los hooks.
+# ⚠️ USAR SOLO EN EMERGENCIAS - los hooks existen por una razón.
 ```
 
 ---
@@ -838,12 +838,12 @@ PRE-COMMIT:
  [ ] .gitignore excluye archivos correctos
  ```
 
- ---
+---
 
 <a id="errores-habituales"></a>
- 
- ## 🧨 Errores habituales y cómo depurarlos en Git
- 
+
+## 🧨 Errores habituales y cómo depurarlos en Git
+
  Git aquí no es solo “guardar versiones”, sino soportar **flujos de trabajo profesionales** con branches, hooks y CI. Estos son los errores más frecuentes en el portafolio y cómo atacarlos.
  
  Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
@@ -970,11 +970,11 @@ PRE-COMMIT:
 
 Con este enfoque, Git deja de ser “magia negra” y se convierte en una herramienta predecible y aliada de tu flujo MLOps.
 
- ---
- 
- <a id="57-autoevaluacion"></a>
+---
 
- ## 5.7 Autoevaluación
+<a id="57-autoevaluacion"></a>
+
+## 5.7 Autoevaluación
 
 ### Preguntas de Reflexión
 

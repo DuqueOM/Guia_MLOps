@@ -31,7 +31,8 @@ Este archivo es la página de inicio para MkDocs. Para la documentación complet
 | [EJERCICIOS.md](EJERCICIOS.md) | Ejercicios prácticos por módulo |
 | [EJERCICIOS_SOLUCIONES.md](EJERCICIOS_SOLUCIONES.md) | Soluciones detalladas |
 | [SYLLABUS.md](SYLLABUS.md) | Programa y macro-módulos |
-| [PLAN_ESTUDIOS.md](PLAN_ESTUDIOS.md) | Cronograma día a día |
+| [MAPA_PORTAFOLIO_1TO1.md](MAPA_PORTAFOLIO_1TO1.md) | Mapa 1:1 Portafolio → Guía |
+| [PLAN_ESTUDIOS.md](PLAN_ESTUDIOS.md) | Cronograma día a día (ruta acelerada 8 semanas) |
 | [templates/](templates/index.md) | Plantillas reutilizables |
 
 ### Preparación de Entrevistas
@@ -49,7 +50,11 @@ Este archivo es la página de inicio para MkDocs. Para la documentación complet
 
 ```bash
 cd Guia_MLOps/docs
-pip install -r requirements.txt
+# Recomendado (solo docs)
+pip install -r requirements-docs.txt
+
+# Alternativa (stack completo ML/MLOps)
+# pip install -r requirements.txt
 mkdocs serve
 # Abrir http://localhost:8000
 ```

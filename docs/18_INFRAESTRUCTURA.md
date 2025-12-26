@@ -160,58 +160,58 @@ resource "aws_ecs_service" "bankchurn_api" {
 ```yaml
 # k8s/deployment.yaml
 
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: apps/v1                      # Versión de la API de K8s.
+kind: Deployment                         # Tipo de recurso: gestiona réplicas de Pods.
 metadata:
-  name: bankchurn-api
+  name: bankchurn-api                    # Nombre del Deployment.
   labels:
-    app: bankchurn
+    app: bankchurn                       # Label para seleccionar este recurso.
 spec:
-  replicas: 2
+  replicas: 2                            # Número de Pods a mantener corriendo.
   selector:
     matchLabels:
-      app: bankchurn
-  template:
+      app: bankchurn                     # Selecciona Pods con este label.
+  template:                              # Template del Pod.
     metadata:
       labels:
-        app: bankchurn
+        app: bankchurn                   # Los Pods creados tendrán este label.
     spec:
       containers:
-      - name: bankchurn
-        image: ghcr.io/user/bankchurn:latest
+      - name: bankchurn                  # Nombre del contenedor.
+        image: ghcr.io/user/bankchurn:latest  # Imagen Docker a usar.
         ports:
-        - containerPort: 8000
+        - containerPort: 8000            # Puerto que expone el contenedor.
         resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
+          requests:                      # Recursos mínimos garantizados.
+            memory: "256Mi"              # 256 MiB de RAM.
+            cpu: "250m"                  # 0.25 CPU cores (milicores).
+          limits:                        # Recursos máximos permitidos.
+            memory: "512Mi"              # Si excede, OOMKilled.
+            cpu: "500m"                  # Si excede, throttling.
+        livenessProbe:                   # K8s verifica si el Pod está vivo.
           httpGet:
-            path: /health
+            path: /health                # Endpoint a llamar.
             port: 8000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        env:
+          initialDelaySeconds: 30        # Espera antes de primer check.
+          periodSeconds: 10              # Intervalo entre checks.
+        env:                             # Variables de entorno.
         - name: MLFLOW_TRACKING_URI
           valueFrom:
-            secretKeyRef:
-              name: ml-secrets
-              key: mlflow-uri
+            secretKeyRef:                # Lee valor de un Secret de K8s.
+              name: ml-secrets           # Nombre del Secret.
+              key: mlflow-uri            # Key dentro del Secret.
 ---
 apiVersion: v1
-kind: Service
+kind: Service                            # Service: expone Pods a la red.
 metadata:
   name: bankchurn-service
 spec:
   selector:
-    app: bankchurn
+    app: bankchurn                       # Enruta tráfico a Pods con este label.
   ports:
-  - port: 80
-    targetPort: 8000
-  type: LoadBalancer
+  - port: 80                             # Puerto externo.
+    targetPort: 8000                     # Puerto del contenedor.
+  type: LoadBalancer                     # Crea un balanceador de carga externo.
 ```
 
 ---
@@ -388,6 +388,54 @@ Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario
 **Cómo corregirlo**
 
 - Para proyectos serios, usa un **backend remoto** para el estado y controla quién puede aplicar cambios.
+
+#### Configuración de Backend Remoto (AWS S3 + DynamoDB)
+
+```hcl
+# backend.tf
+terraform {
+  backend "s3" {
+    bucket         = "ml-portfolio-terraform-state"
+    key            = "infra/terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
+    dynamodb_table = "terraform-state-lock"
+  }
+}
+
+# Crear tabla DynamoDB para locking (una sola vez)
+resource "aws_dynamodb_table" "terraform_lock" {
+  name         = "terraform-state-lock"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "LockID"
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+}
+```
+
+#### Backend Remoto para GCP (GCS)
+
+```hcl
+terraform {
+  backend "gcs" {
+    bucket  = "ml-portfolio-terraform-state"
+    prefix  = "infra/terraform"
+  }
+}
+```
+
+#### Verificación
+
+```bash
+# Inicializar con backend remoto
+terraform init -backend-config="bucket=ml-portfolio-terraform-state"
+
+# Verificar estado
+terraform state list
+```
 
 ---
 

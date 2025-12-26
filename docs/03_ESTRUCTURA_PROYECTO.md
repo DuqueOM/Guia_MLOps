@@ -267,58 +267,59 @@ ignore_missing_imports = true
 ## 🔨 Makefile
 
 ```makefile
-# Makefile - Comandos comunes
+# Makefile - Comandos comunes del proyecto
 
-.PHONY: install test lint format train serve clean
+.PHONY: install test lint format train serve clean  # .PHONY: declara targets que no son archivos.
 
 # Instalación
-install:
-pip install -e ".[all]"
+install:                              # Target por defecto para desarrollo.
+	pip install -e ".[all]"           # -e: editable (cambios se reflejan sin reinstalar). [all]: incluye todas las deps.
 
-install-prod:
-pip install -e ".[api]"
+install-prod:                         # Target para producción (sin deps de desarrollo).
+	pip install -e ".[api]"           # Solo instala deps de API, no dev/mlflow.
 
 # Testing
-test:
-pytest --cov=src/ --cov-fail-under=80
+test:                                 # Ejecuta tests con coverage.
+	pytest --cov=src/ --cov-fail-under=80  # Falla si coverage < 80%.
 
-test-fast:
-pytest -m "not slow" -x
+test-fast:                            # Tests rápidos para desarrollo.
+	pytest -m "not slow" -x           # -m "not slow": excluye tests lentos. -x: falla al primer error.
 
 # Linting y formato
-lint:
-ruff check src/ tests/
-mypy src/
+lint:                                 # Verifica calidad de código.
+	ruff check src/ tests/            # Ruff: linter rápido.
+	mypy src/                         # mypy: verificación de tipos.
 
-format:
-black src/ tests/ app/
-ruff check --fix src/ tests/
+format:                               # Auto-formatea código.
+	black src/ tests/ app/            # Black: formatter estándar de Python.
+	ruff check --fix src/ tests/      # --fix: auto-corrige problemas que puede.
 
 # Entrenamiento
-train:
-python main.py --seed 42 train --config configs/config.yaml --input data/raw/Churn.csv
-serve:
-uvicorn app.fastapi_app:app --host 0.0.0.0 --port 8000 --reload
+train:                                # Entrena el modelo.
+	python main.py --seed 42 train --config configs/config.yaml --input data/raw/Churn.csv
 
-serve-prod:
-uvicorn app.fastapi_app:app --host 0.0.0.0 --port 8000
+serve:                                # Inicia servidor de desarrollo.
+	uvicorn app.fastapi_app:app --host 0.0.0.0 --port 8000 --reload  # --reload: reinicia con cambios.
+
+serve-prod:                           # Servidor de producción (sin reload).
+	uvicorn app.fastapi_app:app --host 0.0.0.0 --port 8000
 
 # Docker
-docker-build:
-docker build -t bankchurn:latest .
+docker-build:                         # Construye imagen Docker.
+	docker build -t bankchurn:latest .  # -t: tag. .: contexto actual.
 
-docker-run:
-docker run -p 8000:8000 bankchurn:latest
+docker-run:                           # Ejecuta contenedor.
+	docker run -p 8000:8000 bankchurn:latest  # -p host:container: mapea puertos.
 
 # MLflow
-mlflow-ui:
-mlflow ui --host 0.0.0.0 --port 5000
+mlflow-ui:                            # Inicia UI de MLflow para ver experimentos.
+	mlflow ui --host 0.0.0.0 --port 5000
 
 # Limpieza
-clean:
-rm -rf __pycache__ .pytest_cache .mypy_cache .ruff_cache
-rm -rf *.egg-info build dist
-rm -rf htmlcov .coverage
+clean:                                # Elimina archivos generados.
+	rm -rf __pycache__ .pytest_cache .mypy_cache .ruff_cache  # Caches de Python/herramientas.
+	rm -rf *.egg-info build dist      # Archivos de build.
+	rm -rf htmlcov .coverage          # Archivos de coverage.
 ```
 
 ---

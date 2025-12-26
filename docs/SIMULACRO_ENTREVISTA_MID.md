@@ -28,7 +28,7 @@
 
 ---
 
-# 1. Pipelines y Arquitectura (Preguntas 1-15)
+# 1. Pipelines y Arquitectura (Preguntas 1-15) {#1-pipelines-y-arquitectura-preguntas-1-15}
 
 ## Pregunta 1: Pipeline Unificado
 **¿Por qué usar un Pipeline unificado en lugar de artefactos separados?**
@@ -333,7 +333,7 @@ git tag -a v1.0.0 -m "Model v1.0.0: AUC 0.85"
 
 ---
 
-# 2. MLOps Práctico (Preguntas 16-30)
+# 2. MLOps Práctico (Preguntas 16-30) {#2-mlops-práctico-preguntas-16-30}
 
 ## Pregunta 16: MLflow Tracking
 **¿Cómo usas MLflow para tracking?**
@@ -775,7 +775,7 @@ jobs:
 
 ---
 
-# 3. Testing y Calidad (Preguntas 31-40)
+# 3. Testing y Calidad (Preguntas 31-40) {#3-testing-y-calidad-preguntas-31-40}
 
 ## Pregunta 31: Tipos de Tests
 **¿Qué tipos de tests tiene el portafolio?**
@@ -1102,7 +1102,7 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
 
 ---
 
-# 4. Deployment y APIs (Preguntas 41-50)
+# 4. Deployment y APIs (Preguntas 41-50) {#4-deployment-y-apis-preguntas-41-50}
 
 ## Pregunta 41: FastAPI Basics
 **Muestra un endpoint de predicción.**
@@ -1471,7 +1471,7 @@ kubectl get hpa
 
 ---
 
-# 5. Escenarios Prácticos (Preguntas 51-60)
+# 5. Escenarios Prácticos (Preguntas 51-60) {#5-escenarios-prácticos-preguntas-51-60}
 
 ## Pregunta 51: Debug de Producción
 **El modelo tiene accuracy 85% en dev pero 60% en prod. ¿Por qué?**

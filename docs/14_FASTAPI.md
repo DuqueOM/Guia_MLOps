@@ -102,25 +102,25 @@ from .schemas import PredictionRequest, PredictionResponse, HealthResponse
 # LIFECYCLE: Cargar modelo al iniciar
 # ═══════════════════════════════════════════════════════════════════════════
 
-model = None  # Global para acceso en endpoints
+model = None                             # Variable global: accesible desde todos los endpoints.
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+@asynccontextmanager                     # Decorador para crear context manager async.
+async def lifespan(app: FastAPI):        # Función que gestiona startup/shutdown de la app.
     """Lifecycle: carga modelo al iniciar, limpia al cerrar."""
-    global model
+    global model                         # global: permite modificar la variable global desde aquí.
     
     # Startup: cargar modelo
-    model_path = Path("artifacts/model.joblib")
-    if model_path.exists():
-        model = joblib.load(model_path)
+    model_path = Path("artifacts/model.joblib")  # Ruta al modelo serializado.
+    if model_path.exists():              # Verifica que el archivo existe antes de cargar.
+        model = joblib.load(model_path)  # Deserializa el pipeline completo.
         print(f"✅ Modelo cargado: {model_path}")
     else:
-        print(f"⚠️ Modelo no encontrado: {model_path}")
+        print(f"⚠️ Modelo no encontrado: {model_path}")  # Warning, no crash.
     
-    yield  # App corriendo
+    yield                                # yield: aquí la app está corriendo y recibiendo requests.
     
     # Shutdown: limpiar recursos
-    model = None
+    model = None                         # Libera memoria al cerrar.
     print("🛑 App cerrada")
 
 
@@ -128,20 +128,20 @@ async def lifespan(app: FastAPI):
 # APP SETUP
 # ═══════════════════════════════════════════════════════════════════════════
 
-app = FastAPI(
-    title="BankChurn Predictor API",
+app = FastAPI(                           # Crea instancia de la aplicación FastAPI.
+    title="BankChurn Predictor API",     # Título en Swagger UI (/docs).
     description="API para predicción de churn de clientes bancarios",
-    version="1.0.0",
-    lifespan=lifespan,
+    version="1.0.0",                     # Versión de la API (semver).
+    lifespan=lifespan,                   # Asocia el lifecycle manager definido arriba.
 )
 
 # CORS para permitir requests desde frontend
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # En prod: especificar dominios
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+app.add_middleware(                      # Middleware: procesa requests antes/después de endpoints.
+    CORSMiddleware,                      # Cross-Origin Resource Sharing: permite requests desde otros dominios.
+    allow_origins=["*"],                 # "*" permite todo. En prod: ["https://midominio.com"].
+    allow_credentials=True,              # Permite enviar cookies/auth headers.
+    allow_methods=["*"],                 # Permite todos los métodos HTTP (GET, POST, etc.).
+    allow_headers=["*"],                 # Permite todos los headers.
 )
 
 
@@ -149,34 +149,34 @@ app.add_middleware(
 # ENDPOINTS
 # ═══════════════════════════════════════════════════════════════════════════
 
-@app.get("/health", response_model=HealthResponse)
-async def health_check():
+@app.get("/health", response_model=HealthResponse)  # GET /health → devuelve HealthResponse.
+async def health_check():                # async: permite I/O no bloqueante (mejor concurrencia).
     """Health check endpoint para load balancers/k8s."""
-    return HealthResponse(
-        status="healthy" if model is not None else "degraded",
+    return HealthResponse(               # Pydantic valida que el response cumpla el schema.
+        status="healthy" if model is not None else "degraded",  # Ternario: condición ? si : no.
         model_loaded=model is not None,
         version="1.0.0"
     )
 
 
-@app.post("/predict", response_model=PredictionResponse)
-async def predict(request: PredictionRequest):
+@app.post("/predict", response_model=PredictionResponse)  # POST /predict con body JSON.
+async def predict(request: PredictionRequest):  # request: Pydantic valida el body automáticamente.
     """Predice probabilidad de churn para un cliente."""
-    if model is None:
-        raise HTTPException(status_code=503, detail="Modelo no disponible")
+    if model is None:                    # Verificación defensiva.
+        raise HTTPException(status_code=503, detail="Modelo no disponible")  # 503: Service Unavailable.
     
     # Convertir request a DataFrame
-    import pandas as pd
-    df = pd.DataFrame([request.dict()])
+    import pandas as pd                  # Import dentro de función (lazy load, ok en endpoints).
+    df = pd.DataFrame([request.dict()])  # dict(): convierte Pydantic model a diccionario.
     
     # Predecir
-    proba = model.predict_proba(df)[0, 1]
-    prediction = int(proba >= 0.5)
+    proba = model.predict_proba(df)[0, 1]  # [0, 1]: fila 0, columna 1 (prob clase positiva).
+    prediction = int(proba >= 0.5)       # Umbral 0.5: convierte probabilidad a 0/1.
     
-    return PredictionResponse(
+    return PredictionResponse(           # Response tipado y validado.
         prediction=prediction,
-        probability=round(proba, 4),
-        risk_level="high" if proba >= 0.7 else "medium" if proba >= 0.3 else "low"
+        probability=round(proba, 4),     # round: 4 decimales de precisión.
+        risk_level="high" if proba >= 0.7 else "medium" if proba >= 0.3 else "low"  # Ternario encadenado.
     )
 ```
 
@@ -191,11 +191,11 @@ async def predict(request: PredictionRequest):
 ```python
 # app/schemas.py
 
-from typing import Literal, Optional
-from pydantic import BaseModel, Field, validator
+from typing import Literal, Optional       # Literal: valores específicos; Optional: puede ser None.
+from pydantic import BaseModel, Field, validator  # BaseModel: clase base para schemas.
 
 
-class PredictionRequest(BaseModel):
+class PredictionRequest(BaseModel):        # Hereda de BaseModel: obtiene validación automática.
     """Schema para request de predicción.
     
     Pydantic valida automáticamente:
@@ -205,18 +205,20 @@ class PredictionRequest(BaseModel):
     """
     
     CreditScore: int = Field(..., ge=300, le=850, description="Credit score del cliente")
+    # Field(...): ... significa REQUERIDO. ge=300: mayor o igual. le=850: menor o igual.
     Geography: Literal["France", "Germany", "Spain"] = Field(..., description="País")
+    # Literal: SOLO acepta estos 3 valores exactos. Otros → ValidationError.
     Gender: Literal["Male", "Female"] = Field(..., description="Género")
     Age: int = Field(..., ge=18, le=100, description="Edad")
     Tenure: int = Field(..., ge=0, le=10, description="Años como cliente")
-    Balance: float = Field(..., ge=0, description="Balance en cuenta")
+    Balance: float = Field(..., ge=0, description="Balance en cuenta")  # ge=0: no negativo.
     NumOfProducts: int = Field(..., ge=1, le=4, description="Número de productos")
-    HasCrCard: Literal[0, 1] = Field(..., description="Tiene tarjeta de crédito")
+    HasCrCard: Literal[0, 1] = Field(..., description="Tiene tarjeta de crédito")  # Binario.
     IsActiveMember: Literal[0, 1] = Field(..., description="Es miembro activo")
     EstimatedSalary: float = Field(..., ge=0, description="Salario estimado")
     
-    class Config:
-        json_schema_extra = {
+    class Config:                          # Config: configuración del modelo Pydantic.
+        json_schema_extra = {              # Ejemplo para Swagger UI (/docs).
             "example": {
                 "CreditScore": 650,
                 "Geography": "France",

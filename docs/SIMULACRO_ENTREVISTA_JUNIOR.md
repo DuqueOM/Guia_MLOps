@@ -40,7 +40,7 @@
 
 ---
 
-# 1. Python Básico (Preguntas 1-10)
+# 1. Python Básico (Preguntas 1-10) {#1-python-básico-preguntas-1-10}
 
 ## Pregunta 1: Tipos de Datos
 **¿Cuál es la diferencia entre lista, tupla y diccionario?**
@@ -280,7 +280,7 @@ logging.debug(f"Loaded {len(df)} rows")
 
 ---
 
-# 2. Machine Learning Fundamentos (Preguntas 11-20)
+# 2. Machine Learning Fundamentos (Preguntas 11-20) {#2-machine-learning-fundamentos-preguntas-11-20}
 
 ## Pregunta 11: Train/Test Split
 **¿Por qué separamos datos en train y test?**
@@ -498,7 +498,7 @@ print(f"AUC: {auc:.3f}")
 
 ---
 
-# 3. Datos y Preprocesamiento (Preguntas 21-30)
+# 3. Datos y Preprocesamiento (Preguntas 21-30) {#3-datos-y-preprocesamiento-preguntas-21-30}
 
 ## Pregunta 21: Exploración de Datos
 **¿Qué haces primero cuando recibes un dataset?**
@@ -753,7 +753,7 @@ train_test_split(X, y, random_state=SEED)
 
 ---
 
-# 4. Git y Herramientas (Preguntas 31-40)
+# 4. Git y Herramientas (Preguntas 31-40) {#4-git-y-herramientas-preguntas-31-40}
 
 ## Pregunta 31: Git Básico
 **¿Cuál es el flujo básico de Git?**
@@ -1031,7 +1031,7 @@ curl http://localhost:8000/health
 
 ---
 
-# 5. Práctica con el Portafolio (Preguntas 41-50)
+# 5. Práctica con el Portafolio (Preguntas 41-50) {#5-práctica-con-el-portafolio-preguntas-41-50}
 
 ## Pregunta 41: Describir el Portafolio
 **Cuéntame sobre el portafolio.**

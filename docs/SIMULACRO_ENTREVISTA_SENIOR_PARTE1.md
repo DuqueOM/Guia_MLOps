@@ -22,7 +22,7 @@
 
 ---
 
-# 1. Fundamentos de Machine Learning (Preguntas 1-15)
+# 1. Fundamentos de Machine Learning (Preguntas 1-15) {#1-fundamentos-de-machine-learning-preguntas-1-15}
 
 ## Pregunta 1: Data Leakage
 **¿Qué es el data leakage y cómo lo preveniste?**
@@ -293,7 +293,7 @@ p_value_two_sided  # Si < 0.05, diferencia significativa
 
 ---
 
-# 2. MLOps y Ciclo de Vida (Preguntas 16-30)
+# 2. MLOps y Ciclo de Vida (Preguntas 16-30) {#2-mlops-y-ciclo-de-vida-preguntas-16-30}
 
 ## Pregunta 16: MLflow Integration
 **¿Cómo integraste MLflow?**
@@ -579,7 +579,7 @@ async def lifespan(app):
 
 ---
 
-# 3. BankChurn-Predictor (Preguntas 31-45)
+# 3. BankChurn-Predictor (Preguntas 31-45) {#3-bankchurn-predictor-preguntas-31-45}
 
 ## Pregunta 31: Arquitectura Modular
 **Describe la estructura del proyecto.**
@@ -775,7 +775,7 @@ app.add_middleware(
 
 ---
 
-# 4. CarVision-Market-Intelligence (Preguntas 46-60)
+# 4. CarVision-Market-Intelligence (Preguntas 46-60) {#4-carvision-market-intelligence-preguntas-46-60}
 
 ## Pregunta 46: Pipeline [features, pre, model]
 **Explica el pipeline de CarVision.**
@@ -861,7 +861,7 @@ def load_model():
 
 ---
 
-# 5. TelecomAI (Preguntas 61-70)
+# 5. TelecomAI (Preguntas 61-70) {#5-telecomai-preguntas-61-70}
 
 ## Pregunta 61: Simple Feature Set
 **¿Por qué solo 4 features?**
@@ -893,7 +893,7 @@ model:
 
 ---
 
-# 6. Arquitectura y Diseño (Preguntas 71-80)
+# 6. Arquitectura y Diseño (Preguntas 71-80) {#6-arquitectura-y-diseño-preguntas-71-80}
 
 ## Pregunta 71: Design Patterns
 **¿Qué patrones aplicaste?**
@@ -922,7 +922,7 @@ model:
 
 ---
 
-# 7. CI/CD y DevOps (Preguntas 81-90)
+# 7. CI/CD y DevOps (Preguntas 81-90) {#7-cicd-y-devops-preguntas-81-90}
 
 ## Pregunta 81: Unified CI Pipeline
 **Explica tu workflow unificado.**
@@ -957,7 +957,7 @@ jobs:
 
 ---
 
-# 8. Infraestructura (Preguntas 91-100)
+# 8. Infraestructura (Preguntas 91-100) {#8-infraestructura-preguntas-91-100}
 
 ## Pregunta 91: Kubernetes Deployment
 **Explica tu deployment de K8s.**
@@ -1003,7 +1003,7 @@ spec:
 
 ---
 
-# 9. Ética y Fairness (Preguntas 101-105)
+# 9. Ética y Fairness (Preguntas 101-105) {#9-ética-y-fairness-preguntas-101-105}
 
 ## Pregunta 101: Responsible AI
 **¿Cómo abordas responsabilidad en ML?**
@@ -1020,7 +1020,7 @@ spec:
 
 ---
 
-# 10. Liderazgo (Preguntas 106-115)
+# 10. Liderazgo (Preguntas 106-115) {#10-liderazgo-preguntas-106-115}
 
 ## Pregunta 106: Technical Decision Making
 **¿Cómo decides entre RF y GB?**

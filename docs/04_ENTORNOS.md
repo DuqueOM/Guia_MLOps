@@ -256,14 +256,15 @@ flowchart TB
 
 ```bash
 # Crear entorno virtual
-python3.11 -m venv .venv
+python3.11 -m venv .venv              # -m venv: ejecuta módulo venv. .venv: carpeta destino.
+                                      # Crea una copia aislada del intérprete Python.
 
 # Activar
-source .venv/bin/activate  # Linux/Mac
-# .venv\Scripts\activate   # Windows
+source .venv/bin/activate             # Linux/Mac: modifica PATH para usar Python del venv.
+# .venv\Scripts\activate              # Windows: mismo efecto, sintaxis diferente.
 
 # Instalar pip-tools para lockfiles
-pip install pip-tools
+pip install pip-tools                 # pip-tools: genera lockfiles con versiones exactas.
 ```
 
 ### Estructura de Archivos
@@ -295,13 +296,13 @@ pyyaml>=6.0
 
 ```bash
 # Genera requirements.txt con TODAS las versiones exactas
-pip-compile requirements.in --output-file=requirements.txt
+pip-compile requirements.in --output-file=requirements.txt  # Lee .in, resuelve deps, genera .txt con versiones exactas.
 
 # Para desarrollo
-pip-compile requirements-dev.in --output-file=requirements-dev.txt
+pip-compile requirements-dev.in --output-file=requirements-dev.txt  # Misma lógica para deps de desarrollo.
 
 # Instalar desde lockfile
-pip-sync requirements.txt requirements-dev.txt
+pip-sync requirements.txt requirements-dev.txt  # Instala EXACTAMENTE lo del lockfile (añade y remueve).
 ```
 
 ### requirements.txt Generado (NO EDITAR)
@@ -337,28 +338,28 @@ pydantic==2.5.2
 
 ```makefile
 # Makefile
-.PHONY: venv install lock sync clean
+.PHONY: venv install lock sync clean  # .PHONY: estos targets no son archivos, son comandos.
 
-PYTHON := python3.11
-VENV := .venv
-BIN := $(VENV)/bin
+PYTHON := python3.11                  # Variable: versión de Python a usar.
+VENV := .venv                         # Variable: carpeta del entorno virtual.
+BIN := $(VENV)/bin                    # Variable: ruta a binarios del venv.
 
-venv:
-	$(PYTHON) -m venv $(VENV)
-	$(BIN)/pip install --upgrade pip pip-tools
+venv:                                 # Target: crear entorno virtual.
+	$(PYTHON) -m venv $(VENV)         # Crea venv con Python especificado.
+	$(BIN)/pip install --upgrade pip pip-tools  # Actualiza pip e instala pip-tools.
 
-lock: venv
-	$(BIN)/pip-compile requirements.in -o requirements.txt
-	$(BIN)/pip-compile requirements-dev.in -o requirements-dev.txt
+lock: venv                            # Target: generar lockfiles. Depende de venv.
+	$(BIN)/pip-compile requirements.in -o requirements.txt  # Genera lockfile principal.
+	$(BIN)/pip-compile requirements-dev.in -o requirements-dev.txt  # Genera lockfile de desarrollo.
 
-sync: venv
-	$(BIN)/pip-sync requirements.txt requirements-dev.txt
+sync: venv                            # Target: sincronizar entorno con lockfiles.
+	$(BIN)/pip-sync requirements.txt requirements-dev.txt  # Instala exactamente lo del lockfile.
 
-install: venv lock sync
+install: venv lock sync               # Target compuesto: ejecuta venv → lock → sync en orden.
 
-clean:
-	rm -rf $(VENV)
-	rm -f requirements.txt requirements-dev.txt
+clean:                                # Target: limpiar todo.
+	rm -rf $(VENV)                    # Elimina carpeta del venv.
+	rm -f requirements.txt requirements-dev.txt  # Elimina lockfiles generados.
 ```
 
 ---
@@ -371,62 +372,62 @@ clean:
 
 ```bash
 # Instalar Poetry (método oficial)
-curl -sSL https://install.python-poetry.org | python3 -
+curl -sSL https://install.python-poetry.org | python3 -  # Descarga e instala Poetry globalmente.
 
 # Verificar
-poetry --version
+poetry --version                      # Debería mostrar algo como "Poetry 1.7.0".
 ```
 
 ### Inicializar Proyecto
 
 ```bash
 # En proyecto existente
-poetry init
+poetry init                           # Wizard interactivo que crea pyproject.toml.
 
 # O crear nuevo proyecto
-poetry new bankchurn-predictor
+poetry new bankchurn-predictor        # Crea estructura de carpetas + pyproject.toml.
 ```
 
 ### pyproject.toml Completo
 
 ```toml
-[tool.poetry]
-name = "bankchurn"
-version = "0.1.0"
+[tool.poetry]                           # Sección de metadata de Poetry.
+name = "bankchurn"                      # Nombre del paquete (para pip install).
+version = "0.1.0"                       # Versión semántica del proyecto.
 description = "Predictor de churn bancario con MLOps"
 authors = ["Tu Nombre <tu@email.com>"]
-readme = "README.md"
-packages = [{include = "bankchurn", from = "src"}]
+readme = "README.md"                    # Archivo README a incluir en el paquete.
+packages = [{include = "bankchurn", from = "src"}]  # Dónde está el código fuente.
 
-[tool.poetry.dependencies]
-python = "^3.10"
-pandas = "^2.0.0"
+[tool.poetry.dependencies]              # Dependencias de producción.
+python = "^3.10"                        # ^3.10: compatible con 3.10, 3.11, 3.12 pero no 4.0.
+pandas = "^2.0.0"                       # ^ = "compatible con" (semver).
 scikit-learn = "^1.3.0"
 pydantic = "^2.0.0"
 fastapi = "^0.104.0"
-uvicorn = "^0.24.0"
+uvicorn = "^0.24.0"                     # Server ASGI para FastAPI.
 mlflow = "^2.8.0"
 pyyaml = "^6.0"
-joblib = "^1.3.0"
+joblib = "^1.3.0"                       # Serialización de modelos sklearn.
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.4.0"
-pytest-cov = "^4.1.0"
-mypy = "^1.6.0"
-ruff = "^0.1.0"
-pre-commit = "^3.5.0"
-ipython = "^8.0.0"
+[tool.poetry.group.dev.dependencies]    # Dependencias solo para desarrollo.
+pytest = "^7.4.0"                       # Framework de testing.
+pytest-cov = "^4.1.0"                   # Plugin de coverage para pytest.
+mypy = "^1.6.0"                         # Type checker.
+ruff = "^0.1.0"                         # Linter + formatter.
+pre-commit = "^3.5.0"                   # Hooks de pre-commit.
+ipython = "^8.0.0"                      # REPL mejorado.
 
-[tool.poetry.group.docs.dependencies]
-mkdocs = "^1.5.0"
-mkdocs-material = "^9.4.0"
+[tool.poetry.group.docs.dependencies]   # Dependencias para documentación.
+mkdocs = "^1.5.0"                       # Generador de documentación.
+mkdocs-material = "^9.4.0"              # Tema popular para MkDocs.
 
-[tool.poetry.scripts]
-bankchurn-train = "bankchurn.cli:train"
+[tool.poetry.scripts]                   # Comandos CLI que se instalan.
+bankchurn-train = "bankchurn.cli:train"  # `bankchurn-train` → ejecuta cli.train().
 bankchurn-predict = "bankchurn.cli:predict"
 
-[build-system]
-requires = ["poetry-core"]
+[build-system]                          # Configuración de build (PEP 517).
+requires = ["poetry-core"]              # Backend de build.
 build-backend = "poetry.core.masonry.api"
 
 # ════════════════════════════════════════════════════════════════════

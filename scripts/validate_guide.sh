@@ -6,7 +6,8 @@
 
 set -e
 
-GUIDE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+GUIDE_DIR="$REPO_ROOT/docs"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -50,7 +51,7 @@ for file in "${REQUIRED_FILES[@]}"; do
         echo -e "  ${GREEN}✓${NC} $file"
     else
         echo -e "  ${RED}✗${NC} $file - NO ENCONTRADO"
-        ((ERRORS++))
+        ERRORS=$((ERRORS+1))
     fi
 done
 
@@ -64,7 +65,7 @@ for i in $(seq -w 1 23); do
         echo -e "  ${GREEN}✓${NC} $MODULE"
     else
         echo -e "  ${RED}✗${NC} Módulo $i - NO ENCONTRADO"
-        ((ERRORS++))
+        ERRORS=$((ERRORS+1))
     fi
 done
 
@@ -80,11 +81,38 @@ YAML_FILES=(
 
 for file in "${YAML_FILES[@]}"; do
     if [[ -f "$GUIDE_DIR/$file" ]]; then
-        if python3 -c "import yaml; yaml.safe_load(open('$GUIDE_DIR/$file'))" 2>/dev/null; then
+        if python3 - "$GUIDE_DIR/$file" <<'PY' 2>/dev/null; then
+import sys
+
+import yaml
+from pathlib import Path
+
+
+path = Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+
+
+class Loader(yaml.SafeLoader):
+    pass
+
+
+def python_name_multi_constructor(loader, tag_suffix, node):
+    # MkDocs configs commonly use !!python/name:... (e.g. pymdownx.superfences)
+    # We only validate YAML structure, so keep the referenced name as a string.
+    return tag_suffix
+
+
+Loader.add_multi_constructor(
+    "tag:yaml.org,2002:python/name:",
+    python_name_multi_constructor,
+)
+
+yaml.load(text, Loader=Loader)
+PY
             echo -e "  ${GREEN}✓${NC} $file - Sintaxis válida"
         else
             echo -e "  ${RED}✗${NC} $file - Error de sintaxis YAML"
-            ((ERRORS++))
+            ERRORS=$((ERRORS+1))
         fi
     fi
 done
@@ -97,24 +125,82 @@ echo "🔗 [3/5] Verificando links internos..."
 
 # Extraer todos los links .md y verificar que existen
 BROKEN_LINKS=0
-for mdfile in "$GUIDE_DIR"/*.md; do
-    # Extraer links tipo [texto](archivo.md) o [texto](archivo.md#anchor)
-    links=$(grep -oE '\]\([^)]+\.md[^)]*\)' "$mdfile" 2>/dev/null | sed 's/](\([^)#]*\).*/\1/' | sort -u)
-    
-    for link in $links; do
-        # Ignorar links externos (http/https)
-        if [[ "$link" == http* ]]; then
-            continue
-        fi
-        
-        # Verificar si el archivo existe
-        target="$GUIDE_DIR/$link"
-        if [[ ! -f "$target" ]]; then
-            echo -e "  ${YELLOW}⚠${NC} $(basename $mdfile): Link roto → $link"
-            ((BROKEN_LINKS++))
-            ((WARNINGS++))
-        fi
-    done
+CONTENT_DIRS=(
+    "$REPO_ROOT/docs"
+    "$REPO_ROOT/templates"
+    "$REPO_ROOT/exams"
+    "$REPO_ROOT/notebooks/labs"
+)
+
+for dir in "${CONTENT_DIRS[@]}"; do
+    if [[ ! -d "$dir" ]]; then
+        continue
+    fi
+
+    while IFS= read -r -d '' mdfile; do
+        base_dir="$(dirname "$mdfile")"
+
+        # Extraer links tipo [texto](archivo.md) o [texto](archivo.md#anchor)
+        # Ignorar contenido dentro de bloques de código (``` / ~~~)
+        # Nota: solo consideramos el cierre cuando la línea no tiene texto extra tras la fence
+        links=$(awk '
+            BEGIN {
+                in_code = 0
+                fence_char = ""
+                fence_len = 0
+            }
+            {
+                line = $0
+                sub(/^[[:space:]]*/, "", line)
+
+                if (in_code == 0) {
+                    if (match(line, /^[`~]{3,}/)) {
+                        curr = substr(line, RSTART, RLENGTH)
+                        fence_char = substr(curr, 1, 1)
+                        fence_len = length(curr)
+                        in_code = 1
+                        next
+                    }
+                } else {
+                    # Cierre: misma fence (mismo char) con longitud >= apertura y SIN info string
+                    if (substr(line, 1, fence_len) == sprintf("%" fence_len "s", "")) {
+                        # Unreachable: placeholder to keep awk syntax compatible
+                    }
+                    if (match(line, "^" fence_char "{" fence_len ",}")) {
+                        rem = substr(line, RLENGTH + 1)
+                        if (rem ~ /^[[:space:]]*$/) {
+                            in_code = 0
+                            fence_char = ""
+                            fence_len = 0
+                            next
+                        }
+                    }
+                }
+
+                if (in_code == 0) {
+                    print
+                }
+            }
+        ' "$mdfile" \
+            | grep -oE '\]\([^)]+\.md[^)]*\)' 2>/dev/null \
+            | sed 's/](\([^)#]*\).*/\1/' \
+            | sort -u)
+
+        for link in $links; do
+            # Ignorar links externos (http/https)
+            if [[ "$link" == http* ]]; then
+                continue
+            fi
+
+            # Verificar si el archivo existe (resolución relativa al archivo actual)
+            target="$base_dir/$link"
+            if [[ ! -f "$target" ]]; then
+                echo -e "  ${YELLOW}⚠${NC} $(basename "$mdfile"): Link roto → $link"
+                BROKEN_LINKS=$((BROKEN_LINKS+1))
+                WARNINGS=$((WARNINGS+1))
+            fi
+        done
+    done < <(find "$dir" -type f -name "*.md" -print0)
 done
 
 if [[ $BROKEN_LINKS -eq 0 ]]; then
@@ -139,7 +225,7 @@ check_reference() {
         echo -e "  ${GREEN}✓${NC} $file referenciado $count veces"
     else
         echo -e "  ${YELLOW}⚠${NC} $file solo referenciado $count veces (esperado: $min_refs+)"
-        ((WARNINGS++))
+        WARNINGS=$((WARNINGS+1))
     fi
 }
 
@@ -164,7 +250,7 @@ for i in $(seq -w 1 23); do
         
         if [[ $SIZE -lt $MIN_SIZE ]]; then
             echo -e "  ${YELLOW}⚠${NC} $(basename $MODULE): ${SIZE} bytes (< ${MIN_SIZE} bytes)"
-            ((WARNINGS++))
+            WARNINGS=$((WARNINGS+1))
         fi
     fi
 done

@@ -175,61 +175,61 @@ CMD ["uvicorn", "app.fastapi_app:app", "--host", "0.0.0.0", "--port", "8000"]
 ### Implementación
 
 ```dockerfile
-# Dockerfile Multi-Stage - Nivel 3
+# Dockerfile Multi-Stage - Nivel 3 (Producción)
 
 # ══════════════════════════════════════════════════════════════════════════
 # STAGE 1: Builder - Compila dependencias
 # ══════════════════════════════════════════════════════════════════════════
-FROM python:3.11-slim AS builder
+FROM python:3.11-slim AS builder          # AS builder: nombra este stage para referenciarlo después.
 
-WORKDIR /build
+WORKDIR /build                            # Directorio de trabajo para compilación.
 
 # Instalar herramientas de compilación (temporales)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    python3-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \  # --no-install-recommends: solo deps esenciales.
+    gcc \                                 # Compilador C (para paquetes con código nativo).
+    python3-dev \                         # Headers de Python (para compilar extensiones).
+    && rm -rf /var/lib/apt/lists/*        # Limpia cache apt → reduce tamaño.
 
 # Copiar requirements
-COPY requirements.txt .
+COPY requirements.txt .                   # Solo requirements para aprovechar cache.
 
 # Crear wheels (binarios precompilados)
-RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
+RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt  # Genera .whl en /wheels.
 
 # ══════════════════════════════════════════════════════════════════════════
 # STAGE 2: Runtime - Imagen final mínima
 # ══════════════════════════════════════════════════════════════════════════
-FROM python:3.11-slim AS runtime
+FROM python:3.11-slim AS runtime          # Nueva imagen limpia, sin gcc ni herramientas de build.
 
-WORKDIR /app
+WORKDIR /app                              # Directorio de la aplicación.
 
 # Copiar SOLO los wheels del builder
-COPY --from=builder /wheels /wheels
+COPY --from=builder /wheels /wheels       # --from=builder: copia desde el stage anterior.
 
 # Instalar desde wheels (sin compilación)
-RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
+RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels  # Instala y limpia wheels.
 
 # Copiar código
-COPY src/ ./src/
-COPY app/ ./app/
-COPY configs/ ./configs/
+COPY src/ ./src/                          # Código fuente.
+COPY app/ ./app/                          # Aplicación FastAPI/Streamlit.
+COPY configs/ ./configs/                  # Archivos de configuración.
 
 # Copiar modelo pre-entrenado si existe
-COPY artifacts/model.joblib ./artifacts/model.joblib 2>/dev/null || true
+COPY artifacts/model.joblib ./artifacts/model.joblib 2>/dev/null || true  # || true: no falla si no existe.
 
 # Crear usuario no-root
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app  # Seguridad: nunca correr como root.
+USER appuser                              # Cambia a usuario sin privilegios.
 
 # Healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \  # Docker verifica salud automáticamente.
+    CMD curl -f http://localhost:8000/health || exit 1  # Falla si /health no responde 200.
 
 # Exponer puerto
-EXPOSE 8000
+EXPOSE 8000                               # Documenta el puerto (no lo publica).
 
 # Comando de inicio
-CMD ["uvicorn", "app.fastapi_app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.fastapi_app:app", "--host", "0.0.0.0", "--port", "8000"]  # Ejecuta la API.
 ```
 
 ---
@@ -506,6 +506,291 @@ docker compose -f docker-compose.demo.yml down
 
 # Limpiar volúmenes también
 docker compose -f docker-compose.demo.yml down -v
+```
+
+---
+
+<a id="136-docker-compose-avanzado"></a>
+
+## 13.6 Docker Compose Avanzado para MLOps ⭐ NUEVO
+
+El portafolio usa patrones avanzados de Docker Compose que debes conocer para orquestar stacks ML complejos.
+
+### 13.6.1 Profiles: Servicios Opcionales
+
+Los **profiles** permiten tener servicios que solo se inician cuando los necesitas (ej: monitoreo):
+
+```yaml
+# docker-compose.demo.yml del portafolio (extracto)
+services:
+  # Servicios principales (sin profile = siempre se inician)
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.9.2
+    ports:
+      - "5000:5000"
+    # ...
+
+  bankchurn:
+    build: ./BankChurn-Predictor
+    ports:
+      - "8001:8000"
+    # ...
+
+  # Servicios de monitoreo (profile = monitoring)
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus-config.yaml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - ml-network
+    profiles:
+      - monitoring  # ← Solo se inicia con --profile monitoring
+
+  grafana:
+    image: grafana/grafana:10.2.2
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    profiles:
+      - monitoring  # ← Solo se inicia con --profile monitoring
+```
+
+**Uso de profiles:**
+
+```bash
+# Solo servicios principales (sin monitoreo)
+docker compose -f docker-compose.demo.yml up -d
+
+# Con monitoreo (Prometheus + Grafana)
+docker compose -f docker-compose.demo.yml --profile monitoring up -d
+
+# Ver qué está corriendo
+docker compose -f docker-compose.demo.yml ps
+```
+
+### 13.6.2 Healthchecks Avanzados y Dependencies
+
+```yaml
+services:
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.9.2
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s  # ← Da tiempo para que el servicio arranque
+
+  bankchurn:
+    build: ./BankChurn-Predictor
+    depends_on:
+      mlflow:
+        condition: service_healthy  # ← Espera a que MLflow esté healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s  # ← El modelo tarda en cargar
+
+  carvision-dashboard:
+    image: ml-portfolio-carvision:latest
+    command: ["streamlit", "run", "app/streamlit_app.py", "--server.port", "8501"]
+    depends_on:
+      - carvision  # ← Espera a que la API esté disponible (no healthy)
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s  # ← Streamlit tarda más
+```
+
+### 13.6.3 Networking para Microservicios ML
+
+```yaml
+services:
+  # Servicios internos se comunican por nombre
+  bankchurn:
+    networks:
+      - ml-network
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000  # ← Usa nombre del servicio
+
+  carvision:
+    networks:
+      - ml-network
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+
+networks:
+  ml-network:
+    driver: bridge
+    name: ml-mlops-network  # ← Nombre explícito para debugging
+```
+
+**Debugging de networking:**
+
+```bash
+# Ver la red y sus contenedores
+docker network inspect ml-mlops-network
+
+# Probar conectividad desde un contenedor
+docker exec -it bankchurn-api curl http://mlflow:5000/health
+
+# Ver logs de un servicio específico
+docker compose logs -f bankchurn
+```
+
+### 13.6.4 Volumes para Persistencia y Desarrollo
+
+```yaml
+services:
+  mlflow:
+    volumes:
+      # Named volume para persistencia (sobrevive a `down`)
+      - mlflow-artifacts:/mlflow
+      # Bind mount para acceder a runs locales
+      - ./mlruns:/mlruns
+
+  bankchurn:
+    volumes:
+      # Read-only para datos (evita modificaciones accidentales)
+      - ./BankChurn-Predictor/data:/app/data:ro
+      # Read-only para modelos
+      - ./BankChurn-Predictor/models:/app/models:ro
+
+  # Para DESARROLLO: hot-reload del código
+  bankchurn-dev:
+    build: ./BankChurn-Predictor
+    volumes:
+      # Monta código fuente para hot-reload
+      - ./BankChurn-Predictor/src:/app/src
+      - ./BankChurn-Predictor/app:/app/app
+    command: ["uvicorn", "app.fastapi_app:app", "--reload", "--host", "0.0.0.0"]
+    profiles:
+      - dev
+
+volumes:
+  mlflow-artifacts:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+```
+
+### 13.6.5 Variables de Entorno y Secrets
+
+```yaml
+services:
+  bankchurn:
+    environment:
+      # Variables inline
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      # Variables desde archivo .env
+      - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI:-http://mlflow:5000}
+    env_file:
+      - .env  # ← Carga todas las variables de .env
+
+# .env (NO commitear a Git)
+# MLFLOW_TRACKING_URI=http://mlflow:5000
+# DB_PASSWORD=supersecret
+```
+
+### 13.6.6 El Stack Completo del Portafolio
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    STACK DOCKER COMPOSE DEL PORTAFOLIO                          │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  SERVICIOS PRINCIPALES (siempre activos):                                       │
+│  ─────────────────────────────────────────                                      │
+│                                                                                 │
+│  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐                     │
+│  │ MLflow       │     │ BankChurn    │     │ CarVision    │                     │
+│  │ :5000        │◄────│ API :8001    │     │ API :8002    │                     │
+│  │              │     │              │     │              │                     │
+│  │ Tracking +   │     │ /predict     │     │ /predict     │                     │
+│  │ Artifacts    │◄────┤ /health      │     │ /health      │                     │
+│  └──────────────┘     └──────────────┘     └──────┬───────┘                     │
+│         ▲                                         │                             │
+│         │                                         ▼                             │
+│         │             ┌──────────────┐     ┌──────────────┐                     │
+│         │             │ TelecomAI    │     │ CarVision    │                     │
+│         └─────────────│ API :8003    │     │ Dashboard    │                     │
+│                       │              │     │ :8501        │                     │
+│                       │ /predict     │     │              │                     │
+│                       │ /health      │     │ Streamlit    │                     │
+│                       └──────────────┘     └──────────────┘                     │
+│                                                                                 │
+│  SERVICIOS DE MONITOREO (--profile monitoring):                                 │
+│  ──────────────────────────────────────────────                                 │
+│                                                                                 │
+│  ┌──────────────┐     ┌──────────────┐                                          │
+│  │ Prometheus   │────►│ Grafana      │                                          │
+│  │ :9090        │     │ :3000        │                                          │
+│  │              │     │              │                                          │
+│  │ Scrape       │     │ Dashboards   │                                          │
+│  │ /metrics     │     │ + Alertas    │                                          │
+│  └──────────────┘     └──────────────┘                                          │
+│                                                                                 │
+│  RED: ml-mlops-network (bridge)                                                 │
+│  VOLUMES: mlflow-artifacts, prometheus-data, grafana-data                       │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 🔧 Ejercicio: Crear Tu Stack Docker Compose
+
+```bash
+# 1. Crear estructura básica
+mkdir -p my-ml-stack/{api,data,models}
+
+# 2. Crear docker-compose.yml
+cat > my-ml-stack/docker-compose.yml << 'EOF'
+services:
+  api:
+    build: ./api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+    environment:
+      - MODEL_PATH=/app/models/model.joblib
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.9.2
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+    command: mlflow server --host 0.0.0.0 --port 5000
+
+volumes:
+  mlflow-data:
+EOF
+
+# 3. Probar el stack
+docker compose up -d
+docker compose ps
+docker compose logs -f api
 ```
 
 ---

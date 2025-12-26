@@ -180,19 +180,19 @@ Dominar el testing en proyectos ML para alcanzar **80%+ de coverage** sin tests 
 ```python
 # tests/conftest.py - Código REAL del portafolio
  
-import pytest
-import pandas as pd
-import numpy as np
-from pathlib import Path
-import tempfile
-import yaml
+import pytest                            # Framework de testing para Python.
+import pandas as pd                      # DataFrames para datos de prueba.
+import numpy as np                       # Arrays numéricos y generación aleatoria.
+from pathlib import Path                 # Rutas de archivos.
+import tempfile                          # Directorios temporales para tests.
+import yaml                              # Cargar/guardar configuraciones.
  
 # ═══════════════════════════════════════════════════════════════════════════
 # FIXTURES DE DATOS
 # ═══════════════════════════════════════════════════════════════════════════
  
-@pytest.fixture
-def sample_data() -> pd.DataFrame:
+@pytest.fixture                          # Decorador: convierte función en fixture reutilizable.
+def sample_data() -> pd.DataFrame:       # Fixture que retorna un DataFrame de prueba.
     """DataFrame pequeño para tests rápidos.
     
     Este fixture se usa en MUCHOS tests:
@@ -200,12 +200,12 @@ def sample_data() -> pd.DataFrame:
     - test_features.py: Verificar feature engineering
     - test_model.py: Verificar predicciones
     """
-    return pd.DataFrame({
-        "price": [15000, 25000, 35000, 45000, 55000],
-        "model_year": [2015, 2018, 2020, 2019, 2021],
+    return pd.DataFrame({                # DataFrame pequeño: tests rápidos.
+        "price": [15000, 25000, 35000, 45000, 55000],  # Target (lo que predecimos).
+        "model_year": [2015, 2018, 2020, 2019, 2021],  # Feature numérica.
         "odometer": [80000, 45000, 20000, 30000, 10000],
         "model": ["ford f-150", "toyota camry", "honda civic", 
-                  "chevrolet silverado", "ford mustang"],
+                  "chevrolet silverado", "ford mustang"],  # Feature categórica.
         "fuel": ["gas", "gas", "gas", "diesel", "gas"],
         "transmission": ["automatic", "automatic", "manual", 
                         "automatic", "manual"],
@@ -927,16 +927,50 @@ Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario
  
 - Busca en tests accesos directos a rutas del proyecto o a recursos externos.
 - Revisa que tus fixtures (`sample_data`, `sample_config`, etc.) no lean de archivos reales salvo cuando se prueban funciones de I/O.
- 
-**Cómo corregirlo**
- 
-- Usa **fixtures sintéticas** en memoria para la mayoría de tests.
 - Deja el acceso a disco/red solo en tests de integración marcados (`@pytest.mark.integration` o `@pytest.mark.slow`).
- 
+
 ---
- 
+
+## 11.6.1 Load Testing con Locust
+
+> **Referencia del portafolio**: `tests/load/locustfile.py`
+
+```python
+# tests/load/locustfile.py
+from locust import HttpUser, task, between
+
+class MLAPIUser(HttpUser):
+    wait_time = between(0.5, 2)
+    
+    @task(3)
+    def health_check(self):
+        self.client.get("/health")
+    
+    @task(1)
+    def predict(self):
+        self.client.post("/api/v1/predict", json={
+            "CreditScore": 650, "Age": 35, "Tenure": 5
+        })
+```
+
+```bash
+# Ejecutar pruebas de carga
+locust -f tests/load/locustfile.py --host=http://localhost:8000
+
+# Headless para CI
+locust -f tests/load/locustfile.py --host=http://localhost:8000 \
+    --users 50 --spawn-rate 5 --run-time 1m --headless --csv=reports/load
+```
+
+| Métrica | SLO Target | Umbral crítico |
+|---------|------------|----------------|
+| **P95 Latency** | < 200ms | < 500ms |
+| **Error Rate** | < 0.1% | < 1% |
+
+---
+
 <a id="117-alcanzar-80-coverage"></a>
- 
+
 ## 11.7 Alcanzar 80% Coverage
  
 ### Configuración de pytest-cov

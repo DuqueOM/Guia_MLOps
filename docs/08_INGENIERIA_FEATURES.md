@@ -117,22 +117,22 @@ Para que esto cuente como progreso real, fuerza este mapeo:
 
 # Datos originales
 df = pd.DataFrame({
-    'price': [15000, 25000, 35000],      # Target a predecir
-    'odometer': [80000, 50000, 20000],
+    'price': [15000, 25000, 35000],      # Target a predecir (lo que queremos estimar).
+    'odometer': [80000, 50000, 20000],   # Feature legítima (disponible en producción).
 })
 
 # Feature engineering INCORRECTO
-df['price_per_mile'] = df['price'] / df['odometer']  # ← LEAKAGE!
+df['price_per_mile'] = df['price'] / df['odometer']  # ← LEAKAGE! Usa el target.
 
 # ¿Por qué es leakage?
-# price_per_mile = price / odometer
-# Por lo tanto: price = price_per_mile * odometer
-# El modelo "aprende" a multiplicar, no a predecir precios reales
+# price_per_mile = price / odometer       # La feature CONTIENE información del target.
+# Por lo tanto: price = price_per_mile * odometer  # El modelo solo aprende a despejar.
+# El modelo "aprende" a multiplicar, no a predecir precios reales.
 
 # En producción:
-# - No tienes el price (es lo que quieres predecir)
-# - No puedes calcular price_per_mile
-# - El modelo no sabe qué hacer
+# - No tienes el price (es lo que quieres predecir)  # No puedes usar lo que no conoces.
+# - No puedes calcular price_per_mile               # Feature imposible de crear.
+# - El modelo no sabe qué hacer                     # Crash o predicción sin sentido.
 ```
 
 ---
@@ -145,36 +145,36 @@ df['price_per_mile'] = df['price'] / df['odometer']  # ← LEAKAGE!
 
 ```python
 # ❌ MALO: Feature calculada con el target
-df['price_category'] = pd.cut(df['price'], bins=[0, 10000, 50000, inf])
+df['price_category'] = pd.cut(df['price'], bins=[0, 10000, 50000, inf])  # pd.cut: discretiza valores continuos.
 
-# El modelo aprende: "si price_category es 'alto', predice price alto"
-# Pero en producción NO tienes price_category porque no tienes price
+# El modelo aprende: "si price_category es 'alto', predice price alto"  # Correlación perfecta = trampa.
+# Pero en producción NO tienes price_category porque no tienes price    # Feature inexistente en inferencia.
 ```
 
 ### 2. Train-Test Contamination (Datos de test "filtrados" a train)
 
 ```python
 # ❌ MALO: Normalizar ANTES de split
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)  # ← Usa estadísticas de TODO X
-X_train, X_test = train_test_split(X_scaled)
-# El scaler "vio" datos de test durante fit
+scaler = StandardScaler()             # Crea el scaler.
+X_scaled = scaler.fit_transform(X)    # fit_transform en TODO X: aprende mean/std de train+test.
+X_train, X_test = train_test_split(X_scaled)  # Split DESPUÉS de transformar.
+# El scaler "vio" datos de test durante fit   # Contaminación: test influye en transformación.
 
 # ✅ CORRECTO: Normalizar DESPUÉS de split
-X_train, X_test = train_test_split(X)
+X_train, X_test = train_test_split(X)         # Split PRIMERO.
 scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)  # Solo train
-X_test_scaled = scaler.transform(X_test)        # Usa params de train
+X_train_scaled = scaler.fit_transform(X_train)  # fit solo en train: aprende mean/std de train.
+X_test_scaled = scaler.transform(X_test)        # transform (no fit): usa params de train.
 ```
 
 ### 3. Temporal Leakage (Usar información del futuro)
 
 ```python
 # ❌ MALO: Predecir churn de enero usando datos de febrero
-df['avg_purchases_next_month'] = ...  # Información del futuro
+df['avg_purchases_next_month'] = ...  # Información del futuro: imposible conocerla al predecir.
 
 # ✅ CORRECTO: Solo usar información disponible al momento de predicción
-df['avg_purchases_last_3_months'] = ...  # Información del pasado
+df['avg_purchases_last_3_months'] = ...  # Información del pasado: siempre disponible.
 ```
 
 ---
@@ -272,29 +272,29 @@ def infer_feature_types(df, target, drop_columns=None, ...):
 ```python
 # ✅ CORRECTO: Pipeline garantiza orden correcto
 
-from sklearn.pipeline import Pipeline
-from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline       # Pipeline: encadena pasos de forma segura.
+from sklearn.compose import ColumnTransformer  # ColumnTransformer: transforma por grupos de columnas.
 
 # Definir QUÉ columnas usar (excluyendo las peligrosas)
-num_cols = ['odometer', 'vehicle_age']  # SIN price_per_mile
-cat_cols = ['fuel', 'transmission', 'brand']
+num_cols = ['odometer', 'vehicle_age']      # Features numéricas SEGURAS (sin leakage).
+cat_cols = ['fuel', 'transmission', 'brand']  # Features categóricas SEGURAS.
 
 # Pipeline aplica transformaciones EN ORDEN
-pipeline = Pipeline([
-    ('features', FeatureEngineer()),      # Crea features
-    ('pre', ColumnTransformer([           # Solo usa features SEGURAS
-        ('num', StandardScaler(), num_cols),
-        ('cat', OneHotEncoder(), cat_cols)
+pipeline = Pipeline([                        # Lista de tuplas (nombre, transformador).
+    ('features', FeatureEngineer()),         # Paso 1: crea vehicle_age, brand, etc.
+    ('pre', ColumnTransformer([              # Paso 2: transforma solo columnas SEGURAS.
+        ('num', StandardScaler(), num_cols), # Escala numéricas (aprende mean/std de train).
+        ('cat', OneHotEncoder(), cat_cols)   # One-hot encodes categóricas.
     ])),
-    ('model', RandomForestRegressor())
+    ('model', RandomForestRegressor())       # Paso 3: el modelo.
 ])
 
 # fit() entrena todo con datos de TRAIN solamente
-pipeline.fit(X_train, y_train)
+pipeline.fit(X_train, y_train)               # fit propaga por todos los pasos secuencialmente.
 
 # predict() aplica las MISMAS transformaciones
 # usando parámetros aprendidos de TRAIN
-predictions = pipeline.predict(X_test)
+predictions = pipeline.predict(X_test)       # predict: transforma X_test con params de train, luego predice.
 ```
 
 ### Diagrama del Flujo Seguro

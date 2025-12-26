@@ -164,19 +164,19 @@ jobs:
 
 jobs:
   tests:
-    name: Tests & Coverage
-    runs-on: ubuntu-latest
+    name: Tests & Coverage               # Nombre visible en GitHub Actions UI.
+    runs-on: ubuntu-latest               # Runner: máquina virtual donde corre el job.
     strategy:
-      fail-fast: false                  # No cancelar otros si uno falla
+      fail-fast: false                   # false: sigue ejecutando otros jobs aunque uno falle.
       matrix:
-        python-version: ['3.11', '3.12']  # 2 versiones de Python
-        project:                           # 3 proyectos
+        python-version: ['3.11', '3.12'] # Matrix: ejecuta el job con cada valor.
+        project:                         # Segundo eje del matrix: proyectos.
           - BankChurn-Predictor
           - CarVision-Market-Intelligence
           - TelecomAI-Customer-Intelligence
     
     # Esto crea 2 x 3 = 6 jobs paralelos:
-    # - BankChurn con Python 3.11
+    # - BankChurn con Python 3.11        # Cada combinación es un job independiente.
     # - BankChurn con Python 3.12
     # - CarVision con Python 3.11
     # - CarVision con Python 3.12
@@ -184,25 +184,25 @@ jobs:
     # - TelecomAI con Python 3.12
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout code              # Paso: clona el repositorio.
+        uses: actions/checkout@v4        # Action oficial de GitHub para checkout.
       
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - name: Set up Python ${{ matrix.python-version }}  # ${{ }}: expresión de GitHub Actions.
+        uses: actions/setup-python@v5    # Instala Python en el runner.
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'  # Cache de dependencias para velocidad
+          python-version: ${{ matrix.python-version }}  # Usa el valor del matrix.
+          cache: 'pip'                   # Cachea ~/.cache/pip → installs más rápidos.
       
       - name: Install dependencies
-        working-directory: ${{ matrix.project }}
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-cov
+        working-directory: ${{ matrix.project }}  # cd al proyecto antes de ejecutar.
+        run: |                           # run: ejecuta comandos shell.
+          python -m pip install --upgrade pip      # Actualiza pip primero.
+          pip install -r requirements.txt          # Instala dependencias del proyecto.
+          pip install pytest pytest-cov            # Instala herramientas de testing.
       
       - name: Run tests
         working-directory: ${{ matrix.project }}
-        run: pytest --cov=src/ --cov-fail-under=80
+        run: pytest --cov=src/ --cov-fail-under=80  # --cov-fail-under: falla si coverage < 80%.
 ```
 
 ### Visualización del Matrix
@@ -669,6 +669,327 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+```
+
+---
+
+<a id="127-workflows-avanzados-mlops"></a>
+
+## 12.7 Workflows Avanzados de MLOps ⭐ NUEVO
+
+El portafolio incluye workflows especializados para ML que van más allá del CI/CD tradicional. Estos workflows automatizan tareas críticas como detección de drift, reentrenamiento y comparación de modelos.
+
+### Workflows Disponibles en el Portafolio
+
+```
+.github/workflows/
+├── ci-mlops.yml              # CI/CD principal (ya cubierto)
+├── drift-detection.yml       # Detecta drift de datos/modelo
+├── drift-bankchurn.yml       # Drift específico para BankChurn
+├── retrain-bankchurn.yml     # Reentrenamiento automático
+├── cml-training-comparison.yml # Comparación de runs con CML
+└── docs.yml                  # Build de documentación
+```
+
+### 12.7.1 Drift Detection: Monitoreo Automático
+
+```yaml
+# .github/workflows/drift-detection.yml (simplificado)
+name: Drift Detection
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Cada lunes a las 6 AM
+  workflow_dispatch:      # También manual
+
+jobs:
+  detect-drift:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: [BankChurn-Predictor, CarVision-Market-Intelligence]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: |
+          pip install evidently pandas scikit-learn joblib
+      
+      - name: Run drift detection
+        working-directory: ${{ matrix.project }}
+        run: |
+          python scripts/detect_drift.py \
+            --reference data/reference.csv \
+            --current data/production.csv \
+            --output reports/drift_report.html
+      
+      - name: Upload drift report
+        uses: actions/upload-artifact@v5
+        with:
+          name: drift-report-${{ matrix.project }}
+          path: ${{ matrix.project }}/reports/drift_report.html
+      
+      - name: Create issue if drift detected
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '⚠️ Drift detectado en ${{ matrix.project }}',
+              body: 'El workflow de drift detection ha detectado cambios significativos. Ver artifacts para detalles.',
+              labels: ['drift', 'ml-ops', 'automated']
+            })
+```
+
+### 12.7.2 Retrain Automático: Cuando el Modelo Necesita Actualización
+
+```yaml
+# .github/workflows/retrain-bankchurn.yml (simplificado)
+name: Retrain BankChurn Model
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Razón del reentrenamiento'
+        required: true
+        default: 'scheduled-retrain'
+      promote_if_better:
+        description: '¿Promover automáticamente si mejora métricas?'
+        required: true
+        default: 'false'
+        type: boolean
+
+env:
+  PROJECT: BankChurn-Predictor
+  MLFLOW_TRACKING_URI: http://localhost:5000
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        working-directory: ${{ env.PROJECT }}
+        run: pip install -r requirements.txt
+      
+      - name: Train new model
+        working-directory: ${{ env.PROJECT }}
+        run: |
+          python main.py --mode train \
+            --experiment-name "retrain-${{ github.run_id }}" \
+            --run-name "${{ inputs.reason }}"
+      
+      - name: Evaluate model
+        working-directory: ${{ env.PROJECT }}
+        id: evaluate
+        run: |
+          python scripts/evaluate_model.py \
+            --model artifacts/model.joblib \
+            --test-data data/test.csv \
+            --output metrics.json
+          
+          # Exportar métricas para comparación
+          F1=$(jq '.f1_score' metrics.json)
+          echo "f1_score=$F1" >> $GITHUB_OUTPUT
+      
+      - name: Compare with production model
+        id: compare
+        run: |
+          PROD_F1=$(cat production_metrics.json | jq '.f1_score')
+          NEW_F1=${{ steps.evaluate.outputs.f1_score }}
+          
+          if (( $(echo "$NEW_F1 > $PROD_F1" | bc -l) )); then
+            echo "is_better=true" >> $GITHUB_OUTPUT
+            echo "✅ Nuevo modelo es mejor: $NEW_F1 > $PROD_F1"
+          else
+            echo "is_better=false" >> $GITHUB_OUTPUT
+            echo "❌ Nuevo modelo no mejora: $NEW_F1 <= $PROD_F1"
+          fi
+      
+      - name: Promote model (if better and enabled)
+        if: steps.compare.outputs.is_better == 'true' && inputs.promote_if_better
+        run: |
+          python scripts/promote_model.py \
+            --model artifacts/model.joblib \
+            --stage production \
+            --run-id ${{ github.run_id }}
+      
+      - name: Upload training artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: retrain-artifacts-${{ github.run_id }}
+          path: |
+            ${{ env.PROJECT }}/artifacts/
+            ${{ env.PROJECT }}/metrics.json
+```
+
+### 12.7.3 CML: Continuous Machine Learning
+
+[CML](https://cml.dev/) permite generar reportes visuales de entrenamiento directamente en PRs. El portafolio lo usa para comparar runs de MLflow:
+
+```yaml
+# .github/workflows/cml-training-comparison.yml (simplificado)
+name: CML Training Report
+
+on:
+  pull_request:
+    paths:
+      - '**/src/**'
+      - '**/configs/**'
+
+jobs:
+  train-and-report:
+    runs-on: ubuntu-latest
+    container: ghcr.io/iterative/cml:0-dvc2-base1
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Train model
+        run: |
+          pip install -r BankChurn-Predictor/requirements.txt
+          cd BankChurn-Predictor
+          python main.py --mode train
+      
+      - name: Generate CML report
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Crear reporte markdown
+          echo "## 📊 Training Report" >> report.md
+          echo "" >> report.md
+          
+          # Agregar métricas
+          echo "### Metrics" >> report.md
+          cat BankChurn-Predictor/artifacts/training_results.json | \
+            python -c "import json,sys; d=json.load(sys.stdin); print(f'- **F1**: {d[\"f1\"]:.4f}')" >> report.md
+          
+          # Agregar gráficos si existen
+          if [ -f BankChurn-Predictor/artifacts/confusion_matrix.png ]; then
+            echo "### Confusion Matrix" >> report.md
+            cml-publish BankChurn-Predictor/artifacts/confusion_matrix.png --md >> report.md
+          fi
+          
+          # Publicar como comentario en PR
+          cml comment create report.md
+```
+
+### 12.7.4 Diagrama de Workflows MLOps Integrados
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    WORKFLOWS MLOPS DEL PORTAFOLIO                               │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  DESARROLLO                           OPERACIÓN                                 │
+│  ──────────                           ─────────                                 │
+│                                                                                 │
+│  ┌──────────────┐                     ┌──────────────┐                          │
+│  │ Push/PR      │                     │ Schedule     │                          │
+│  └──────┬───────┘                     │ (cron)       │                          │
+│         │                             └──────┬───────┘                          │
+│         ▼                                    │                                  │
+│  ┌──────────────┐                            ▼                                  │
+│  │ ci-mlops.yml │                     ┌──────────────┐                          │
+│  │              │                     │ drift-       │                          │
+│  │ • Tests      │                     │ detection    │                          │
+│  │ • Coverage   │                     │              │                          │
+│  │ • Security   │                     │ • Compare    │                          │
+│  │ • Docker     │                     │   reference  │                          │
+│  └──────┬───────┘                     │   vs current │                          │
+│         │                             └──────┬───────┘                          │
+│         ▼                                    │                                  │
+│  ┌──────────────┐                            ▼                                  │
+│  │ cml-report   │                     ┌──────────────┐                          │
+│  │              │    ◄────────────    │ ¿Drift?      │                          │
+│  │ • Metrics    │        NO           │              │                          │
+│  │   comparison │                     └──────┬───────┘                          │
+│  │ • Plots in   │                            │ SÍ                               │
+│  │   PR comment │                            ▼                                  │
+│  └──────────────┘                     ┌──────────────┐                          │
+│                                       │ retrain-     │                          │
+│                                       │ bankchurn    │                          │
+│                                       │              │                          │
+│                                       │ • Train new  │                          │
+│                                       │ • Compare    │                          │
+│                                       │ • Promote?   │                          │
+│                                       └──────────────┘                          │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 🔧 Ejercicio: Implementar Drift Detection Básico
+
+```bash
+# 1. Crear script de drift detection
+cat > scripts/detect_drift.py << 'EOF'
+"""Drift detection básico usando Evidently."""
+import argparse
+import pandas as pd
+from evidently.report import Report
+from evidently.metric_preset import DataDriftPreset
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--reference", required=True)
+    parser.add_argument("--current", required=True)
+    parser.add_argument("--output", default="drift_report.html")
+    args = parser.parse_args()
+    
+    reference = pd.read_csv(args.reference)
+    current = pd.read_csv(args.current)
+    
+    report = Report(metrics=[DataDriftPreset()])
+    report.run(reference_data=reference, current_data=current)
+    report.save_html(args.output)
+    
+    # Exit con código de error si hay drift significativo
+    drift_share = report.as_dict()["metrics"][0]["result"]["share_of_drifted_columns"]
+    if drift_share > 0.3:  # >30% de columnas con drift
+        print(f"⚠️ Drift detectado: {drift_share:.1%} de columnas")
+        exit(1)
+    print(f"✅ Sin drift significativo: {drift_share:.1%} de columnas")
+
+if __name__ == "__main__":
+    main()
+EOF
+
+# 2. Crear workflow básico de drift
+mkdir -p .github/workflows
+cat > .github/workflows/drift-check.yml << 'EOF'
+name: Weekly Drift Check
+on:
+  schedule:
+    - cron: '0 8 * * 1'  # Lunes 8 AM
+  workflow_dispatch:
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install evidently pandas
+      - run: python scripts/detect_drift.py --reference data/train.csv --current data/new_data.csv
+EOF
 ```
 
 ---

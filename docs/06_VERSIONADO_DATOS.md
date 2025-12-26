@@ -211,14 +211,14 @@ pip install "dvc[gdrive]"  # Google Drive (para proyectos personales)
 
 ```bash
 # En un repo Git existente
-cd bankchurn-predictor
-dvc init
+cd bankchurn-predictor           # Navega al proyecto (debe ser repo Git).
+dvc init                         # Inicializa DVC en el repositorio.
 
 # Esto crea:
-# .dvc/           - Directorio de configuración
-# .dvc/.gitignore
-# .dvc/config
-# .dvcignore      - Qué ignorar (como .gitignore)
+# .dvc/           - Directorio de configuración de DVC (como .git para Git).
+# .dvc/.gitignore - Ignora cache local de DVC.
+# .dvc/config     - Configuración de remotes y opciones.
+# .dvcignore      - Archivos/carpetas que DVC debe ignorar.
 ```
 
 ### Configurar Remote Storage
@@ -227,32 +227,32 @@ dvc init
 # ════════════════════════════════════════════════════════════════════
 # OPCIÓN 1: Local (para desarrollo)
 # ════════════════════════════════════════════════════════════════════
-dvc remote add -d localremote /path/to/dvc-storage
-# -d = default remote
+dvc remote add -d localremote /path/to/dvc-storage  # Crea remote llamado "localremote".
+# -d = default remote: este remote se usa por defecto en push/pull.
 
 # ════════════════════════════════════════════════════════════════════
 # OPCIÓN 2: Amazon S3
 # ════════════════════════════════════════════════════════════════════
-dvc remote add -d s3remote s3://my-bucket/dvc-storage
-dvc remote modify s3remote region us-east-1
-# Credenciales: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY en env
+dvc remote add -d s3remote s3://my-bucket/dvc-storage  # s3://bucket/path formato S3.
+dvc remote modify s3remote region us-east-1            # Configura región del bucket.
+# Credenciales: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY en variables de entorno.
 
 # ════════════════════════════════════════════════════════════════════
 # OPCIÓN 3: Google Cloud Storage
 # ════════════════════════════════════════════════════════════════════
-dvc remote add -d gcsremote gs://my-bucket/dvc-storage
-# Credenciales: GOOGLE_APPLICATION_CREDENTIALS en env
+dvc remote add -d gcsremote gs://my-bucket/dvc-storage  # gs://bucket/path formato GCS.
+# Credenciales: GOOGLE_APPLICATION_CREDENTIALS apunta a JSON de service account.
 
 # ════════════════════════════════════════════════════════════════════
 # OPCIÓN 4: Google Drive (Gratis, bueno para proyectos personales)
 # ════════════════════════════════════════════════════════════════════
-dvc remote add -d gdriveremote gdrive://folder-id
-# La primera vez pedirá autenticación OAuth
+dvc remote add -d gdriveremote gdrive://folder-id      # folder-id: ID de carpeta en Drive.
+# La primera vez pedirá autenticación OAuth en el browser.
 
 # ════════════════════════════════════════════════════════════════════
 # Ver configuración
 # ════════════════════════════════════════════════════════════════════
-cat .dvc/config
+cat .dvc/config                                        # Muestra configuración actual.
 ```
 
 ### Estructura de Directorios Recomendada

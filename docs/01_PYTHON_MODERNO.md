@@ -74,6 +74,7 @@ Para que esto cuente como progreso real, fuerza este mapeo:
 - **0.1** [Protocolo E: Cómo estudiar este módulo](#01-protocolo-e-como-estudiar-este-modulo)
 - **0.2** [Entregables verificables (mínimo viable)](#02-entregables-verificables-minimo-viable)
 - **0.3** [Puente teoría ↔ código (Portafolio)](#03-puente-teoria-codigo-portafolio)
+- **0.4** [Repaso: Fundamentos de Python para MLOps](#04-repaso-fundamentos-python) ⭐ NUEVO
 1. [Type Hints: Tu Contrato con el Futuro](#11-type-hints-tu-contrato-con-el-futuro)
 2. [Pydantic: Validación Automática](#12-pydantic-validation-automatica)
 3. [src/ Layout: Estructura Profesional](#13-src-layout-estructura-profesional)
@@ -81,6 +82,367 @@ Para que esto cuente como progreso real, fuerza este mapeo:
 5. [OOP para ML: Protocolos y ABC](#15-oop-para-ml) ⭐ NUEVO
 6. [Pandera: Validación de DataFrames](#16-pandera-validacion-dataframes) ⭐ NUEVO
 7. [Ejercicios Prácticos](#17-ejercicios-practicos)
+
+---
+
+<a id="04-repaso-fundamentos-python"></a>
+
+## 0.4 Repaso: Fundamentos de Python para MLOps
+
+> **Si vienes de Python básico**, esta sección te prepara para el salto a código profesional.
+> Si ya dominas funciones, clases y módulos, puedes saltar a la sección 1.1.
+
+### 🎯 De Notebook a Código Profesional: El Mindset
+
+```
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║  EL PROBLEMA DEL DATA SCIENTIST TÍPICO:                                       ║
+║                                                                               ║
+║  En un notebook:                                                              ║
+║  • Escribes código en celdas desordenadas                                     ║
+║  • Variables globales por todos lados                                         ║
+║  • "Funciona" = éxito                                                         ║
+║  • Cuando algo falla, reinicias el kernel y vuelves a correr todo            ║
+║                                                                               ║
+║  En producción:                                                               ║
+║  • El código debe ser MODULAR (dividido en piezas reutilizables)             ║
+║  • Las dependencias deben ser EXPLÍCITAS (no variables mágicas)              ║
+║  • "Funciona" = pasa tests + se entiende + se mantiene                       ║
+║  • Cuando algo falla, necesitas DIAGNOSTICAR sin reiniciar                   ║
+║                                                                               ║
+║  Esta guía te lleva del primer mindset al segundo.                           ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+```
+
+### Funciones: La Unidad Básica de Código Reutilizable
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════════
+# NIVEL BÁSICO: Funciones simples
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ❌ Código de notebook (todo en celdas sueltas) - NO HAGAS ESTO
+import pandas as pd                              # pandas: librería para manipular tablas (DataFrames). "pd" es la convención universal.
+df = pd.read_csv("data.csv")                     # read_csv() lee un archivo CSV y lo convierte en DataFrame (tabla en memoria).
+df = df.dropna()                                 # dropna() elimina TODAS las filas con algún valor faltante (NaN). Peligroso: puedes perder datos.
+df["Age"] = df["Age"].fillna(df["Age"].mean())   # fillna() rellena NaN con un valor; mean() calcula el promedio. Problema: esto ya modificó df arriba.
+# ... y así 200 líneas más                       # En notebooks, el código crece sin estructura → imposible de mantener/testear.
+
+# ✅ Código profesional (encapsulado en funciones)
+def load_and_clean_data(path: str) -> pd.DataFrame:  # def: define una función. "path: str" indica que espera un string. "-> pd.DataFrame" indica qué retorna.
+    """Carga datos y aplica limpieza básica.         # Docstring: documentación de la función. SIEMPRE documenta funciones públicas.
+    
+    Args:                                            # Args: lista de parámetros que recibe la función.
+        path: Ruta al archivo CSV.                   # Describe cada parámetro con tipo y propósito.
+        
+    Returns:                                         # Returns: describe qué devuelve la función.
+        DataFrame limpio listo para feature engineering.
+        
+    Example:                                         # Example: muestra cómo usar la función (doctests ejecutables con pytest).
+        >>> df = load_and_clean_data("data/raw/churn.csv")
+        >>> df.shape
+        (10000, 14)
+    """
+    df = pd.read_csv(path)                           # Lee el CSV. La ruta viene como parámetro → la función es REUTILIZABLE.
+    df = df.dropna(subset=["target"])                # subset=["target"]: solo elimina filas donde "target" es NaN, no todas las filas.
+    df["Age"] = df["Age"].fillna(df["Age"].median()) # median() es más robusto que mean() frente a outliers.
+    return df                                        # return: devuelve el resultado. Sin return, la función devuelve None.
+
+# Ahora puedo REUTILIZAR esta función en cualquier parte
+df_train = load_and_clean_data("data/train.csv")     # Llamo la función con datos de entrenamiento → obtienen misma limpieza.
+df_test = load_and_clean_data("data/test.csv")       # Llamo con datos de test → GARANTIZA consistencia entre train y test.
+```
+
+### Clases: Agrupando Datos y Comportamiento
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════════
+# ¿POR QUÉ CLASES? La Analogía del Formulario
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Imagina que tienes que procesar solicitudes de crédito:
+#
+# SIN CLASES (diccionarios sueltos):
+# solicitud1 = {"nombre": "Juan", "edad": 30, "salario": 50000}
+# solicitud2 = {"nombre": "Ana", "edad": None, "salario": -1000}  # ¿Válido?
+#
+# ¿Cómo validas que la edad no sea None?
+# ¿Cómo evitas salarios negativos?
+# ¿Dónde pones la lógica de calcular el score crediticio?
+#
+# CON CLASES (estructura + validación + comportamiento):
+
+from dataclasses import dataclass      # dataclass: decorador que genera automáticamente __init__, __repr__, __eq__ para tu clase.
+from typing import Optional            # Optional[X] significa "puede ser X o None". Equivale a Union[X, None].
+
+@dataclass                             # @dataclass: convierte la clase en una "data class" → menos código boilerplate.
+class SolicitudCredito:                # class: define un nuevo tipo de objeto. PascalCase por convención (primera letra mayúscula).
+    """Una solicitud de crédito con validación básica."""  # Docstring de la clase: explica su propósito.
+    nombre: str                        # Atributo: nombre de tipo str (texto). dataclass lo convierte en parámetro del __init__.
+    edad: int                          # Atributo: edad de tipo int (entero). Será obligatorio al crear la instancia.
+    salario: float                     # Atributo: salario de tipo float (decimal). También obligatorio.
+    historial_crediticio: Optional[float] = None  # Atributo OPCIONAL: tiene valor por defecto None. Puede o no proporcionarse.
+    
+    def __post_init__(self):           # __post_init__: método especial que se ejecuta DESPUÉS de que dataclass crea el objeto.
+        """Validación al crear la instancia."""  # Aquí ponemos validaciones que deben ocurrir al instanciar.
+        if self.edad < 18:             # self: referencia al objeto actual. self.edad accede al atributo edad de ESTA instancia.
+            raise ValueError("Debe ser mayor de edad")  # raise: lanza una excepción. ValueError: error por valor inválido.
+        if self.salario <= 0:          # Validación de negocio: salario debe ser positivo.
+            raise ValueError("Salario debe ser positivo")
+    
+    def calcular_score(self) -> float: # Método: función que pertenece a la clase. self siempre es el primer parámetro.
+        """Calcula score crediticio básico."""
+        base = min(self.salario / 1000, 100)      # min(a, b): retorna el menor. Limita el score base a 100 máximo.
+        edad_bonus = min(self.edad - 18, 30) * 0.5  # Bonus por edad, máximo 15 puntos (30 * 0.5).
+        return base + edad_bonus       # return: devuelve el resultado del cálculo.
+
+# Ahora es IMPOSIBLE crear una solicitud inválida
+solicitud = SolicitudCredito(nombre="Juan", edad=30, salario=50000)  # Crea instancia: dataclass genera __init__ con estos parámetros.
+print(f"Score: {solicitud.calcular_score()}")  # f-string: f"..." permite insertar {expresiones} dentro del string. Score: 56.0
+
+# Esto FALLA inmediatamente con un error claro
+# solicitud_mala = SolicitudCredito(nombre="Ana", edad=15, salario=-1000)
+# ValueError: Debe ser mayor de edad  # El error es CLARO y ocurre EN LA CREACIÓN, no después cuando ya es tarde.
+```
+
+### Módulos: Organizando Código en Archivos
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════════
+# ¿POR QUÉ MÓDULOS? La Analogía de la Biblioteca
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Una biblioteca tiene SECCIONES (módulos):
+# - Sección de novelas (data.py)
+# - Sección de ciencia (features.py)
+# - Sección de historia (training.py)
+#
+# Cada sección tiene su PROPÓSITO y no mezclas libros de cocina con novelas.
+
+# Estructura típica de un proyecto ML:
+#
+# src/bankchurn/
+# ├── __init__.py      # "Esta carpeta es un paquete Python"
+# ├── config.py        # Configuración (Pydantic)
+# ├── data.py          # Carga y limpieza de datos
+# ├── features.py      # Feature engineering
+# ├── training.py      # Entrenamiento del modelo
+# ├── evaluation.py    # Métricas y evaluación
+# └── prediction.py    # Inferencia en producción
+
+# Importar desde módulos:
+from bankchurn.config import BankChurnConfig
+from bankchurn.data import load_and_clean_data
+from bankchurn.training import ChurnTrainer
+
+# Esto es MUCHO más claro que tener todo en un archivo de 2000 líneas
+```
+
+### Decoradores: Funciones que Modifican Funciones
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════════
+# DECORADORES: Muy usados en MLOps (logging, timing, caching, validación)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+import time                            # time: módulo estándar de Python para medir tiempo. time.time() da segundos desde 1970.
+from functools import wraps            # wraps: preserva metadatos de la función original (nombre, docstring) al decorarla.
+
+def medir_tiempo(func):                # Un decorador es una función que RECIBE otra función como parámetro.
+    """Decorador que mide el tiempo de ejecución de una función."""
+    @wraps(func)                       # @wraps(func): copia __name__, __doc__ de func a wrapper. Sin esto, se pierde el nombre original.
+    def wrapper(*args, **kwargs):      # wrapper: función interna que "envuelve" a la original. *args/**kwargs capturan cualquier argumento.
+        inicio = time.time()           # Guarda el tiempo ANTES de ejecutar la función.
+        resultado = func(*args, **kwargs)  # Ejecuta la función original con sus argumentos. func es la función decorada.
+        fin = time.time()              # Guarda el tiempo DESPUÉS de ejecutar.
+        print(f"⏱️ {func.__name__} tardó {fin - inicio:.2f}s")  # __name__: nombre de la función. :.2f formatea a 2 decimales.
+        return resultado               # Retorna lo que retornó la función original (no "comerse" el resultado).
+    return wrapper                     # El decorador retorna la función wrapper, que reemplaza a la original.
+
+# Uso:
+@medir_tiempo                          # @decorador es equivalente a: entrenar_modelo = medir_tiempo(entrenar_modelo)
+def entrenar_modelo(X, y):             # Esta función ahora está "envuelta" por wrapper. Al llamarla, ejecuta wrapper.
+    """Entrena un modelo (simulado)."""
+    time.sleep(2)                      # sleep(2): pausa 2 segundos. Simula un proceso que tarda (como entrenar un modelo).
+    return "modelo_entrenado"          # Retorna un string (en la realidad sería el modelo entrenado).
+
+modelo = entrenar_modelo(None, None)   # Llamar entrenar_modelo() realmente llama a wrapper(), que mide tiempo y llama a la original.
+# Output: ⏱️ entrenar_modelo tardó 2.00s  # El decorador añadió comportamiento (medir tiempo) SIN modificar la función original.
+
+# En el portafolio verás decoradores para:
+# - Logging automático de funciones    # Registrar cada llamada a función con sus parámetros.
+# - Caching de resultados costosos     # @lru_cache: guarda resultados para no recalcular.
+# - Validación de inputs/outputs       # Verificar tipos o rangos antes/después de ejecutar.
+# - Retry de operaciones que pueden fallar  # Reintentar N veces si hay error (útil para APIs, BD).
+```
+
+### Context Managers: Recursos que se Limpian Solos
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════════
+# CONTEXT MANAGERS: Cruciales para archivos, conexiones, MLflow runs
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ❌ PROBLEMA: Si hay un error, el archivo queda abierto
+f = open("data.csv", "r")              # open(): abre un archivo. "r" = modo lectura. Retorna un objeto file.
+data = f.read()                        # read(): lee TODO el contenido del archivo a memoria (cuidado con archivos grandes).
+# ... si algo falla aquí, f nunca se cierra  # Si ocurre una excepción, el código salta y f.close() nunca se ejecuta.
+f.close()                              # close(): libera el recurso. Sin cerrar, puedes agotar file descriptors del sistema.
+
+# ✅ SOLUCIÓN: with garantiza que el archivo se cierre
+with open("data.csv", "r") as f:       # with: inicia un "context manager". "as f" asigna el archivo a la variable f.
+    data = f.read()                    # El código dentro del with tiene acceso a f.
+# f se cierra automáticamente, incluso si hay error  # Al salir del with (normal o por excepción), Python llama f.__exit__() que cierra el archivo.
+
+# En MLflow (que usarás en el módulo 10):
+import mlflow                          # mlflow: librería para tracking de experimentos ML. Verás más en módulo 10.
+
+with mlflow.start_run(run_name="experimento_1"):  # start_run(): inicia un "run" de MLflow. Es un context manager.
+    mlflow.log_param("n_estimators", 100)         # log_param(): registra un hiperparámetro. Se guarda asociado al run.
+    mlflow.log_metric("f1_score", 0.85)           # log_metric(): registra una métrica. Puedes ver esto en la UI de MLflow.
+    # El run se cierra automáticamente al salir del with  # MLflow guarda todo y marca el run como finalizado.
+```
+
+### Comprehensions: Código Conciso y Pythónico
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════════
+# COMPREHENSIONS: Transformaciones elegantes de datos
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# List comprehension (muy común en ML)
+columnas = ["CreditScore", "Age", "Balance", "Exited"]  # Lista de strings con nombres de columnas.
+columnas_numericas = [col for col in columnas if col != "Exited"]  # [expresión for variable in iterable if condición]
+# ['CreditScore', 'Age', 'Balance']  # Resultado: lista con todos los elementos EXCEPTO "Exited".
+# Equivale a:                        # Es equivalente a un for loop, pero en UNA línea:
+# columnas_numericas = []            # result = []
+# for col in columnas:               # for col in columnas:
+#     if col != "Exited":            #     if col != "Exited":
+#         columnas_numericas.append(col)  #         result.append(col)
+
+# Dict comprehension (útil para métricas)
+metricas = {"accuracy": 0.85, "precision": 0.78, "recall": 0.72}  # Diccionario: {clave: valor}.
+metricas_redondeadas = {k: round(v, 2) for k, v in metricas.items()}  # {clave: valor for clave, valor in dict.items()}
+# items(): retorna pares (clave, valor). round(v, 2): redondea v a 2 decimales.
+
+# Filtrar columnas por tipo (patrón común en feature engineering)
+import pandas as pd                  # pandas ya se explicó arriba; aquí se re-importa por claridad del ejemplo.
+df = pd.DataFrame({"A": [1, 2], "B": ["x", "y"], "C": [1.5, 2.5]})  # DataFrame: tabla con 3 columnas.
+columnas_numericas = [col for col in df.columns if df[col].dtype in ["int64", "float64"]]
+# df.columns: lista de nombres de columnas. df[col].dtype: tipo de datos de esa columna.
+# "int64", "float64": tipos numéricos de pandas/numpy. Este patrón filtra SOLO columnas numéricas.
+
+# Crear diccionario de features categóricas a codificar
+cat_cols = ["Geography", "Gender"]   # Lista de columnas categóricas que queremos codificar.
+encoding_map = {col: df[col].unique().tolist() for col in cat_cols}
+# unique(): valores únicos de la columna. tolist(): convierte array a lista Python.
+# Resultado: {"Geography": ["France", "Spain", ...], "Gender": ["Male", "Female"]}
+```
+
+### Manejo de Excepciones: Código que No se Rompe
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════════
+# EXCEPCIONES: Anticipar y manejar errores profesionalmente
+# ═══════════════════════════════════════════════════════════════════════════════
+
+from pathlib import Path                # Path: clase para manejar rutas de archivos de forma segura y multiplataforma.
+import logging                          # logging: módulo estándar para registrar mensajes (mejor que print en producción).
+
+logger = logging.getLogger(__name__)    # getLogger(__name__): crea un logger con el nombre del módulo actual.
+                                        # __name__ es una variable especial que contiene el nombre del módulo.
+
+def cargar_modelo(path: Path):          # Función que recibe un Path (no string) → más seguro y con autocompletado.
+    """Carga un modelo serializado con manejo de errores.
+    
+    Args:
+        path: Ruta al archivo .joblib del modelo.
+        
+    Returns:
+        Modelo cargado.
+        
+    Raises:                              # Raises: documenta qué excepciones puede lanzar esta función.
+        FileNotFoundError: Si el archivo no existe.
+        ValueError: Si el archivo no contiene un modelo válido.
+    """
+    if not path.exists():                # exists(): método de Path que verifica si el archivo/carpeta existe.
+        raise FileNotFoundError(f"Modelo no encontrado: {path}")  # raise: lanza una excepción. El programa se detiene aquí.
+    
+    try:                                 # try: intenta ejecutar el código. Si falla, salta al except.
+        import joblib                    # joblib: librería para serializar objetos Python (modelos sklearn).
+        modelo = joblib.load(path)       # load(): deserializa el archivo y retorna el objeto Python guardado.
+    except Exception as e:               # except: captura la excepción si algo falló en el try. "as e" guarda el error.
+        logger.error(f"Error cargando modelo: {e}")  # error(): registra un mensaje de nivel ERROR en el log.
+        raise ValueError(f"Archivo inválido: {path}") from e  # from e: encadena excepciones (muestra la causa original).
+    
+    # Validar que sea un modelo sklearn
+    if not hasattr(modelo, "predict"):   # hasattr(): verifica si el objeto tiene un atributo/método. Todos los modelos sklearn tienen predict().
+        raise ValueError(f"El archivo no contiene un modelo válido: {path}")
+    
+    logger.info(f"Modelo cargado exitosamente: {path}")  # info(): mensaje informativo (menos grave que error).
+    return modelo                        # Si llegamos aquí, todo salió bien. Retornamos el modelo cargado.
+
+# Uso con manejo de error
+try:                                     # try/except: patrón para manejar errores sin que el programa crashee.
+    modelo = cargar_modelo(Path("models/pipeline.joblib"))  # Path(): convierte string a objeto Path.
+except FileNotFoundError:                # Captura SOLO FileNotFoundError. Otros errores no se capturan aquí.
+    print("⚠️ Modelo no encontrado. Ejecuta 'make train' primero.")  # Mensaje amigable al usuario.
+except ValueError as e:                  # Captura ValueError. "as e" permite acceder al mensaje de error.
+    print(f"❌ Error de validación: {e}")  # f-string con el error específico.
+```
+
+### 🎯 Ejercicio de Auto-evaluación: ¿Estás Listo?
+
+Antes de continuar, verifica que puedes responder estas preguntas:
+
+```python
+# 1. ¿Qué hace este código?
+def process(items: list[str]) -> dict[str, int]:
+    return {item: len(item) for item in items if item}
+
+# 2. ¿Por qué esto es mejor que usar un diccionario?
+@dataclass
+class Config:
+    batch_size: int = 32
+    learning_rate: float = 0.001
+
+# 3. ¿Qué problema evita el "with"?
+with open("file.txt") as f:
+    data = f.read()
+
+# 4. ¿Qué imprime este código?
+def decorator(func):
+    def wrapper():
+        print("antes")
+        func()
+        print("después")
+    return wrapper
+
+@decorator
+def hello():
+    print("hola")
+
+hello()
+```
+
+<details>
+<summary>🔍 Ver respuestas</summary>
+
+1. **Crea un diccionario** donde las keys son strings no vacíos y los values son sus longitudes.
+
+2. **Validación y documentación automática**: `@dataclass` genera `__init__`, `__repr__`, y permite type hints. Un diccionario no valida tipos ni tiene autocompletado en el IDE.
+
+3. **Evita dejar archivos abiertos**: Si hay un error dentro del `with`, el archivo se cierra automáticamente.
+
+4. **Imprime**:
+   ```
+   antes
+   hola
+   después
+   ```
+   El decorador "envuelve" la función original.
+
+</details>
 
 ---
 
@@ -186,80 +548,80 @@ def prepare_features(
 # TIPOS BÁSICOS - Los usarás constantemente
 # ═══════════════════════════════════════════════════════════════════════════
 
-from typing import (
-    List,       # Lista de elementos: List[str] = ["a", "b"]
-    Dict,       # Diccionario: Dict[str, float] = {"acc": 0.95}
-    Tuple,      # Tupla fija: Tuple[int, int] = (100, 10)
-    Optional,   # Puede ser None: Optional[Path] = None
-    Union,      # Múltiples tipos: Union[str, List[str]]
-    Any,        # Cualquier tipo (evitar si posible)
-    Literal,    # Valores específicos: Literal["train", "eval"]
+from typing import (                   # typing: módulo estándar de Python para anotaciones de tipos.
+    List,       # Lista de elementos: List[str] = ["a", "b"]  # Lista donde TODOS los elementos son strings.
+    Dict,       # Diccionario: Dict[str, float] = {"acc": 0.95}  # Dict con claves str y valores float.
+    Tuple,      # Tupla fija: Tuple[int, int] = (100, 10)  # Tupla de exactamente 2 enteros.
+    Optional,   # Puede ser None: Optional[Path] = None  # Equivale a Union[Path, None].
+    Union,      # Múltiples tipos: Union[str, List[str]]  # Puede ser string O lista de strings.
+    Any,        # Cualquier tipo (evitar si posible)  # Desactiva type checking - úsalo solo si es inevitable.
+    Literal,    # Valores específicos: Literal["train", "eval"]  # SOLO puede ser "train" o "eval", nada más.
 )
-from pathlib import Path
+from pathlib import Path               # Path: ya explicado en excepciones. Mejor que strings para rutas.
 
 # Ejemplos del portafolio real:
 
 # BankChurn: features son listas de strings
-features: List[str] = ["CreditScore", "Age", "Balance"]
+features: List[str] = ["CreditScore", "Age", "Balance"]  # ": List[str]" indica el tipo. mypy verifica que sea correcto.
 
 # CarVision: métricas son diccionario string->float
-metrics: Dict[str, float] = {"rmse": 4794.27, "r2": 0.77}
+metrics: Dict[str, float] = {"rmse": 4794.27, "r2": 0.77}  # Claves son strings (nombres), valores son floats (números).
 
 # TelecomAI: puede recibir path o None
-model_path: Optional[Path] = None
+model_path: Optional[Path] = None      # Optional[X] = puede ser X o None. Útil para parámetros opcionales.
 
 # ═══════════════════════════════════════════════════════════════════════════
 # TIPOS PARA ML - Específicos de Machine Learning
 # ═══════════════════════════════════════════════════════════════════════════
 
-import pandas as pd
-import numpy as np
-from numpy.typing import NDArray
-from sklearn.base import BaseEstimator
-from sklearn.pipeline import Pipeline
+import pandas as pd                    # pandas: la librería estándar para datos tabulares. Ya la vimos antes.
+import numpy as np                     # numpy: librería para arrays numéricos de alto rendimiento. Base de sklearn/pandas.
+from numpy.typing import NDArray       # NDArray: tipo para arrays numpy. NDArray[np.float64] = array de floats de 64 bits.
+from sklearn.base import BaseEstimator # BaseEstimator: clase base de TODOS los modelos sklearn. Garantiza fit/predict.
+from sklearn.pipeline import Pipeline  # Pipeline: encadena transformadores + modelo. Lo verás en módulo 07.
 
 # DataFrame de pandas
-def load_data(path: Path) -> pd.DataFrame:
-    return pd.read_csv(path)
+def load_data(path: Path) -> pd.DataFrame:  # Retorna pd.DataFrame: indica que devuelve una tabla de pandas.
+    return pd.read_csv(path)           # read_csv lee el archivo y retorna un DataFrame.
 
 # Array NumPy tipado
-def predict_proba(X: NDArray[np.float64]) -> NDArray[np.float64]:
-    return model.predict_proba(X)[:, 1]
+def predict_proba(X: NDArray[np.float64]) -> NDArray[np.float64]:  # NDArray[np.float64]: array de floats 64-bit.
+    return model.predict_proba(X)[:, 1]  # predict_proba retorna probabilidades. [:, 1] selecciona columna 1 (clase positiva).
 
 # Modelo sklearn
-def train_model(X: NDArray, y: NDArray) -> BaseEstimator:
-    model = RandomForestClassifier()
-    model.fit(X, y)
-    return model
+def train_model(X: NDArray, y: NDArray) -> BaseEstimator:  # Retorna BaseEstimator: cualquier modelo sklearn.
+    model = RandomForestClassifier()   # Crea instancia del modelo. RandomForest: ensemble de árboles de decisión.
+    model.fit(X, y)                    # fit(): entrena el modelo con datos X (features) e y (target).
+    return model                       # Retorna el modelo entrenado (listo para predict).
 
 # ═══════════════════════════════════════════════════════════════════════════
 # TIPOS AVANZADOS - Para código más robusto
 # ═══════════════════════════════════════════════════════════════════════════
 
-from typing import TypedDict, Literal
+from typing import TypedDict, Literal  # TypedDict: dict con estructura fija. Literal: valores específicos.
 
 # TypedDict: diccionarios con estructura conocida
-class MetricsDict(TypedDict):
-    accuracy: float
-    precision: float
-    recall: float
-    f1: float
-    roc_auc: float
+class MetricsDict(TypedDict):          # TypedDict: define un diccionario donde cada clave tiene tipo específico.
+    accuracy: float                    # La clave "accuracy" DEBE ser float. mypy lo verifica.
+    precision: float                   # Todas las métricas de clasificación son floats.
+    recall: float                      # recall: proporción de positivos reales detectados.
+    f1: float                          # f1: media armónica de precision y recall.
+    roc_auc: float                     # roc_auc: área bajo la curva ROC. 1.0 = perfecto.
 
 # Literal: solo valores específicos permitidos
-ModelType = Literal["random_forest", "logistic", "gradient_boosting"]
+ModelType = Literal["random_forest", "logistic", "gradient_boosting"]  # Crea un "tipo alias" que solo acepta estos 3 strings.
 
-def build_model(model_type: ModelType, seed: int) -> BaseEstimator:
+def build_model(model_type: ModelType, seed: int) -> BaseEstimator:  # model_type SOLO puede ser uno de los 3 valores.
     """
     mypy SABE que model_type solo puede ser estos 3 valores.
     Si escribes build_model("xgboost", 42), mypy dará error.
     """
-    if model_type == "random_forest":
-        return RandomForestClassifier(random_state=seed)
-    elif model_type == "logistic":
-        return LogisticRegression(random_state=seed)
-    else:  # gradient_boosting
-        return GradientBoostingClassifier(random_state=seed)
+    if model_type == "random_forest":  # Compara string. Python permite esto aunque model_type sea Literal.
+        return RandomForestClassifier(random_state=seed)  # random_state: semilla para reproducibilidad.
+    elif model_type == "logistic":     # elif: "else if" - solo se evalúa si el if anterior fue False.
+        return LogisticRegression(random_state=seed)      # LogisticRegression: modelo lineal para clasificación.
+    else:  # gradient_boosting         # else: se ejecuta si ningún if/elif fue True.
+        return GradientBoostingClassifier(random_state=seed)  # GradientBoosting: ensemble de árboles secuenciales.
 ```
 
 ### Configurar mypy
