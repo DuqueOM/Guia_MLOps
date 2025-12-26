@@ -16,3 +16,6 @@ venv/
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Guia en español
+Guia_MLOps ES/
