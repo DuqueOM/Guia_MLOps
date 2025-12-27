@@ -1117,44 +1117,247 @@ git cherry-pick <commit>         # Aplicar commit específico
 
 ---
 
-## 📺 Recursos Externos Recomendados
+## 📺 Recursos Externos del Módulo
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [Git for Professionals - freeCodeCamp](https://www.youtube.com/watch?v=Uszj_k0DGsg) | Video |
-| 🟡 | [Conventional Commits](https://www.conventionalcommits.org/) | Docs |
+### 🎬 Videos
 
----
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **Git for Professionals** | freeCodeCamp | 40 min | [YouTube](https://www.youtube.com/watch?v=Uszj_k0DGsg) |
+| 🔴 | **Pre-commit Hooks Tutorial** | ArjanCodes | 15 min | [YouTube](https://www.youtube.com/watch?v=psjz6rwzMdk) |
+| 🟡 | **Git Rebase vs Merge** | The Modern Coder | 12 min | [YouTube](https://www.youtube.com/watch?v=0chZFIZLR_0) |
 
-## 🔗 Referencias del Glosario
+### 📄 Documentación
 
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **pre-commit**: Hooks de validación antes de commit
-- **Conventional Commits**: Formato estándar de mensajes
-- **GitHub Flow**: Workflow de branching
-
----
-
-## ✅ Ejercicios
-
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 05:
-- **5.1**: Configurar .gitignore profesional
-- **5.2**: Instalar pre-commit hooks
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [Conventional Commits](https://www.conventionalcommits.org/) | Especificación oficial |
+| 🔴 | [pre-commit.com](https://pre-commit.com/) | Framework de hooks |
+| 🟡 | [GitHub Flow](https://docs.github.com/en/get-started/quickstart/github-flow) | Workflow oficial |
 
 ---
 
-## 🔜 Siguiente Paso
+## ⚖️ Decisión Técnica: ADR-008 Git Workflow
 
-Con Git dominado, es hora de versionar **datos** profesionalmente.
+**Contexto**: Necesitamos un flujo de trabajo Git consistente para el equipo.
 
-**[Ir a Módulo 06: Versionado de Datos →](06_VERSIONADO_DATOS.md)**
+**Decisión**: Usar GitHub Flow + Conventional Commits + pre-commit hooks.
+
+**Alternativas Consideradas**:
+- **Git Flow**: Más complejo, mejor para releases programados
+- **Trunk-Based**: Más rápido pero requiere CI muy maduro
+- **Sin convención**: Historial caótico
+
+**Consecuencias**:
+- ✅ Historial limpio y navegable
+- ✅ Changelogs automáticos posibles
+- ✅ PRs pequeños y revisables
+- ❌ Overhead en commits rápidos
+
+---
+
+## 🔧 Ejercicios del Módulo
+
+### Ejercicio 5.1: .gitignore Profesional
+**Objetivo**: Configurar .gitignore completo para ML.
+**Dificultad**: ⭐
+
+```bash
+# TU TAREA: Crear .gitignore que excluya:
+# - Entornos virtuales
+# - Datos y artefactos
+# - Archivos de IDE
+# - Secretos
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```gitignore
+# Entornos virtuales
+.venv/
+venv/
+env/
+.conda/
+
+# Datos y artefactos (versionados con DVC)
+data/
+artifacts/
+models/
+*.csv
+*.parquet
+*.joblib
+*.pkl
+
+# MLflow y experimentos
+mlruns/
+mlartifacts/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Secretos y configs locales
+.env
+.env.local
+*.pem
+secrets/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+```
+</details>
+
+---
+
+### Ejercicio 5.2: pre-commit Hooks
+**Objetivo**: Configurar hooks de calidad automática.
+**Dificultad**: ⭐⭐
+
+```yaml
+# .pre-commit-config.yaml
+# TU TAREA: Configurar hooks para:
+# - Formateo (ruff)
+# - Linting (ruff)
+# - Type checking (mypy)
+# - Secretos (detect-secrets)
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  # Hooks básicos
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+
+  # Ruff: linting + formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # Type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-PyYAML, pandas-stubs]
+        args: [--ignore-missing-imports]
+
+  # Detectar secretos
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+
+  # Conventional commits
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.0.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+
+# Instalar:
+# pip install pre-commit
+# pre-commit install
+# pre-commit install --hook-type commit-msg
+```
+</details>
+
+---
+
+### Ejercicio 5.3: Conventional Commits
+**Objetivo**: Escribir commits con formato estándar.
+**Dificultad**: ⭐
+
+```bash
+# Clasifica estos cambios con el tipo correcto:
+# 1. Añadir endpoint /predict
+# 2. Corregir bug en preprocesamiento
+# 3. Actualizar README
+# 4. Refactorizar función train()
+# 5. Añadir tests de integración
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```bash
+# 1. Nueva funcionalidad
+git commit -m "feat(api): add /predict endpoint with Pydantic validation"
+
+# 2. Corrección de bug
+git commit -m "fix(data): handle missing values in preprocessing step"
+
+# 3. Documentación
+git commit -m "docs: update README with quick start guide"
+
+# 4. Refactoring (sin cambio de comportamiento)
+git commit -m "refactor(training): extract feature engineering to separate function"
+
+# 5. Tests
+git commit -m "test(integration): add API endpoint tests with pytest"
+
+# Otros tipos comunes:
+# chore: tareas de mantenimiento (deps, configs)
+# ci: cambios en CI/CD
+# perf: mejoras de rendimiento
+# style: formateo, sin cambio de código
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **pre-commit** | Framework para ejecutar hooks automáticos antes de cada commit |
+| **Conventional Commits** | Especificación de formato de mensajes: `type(scope): description` |
+| **GitHub Flow** | Workflow simple: main + feature branches + PRs |
+| **rebase** | Reescribir historia para aplicar commits sobre otra base |
 
 ---
 
 <div align="center">
 
-[← Entornos](04_ENTORNOS.md) | [Siguiente: Versionado de Datos →](06_VERSIONADO_DATOS.md)
+**Siguiente módulo** → [06. Versionado de Datos](06_VERSIONADO_DATOS.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>

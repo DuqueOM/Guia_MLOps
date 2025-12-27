@@ -280,16 +280,16 @@ xdg-open http://localhost:8003/docs # TelecomAI
 │                    BANKCHURN DEMO (8-10 segundos)                       │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
-│  0:00-0:02  Swagger UI de BankChurn                                    │
+│  0:00-0:02  Swagger UI de BankChurn                                     │
 │  • Mostrar http://localhost:8001/docs                                   │
 │  • Título visible: "BankChurn Predictor API"                            │
 │                                                                         │
-│  0:02-0:05  Expandir /predict                                          │
+│  0:02-0:05  Expandir /predict                                           │
 │  • Click en POST /predict                                               │
 │  • Click "Try it out"                                                   │
 │  • Llenar con datos de ejemplo (ver abajo)                              │
 │                                                                         │
-│  0:05-0:08  Ejecutar y ver resultado                                   │
+│  0:05-0:08  Ejecutar y ver resultado                                    │
 │  • Click "Execute"                                                      │
 │  • Scroll para ver respuesta:                                           │
 │    {                                                                    │
@@ -333,16 +333,16 @@ xdg-open http://localhost:8003/docs # TelecomAI
 │                    CARVISION API DEMO (8-10 segundos)                   │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
-│  0:00-0:02  Swagger UI de CarVision                                    │
+│  0:00-0:02  Swagger UI de CarVision                                     │
 │  • Mostrar http://localhost:8002/docs                                   │
 │  • Título: "CarVision Market Intelligence API"                          │
 │                                                                         │
-│  0:02-0:05  Expandir /predict                                          │
+│  0:02-0:05  Expandir /predict                                           │
 │  • Click en POST /predict                                               │
 │  • "Try it out"                                                         │
 │  • Llenar datos de vehículo                                             │
 │                                                                         │
-│  0:05-0:08  Resultado                                                  │
+│  0:05-0:08  Resultado                                                   │
 │  • Ejecutar predicción                                                  │
 │  • Mostrar precio estimado: {"predicted_price": 25430.50}               │
 │                                                                         │
@@ -379,20 +379,20 @@ xdg-open http://localhost:8003/docs # TelecomAI
 │              CARVISION STREAMLIT DEMO (12-15 segundos)                  │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
-│  0:00-0:03  Dashboard Principal                                        │
-│  ───────────────────────────────────────────────────────────────────── │
+│  0:00-0:03  Dashboard Principal                                         │
+│  ─────────────────────────────────────────────────────────────────────  │
 │  • Mostrar http://localhost:8501                                        │
 │  • Vista inicial del dashboard con título                               │
 │  • Sidebar visible con opciones                                         │
 │                                                                         │
-│  0:03-0:06  Sección de Análisis de Datos                               │
-│  ───────────────────────────────────────────────────────────────────── │
+│  0:03-0:06  Sección de Análisis de Datos                                │
+│  ─────────────────────────────────────────────────────────────────────  │
 │  • Mostrar gráficos de distribución de precios                          │
 │  • Gráfico de precios por marca/año                                     │
 │  • Estadísticas descriptivas                                            │
 │                                                                         │
-│  0:06-0:10  Formulario de Predicción                                   │
-│  ───────────────────────────────────────────────────────────────────── │
+│  0:06-0:10  Formulario de Predicción                                    │
+│  ─────────────────────────────────────────────────────────────────────  │
 │  • Navegar a sección de predicción                                      │
 │  • Seleccionar marca: Toyota                                            │
 │  • Seleccionar modelo: Camry                                            │
@@ -400,14 +400,14 @@ xdg-open http://localhost:8003/docs # TelecomAI
 │  • Kilometraje: 35,000                                                  │
 │  • Condición: Good                                                      │
 │                                                                         │
-│  0:10-0:13  Resultado de Predicción                                    │
-│  ───────────────────────────────────────────────────────────────────── │
+│  0:10-0:13  Resultado de Predicción                                     │
+│  ─────────────────────────────────────────────────────────────────────  │
 │  • Click en botón "Predecir Precio"                                     │
 │  • Mostrar resultado: "$25,430" (grande, visible)                       │
 │  • Mostrar intervalo de confianza si existe                             │
 │                                                                         │
-│  0:13-0:15  Vista Final                                                │
-│  ───────────────────────────────────────────────────────────────────── │
+│  0:13-0:15  Vista Final                                                 │
+│  ─────────────────────────────────────────────────────────────────────  │
 │  • Scroll up para mostrar todo el dashboard                             │
 │  • O cambiar a otra sección brevemente                                  │
 │                                                                         │
@@ -429,14 +429,14 @@ xdg-open http://localhost:8003/docs # TelecomAI
 │                    TELECOMAI DEMO (8 segundos)                          │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
-│  0:00-0:02  Swagger UI de TelecomAI                                    │
+│  0:00-0:02  Swagger UI de TelecomAI                                     │
 │  • Mostrar http://localhost:8003/docs                                   │
 │  • Título: "TelecomAI Customer Intelligence API"                        │
 │                                                                         │
-│  0:02-0:05  Expandir /predict                                          │
+│  0:02-0:05  Expandir /predict                                           │
 │  • Llenar datos de uso del cliente                                      │
 │                                                                         │
-│  0:05-0:08  Resultado                                                  │
+│  0:05-0:08  Resultado                                                   │
 │  • Ejecutar predicción                                                  │
 │  • Mostrar plan recomendado                                             │
 │                                                                         │
@@ -458,20 +458,20 @@ xdg-open http://localhost:8003/docs # TelecomAI
 │                    MLFLOW DEMO (10-12 segundos)                         │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
-│  0:00-0:03  MLflow UI Principal                                        │
+│  0:00-0:03  MLflow UI Principal                                         │
 │  • Mostrar http://localhost:5000                                        │
 │  • Lista de experimentos visible                                        │
 │                                                                         │
-│  0:03-0:06  Seleccionar Experimento                                    │
+│  0:03-0:06  Seleccionar Experimento                                     │
 │  • Click en experimento "bankchurn" o "carvision"                       │
 │  • Mostrar lista de runs                                                │
 │                                                                         │
-│  0:06-0:09  Ver Métricas                                               │
+│  0:06-0:09  Ver Métricas                                                │
 │  • Click en un run específico                                           │
 │  • Mostrar métricas: AUC, F1, Accuracy                                  │
 │  • Mostrar parámetros logueados                                         │
 │                                                                         │
-│  0:09-0:12  Model Artifacts                                            │
+│  0:09-0:12  Model Artifacts                                             │
 │  • Mostrar sección de artifacts                                         │
 │  • Modelo guardado visible                                              │
 │                                                                         │
@@ -531,52 +531,52 @@ done
 │                  VIDEO DEMO PRINCIPAL (4-6 min)                         │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
-│  0:00-0:30  INTRODUCCIÓN                                               │
-│  ───────────────────────────────────────────────────────────────────── │
+│  0:00-0:30  INTRODUCCIÓN                                                │
+│  ─────────────────────────────────────────────────────────────────────  │
 │  • "Hola, soy [nombre] y este es mi portafolio MLOps"                   │
 │  • Mostrar GitHub repo                                                  │
 │  • "3 proyectos ML end-to-end con CI/CD y 5 servicios dockerizados"     │
 │                                                                         │
-│  0:30-1:00  LEVANTAR EL STACK                                          │
-│  ───────────────────────────────────────────────────────────────────── │
+│  0:30-1:00  LEVANTAR EL STACK                                           │
+│  ─────────────────────────────────────────────────────────────────────  │
 │  • Mostrar terminal: docker-compose up                                  │
 │  • Explicar: "Con un solo comando levanto 5 servicios"                  │
 │  • Mostrar docker ps con los 5 contenedores                             │
 │                                                                         │
-│  1:00-2:00  TOUR POR LOS 5 SERVICIOS                                   │
-│  ───────────────────────────────────────────────────────────────────── │
+│  1:00-2:00  TOUR POR LOS 5 SERVICIOS                                    │
+│  ─────────────────────────────────────────────────────────────────────  │
 │  • MLflow (5000): "Aquí trackeo todos los experimentos"                 │
 │  • BankChurn API (8001): "API de predicción de churn"                   │
 │  • CarVision API (8002): "API de precios de vehículos"                  │
 │  • Streamlit (8501): "Dashboard interactivo para CarVision"             │
 │  • TelecomAI API (8003): "Clasificación de planes móviles"              │
 │                                                                         │
-│  2:00-3:00  DEMO BANKCHURN                                             │
-│  ───────────────────────────────────────────────────────────────────── │
+│  2:00-3:00  DEMO BANKCHURN                                              │
+│  ─────────────────────────────────────────────────────────────────────  │
 │  • Mostrar código del pipeline sklearn                                  │
 │  • Ejecutar predicción en Swagger UI                                    │
 │  • Mostrar métricas en MLflow                                           │
 │                                                                         │
-│  3:00-4:00  DEMO CARVISION + STREAMLIT                                 │
-│  ───────────────────────────────────────────────────────────────────── │
+│  3:00-4:00  DEMO CARVISION + STREAMLIT                                  │
+│  ─────────────────────────────────────────────────────────────────────  │
 │  • Mostrar FeatureEngineer custom transformer                           │
 │  • Demo en Streamlit Dashboard (gráficos + predicción)                  │
 │  • Mostrar API también funcionando                                      │
 │                                                                         │
-│  4:00-4:30  CI/CD Y TESTING                                            │
-│  ───────────────────────────────────────────────────────────────────── │
+│  4:00-4:30  CI/CD Y TESTING                                             │
+│  ─────────────────────────────────────────────────────────────────────  │
 │  • Mostrar GitHub Actions                                               │
 │  • Tests con 80%+ coverage                                              │
 │  • Badge de CI passing                                                  │
 │                                                                         │
-│  4:30-5:00  ARQUITECTURA                                               │
-│  ───────────────────────────────────────────────────────────────────── │
+│  4:30-5:00  ARQUITECTURA                                                │
+│  ─────────────────────────────────────────────────────────────────────  │
 │  • Mostrar diagrama de arquitectura                                     │
 │  • Stack: sklearn, MLflow, FastAPI, Streamlit, Docker                   │
 │  • Configuración con Pydantic                                           │
 │                                                                         │
-│  5:00-5:30  CIERRE                                                     │
-│  ───────────────────────────────────────────────────────────────────── │
+│  5:00-5:30  CIERRE                                                      │
+│  ─────────────────────────────────────────────────────────────────────  │
 │  • Resumen: "3 proyectos, 5 servicios, 80%+ coverage"                   │
 │  • "Todo el código está en GitHub"                                      │
 │  • Mostrar URL del repositorio                                          │

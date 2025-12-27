@@ -705,44 +705,111 @@ Con la plataforma elegida, es hora de gestionar **infraestructura como código**
 
 ---
 
-## 📺 Recursos Externos Recomendados
+## 📺 Recursos Externos del Módulo
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [Docker Deploy - TechWorld Nana](https://www.youtube.com/watch?v=3c-iBn73dDE) | Video |
-| 🟡 | [Cloud Run Tutorial](https://www.youtube.com/watch?v=3OP-q55hOUI) | Video |
+### 🎬 Videos
 
----
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **Cloud Run Tutorial** | Google Cloud | 25 min | [YouTube](https://www.youtube.com/watch?v=3OP-q55hOUI) |
+| 🟡 | **AWS Lambda for ML** | AWS | 30 min | [YouTube](https://www.youtube.com/watch?v=eOBq__h4OJ4) |
+| 🟢 | **Blue-Green Deployments** | DevOps Toolkit | 20 min | [YouTube](https://www.youtube.com/watch?v=gfQRuL8Gj_A) |
 
-## 🔗 Referencias del Glosario
+### 📄 Documentación
 
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **Multi-stage Build**: Optimización de imágenes Docker
-- **Cloud Run**: Serverless containers de GCP
-- **Non-root user**: Seguridad en contenedores
-
----
-
-## ✅ Ejercicios
-
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 17:
-- **17.1**: Dockerfile multi-stage
-- **17.2**: Docker Compose para stack ML
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [Cloud Run Docs](https://cloud.google.com/run/docs) | Guía oficial GCP |
+| 🟡 | [AWS Lambda](https://docs.aws.amazon.com/lambda/) | Serverless AWS |
 
 ---
 
-## 🔜 Siguiente Paso
+## ⚖️ Decisión Técnica: ADR-007 Plataforma de Deployment
 
-Con la plataforma elegida, es hora de gestionar **infraestructura como código**.
+**Contexto**: Necesitamos elegir dónde desplegar APIs ML.
 
-**[Ir a Módulo 18: Infraestructura como Código →](18_INFRAESTRUCTURA.md)**
+**Decisión**: Cloud Run para APIs de inferencia (default), K8s para casos complejos.
+
+**Alternativas Consideradas**:
+- **AWS Lambda**: Cold starts problemáticos para ML
+- **EC2/GCE**: Más control pero más gestión
+- **Kubernetes**: Más complejo pero más flexible
+
+**Consecuencias**:
+- ✅ Escalado automático (0 a N)
+- ✅ Pay-per-use, sin servidores ociosos
+- ✅ CI/CD simple con Cloud Build
+- ❌ Cold starts (mitigable con min-instances)
+
+---
+
+## 🔧 Ejercicios del Módulo
+
+### Ejercicio 17.1: Análisis de Costos
+**Objetivo**: Comparar costos entre plataformas.
+**Dificultad**: ⭐⭐
+
+```
+Escenario:
+- API con 10,000 requests/día
+- Latencia promedio 200ms
+- Imagen Docker 500MB
+- 1GB RAM por instancia
+
+TU TAREA: Calcular costo mensual aproximado en:
+- Cloud Run
+- AWS Lambda
+- EC2 t3.small
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```
+CLOUD RUN (GCP):
+- Requests: 10,000/día × 30 = 300,000/mes
+- CPU: 300,000 × 0.2s = 60,000 CPU-seconds = 16.7 CPU-hours
+- Memory: 16.7 hours × 1GB = 16.7 GB-hours
+- Costo: ~$5-10/mes (con free tier)
+
+AWS LAMBDA:
+- Requests: 300,000/mes (1M free)
+- Duration: 300,000 × 200ms = 60,000 GB-seconds
+- Costo: ~$1-5/mes (pero cold starts!)
+
+EC2 t3.small (always on):
+- $0.0208/hour × 720h = ~$15/mes
+- + Load Balancer: ~$20/mes
+- Total: ~$35/mes
+
+RECOMENDACIÓN:
+- < 100K req/mes: Cloud Run (escala a 0)
+- 100K-1M req/mes: Cloud Run con min-instances
+- > 1M req/mes: Kubernetes o EC2 dedicado
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **Blue-Green** | Estrategia de deployment con dos ambientes idénticos |
+| **Canary** | Despliegue gradual a un % de tráfico |
+| **Cold Start** | Tiempo de inicio cuando no hay instancias activas |
+| **Serverless** | Modelo donde el proveedor gestiona la infraestructura |
 
 ---
 
 <div align="center">
 
-[← Observabilidad](16_OBSERVABILIDAD.md) | [Siguiente: Infraestructura →](18_INFRAESTRUCTURA.md)
+**Siguiente módulo** → [18. Infraestructura](18_INFRAESTRUCTURA.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>

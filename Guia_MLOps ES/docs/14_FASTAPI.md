@@ -775,40 +775,204 @@ curl -X POST http://localhost:8000/predict \
 
 ---
 
-## 📺 Recursos Externos Recomendados
+## 📺 Recursos Externos del Módulo
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [FastAPI Tutorial - Sebastián Ramírez](https://www.youtube.com/watch?v=0sOvCWFmrtA) | Video |
-| 🟡 | [ML APIs with FastAPI](https://www.youtube.com/watch?v=kBIX3_cMHzE) | Video |
+### 🎬 Videos
 
-**Documentación oficial:**
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Pydantic v2](https://docs.pydantic.dev/latest/)
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **FastAPI Full Course** | Sebastián Ramírez | 1h | [YouTube](https://www.youtube.com/watch?v=0sOvCWFmrtA) |
+| 🔴 | **ML APIs with FastAPI** | ArjanCodes | 30 min | [YouTube](https://www.youtube.com/watch?v=kBIX3_cMHzE) |
+| 🟡 | **Pydantic V2 Tutorial** | ArjanCodes | 25 min | [YouTube](https://www.youtube.com/watch?v=502XOB0u8OY) |
 
----
+### 📄 Documentación
 
-## 🔗 Referencias del Glosario
-
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **FastAPI**: Framework web async para APIs
-- **Pydantic**: Validación de datos con type hints
-- **OpenAPI**: Especificación de APIs (Swagger)
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [FastAPI Docs](https://fastapi.tiangolo.com/) | Documentación oficial |
+| 🟡 | [Pydantic v2](https://docs.pydantic.dev/latest/) | Validación de datos |
 
 ---
 
-## ✅ Ejercicios
+## ⚖️ Decisión Técnica: ADR-004 FastAPI
 
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 14:
-- **14.1**: Schemas Pydantic para request/response
-- **14.2**: Endpoint de predicción completo
+**Contexto**: Necesitamos framework para APIs de inferencia ML.
+
+**Decisión**: Usar FastAPI como framework para todas las APIs.
+
+**Alternativas Consideradas**:
+- **Flask**: Simple pero sync, validación manual
+- **Django REST**: Overkill para microservicios ML
+- **gRPC**: Más rápido pero más complejo
+
+**Consecuencias**:
+- ✅ Validación automática con Pydantic
+- ✅ Docs OpenAPI auto-generadas
+- ✅ Async nativo para alto throughput
+- ❌ Framework relativamente nuevo
+
+---
+
+## 🔧 Ejercicios del Módulo
+
+### Ejercicio 14.1: Schemas Pydantic
+**Objetivo**: Definir schemas de request/response.
+**Dificultad**: ⭐⭐
+
+```python
+from pydantic import BaseModel, Field
+
+# TU TAREA: Crear schemas para endpoint /predict
+# Request: customer features
+# Response: prediction + probability + model_version
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```python
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class PredictRequest(BaseModel):
+    """Schema de entrada para predicción."""
+    credit_score: int = Field(..., ge=300, le=850, description="Credit score")
+    age: int = Field(..., ge=18, le=100, description="Customer age")
+    tenure: int = Field(..., ge=0, le=50, description="Years as customer")
+    balance: float = Field(..., ge=0, description="Account balance")
+    num_products: int = Field(..., ge=1, le=4, description="Number of products")
+    has_credit_card: bool = Field(default=True)
+    is_active_member: bool = Field(default=True)
+    
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{
+                "credit_score": 650,
+                "age": 35,
+                "tenure": 5,
+                "balance": 50000.0,
+                "num_products": 2,
+                "has_credit_card": True,
+                "is_active_member": True
+            }]
+        }
+    }
+
+class PredictResponse(BaseModel):
+    """Schema de salida para predicción."""
+    prediction: int = Field(..., description="0=No churn, 1=Churn")
+    probability: float = Field(..., ge=0, le=1, description="Churn probability")
+    risk_level: str = Field(..., description="low/medium/high")
+    model_version: str = Field(..., description="Model version used")
+    
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{
+                "prediction": 1,
+                "probability": 0.73,
+                "risk_level": "high",
+                "model_version": "1.2.0"
+            }]
+        }
+    }
+```
+</details>
+
+---
+
+### Ejercicio 14.2: Endpoint Completo
+**Objetivo**: Implementar endpoint /predict con manejo de errores.
+**Dificultad**: ⭐⭐⭐
+
+```python
+# TU TAREA: Implementar endpoint que:
+# 1. Reciba PredictRequest validado
+# 2. Cargue modelo (cached)
+# 3. Haga predicción
+# 4. Devuelva PredictResponse
+# 5. Maneje errores apropiadamente
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```python
+from fastapi import FastAPI, HTTPException
+from functools import lru_cache
+import joblib
+
+app = FastAPI(title="Churn Prediction API")
+
+@lru_cache()
+def load_model():
+    """Carga modelo una sola vez."""
+    try:
+        return joblib.load("artifacts/model.joblib")
+    except FileNotFoundError:
+        raise RuntimeError("Model not found")
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
+
+@app.post("/predict", response_model=PredictResponse)
+async def predict(request: PredictRequest):
+    """Predice probabilidad de churn."""
+    try:
+        model = load_model()
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    
+    # Preparar features
+    features = [[
+        request.credit_score,
+        request.age,
+        request.tenure,
+        request.balance,
+        request.num_products,
+        int(request.has_credit_card),
+        int(request.is_active_member)
+    ]]
+    
+    try:
+        prediction = int(model.predict(features)[0])
+        probability = float(model.predict_proba(features)[0][1])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Prediction error: {e}")
+    
+    # Determinar nivel de riesgo
+    risk_level = "high" if probability > 0.7 else "medium" if probability > 0.3 else "low"
+    
+    return PredictResponse(
+        prediction=prediction,
+        probability=probability,
+        risk_level=risk_level,
+        model_version="1.0.0"
+    )
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **FastAPI** | Framework web async para APIs Python con validación automática |
+| **Pydantic** | Librería de validación de datos usando type hints |
+| **OpenAPI** | Especificación estándar para documentar APIs (antes Swagger) |
+| **@lru_cache** | Decorator para cachear resultados de funciones |
 
 ---
 
 <div align="center">
 
-[← Docker Avanzado](13_DOCKER.md) | [Siguiente: Streamlit Dashboards →](15_STREAMLIT.md)
+**Siguiente módulo** → [15. Streamlit](15_STREAMLIT.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>

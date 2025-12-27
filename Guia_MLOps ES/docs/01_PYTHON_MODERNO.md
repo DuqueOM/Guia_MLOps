@@ -1879,43 +1879,275 @@ python -c "from bankchurn.config import BankChurnConfig; print(BankChurnConfig.f
 
 ---
 
-## 📺 Recursos Externos Recomendados
+## 📺 Recursos Externos del Módulo
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [Type Hints - ArjanCodes](https://www.youtube.com/watch?v=dgBCEB2jVU0) | Video |
-| 🔴 | [Pydantic V2 Tutorial](https://www.youtube.com/watch?v=502XOB0u8OY) | Video |
-| 🟡 | [Python Type Checking - Real Python](https://realpython.com/python-type-checking/) | Tutorial |
+### 🎬 Videos
 
-**Documentación oficial:**
-- [PEP 484 – Type Hints](https://peps.python.org/pep-0484/)
-- [Pydantic Documentation](https://docs.pydantic.dev/)
-- [Python Packaging Guide](https://packaging.python.org/)
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **Type Hints in Python** | ArjanCodes | 18 min | [YouTube](https://www.youtube.com/watch?v=QORvB-_mbZ0) |
+| 🔴 | **Pydantic V2: The Complete Guide** | ArjanCodes | 25 min | [YouTube](https://www.youtube.com/watch?v=502XOB0u8OY) |
+| 🟡 | **Python OOP - Classes and Objects** | Corey Schafer | 15 min | [YouTube](https://www.youtube.com/watch?v=ZDa-Z5JzLYM) |
+
+### 📚 Cursos
+
+| 🏷️ | Título | Plataforma | Duración | Link |
+|:--:|:-------|:-----------|:--------:|:-----|
+| 🟢 | Modern Python 3 Bootcamp | Udemy | 30h | [Udemy](https://www.udemy.com/course/the-modern-python3-bootcamp/) |
+
+### 📄 Documentación
+
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [Pydantic Docs](https://docs.pydantic.dev/) | Documentación oficial de Pydantic V2 |
+| 🟡 | [typing Module](https://docs.python.org/3/library/typing.html) | Documentación de type hints |
+| 🟡 | [PEP 484](https://peps.python.org/pep-0484/) | Especificación de Type Hints |
+
+### 💡 Cuándo Consultar
+
+- **Antes de empezar**: Ve el video de Type Hints si no los usas regularmente
+- **Durante el módulo**: Consulta Pydantic docs cuando trabajes con `config.py`
+- **Después**: El curso complementario si quieres profundizar en POO
 
 ---
 
-## 🔗 Referencias del Glosario
+## ⚖️ Decisiones Técnicas (ADRs)
 
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **Type Hints**: Anotaciones de tipos en Python
-- **Pydantic**: Validación de datos con type hints
-- **src/ Layout**: Estructura de proyecto profesional
+### ADR-001: Python 3.11+
+
+**Contexto**: Necesitamos un lenguaje para todo el stack ML.
+
+**Decisión**: Usar Python 3.11+ como lenguaje principal.
+
+**Alternativas Consideradas**:
+- **R**: Mejor para estadística, peor para APIs y producción
+- **Julia**: Más rápido, ecosistema menos maduro
+
+**Consecuencias**:
+- ✅ Ecosistema ML más completo
+- ✅ FastAPI, Pydantic nativos
+- ✅ Mayor pool de talento
+- ❌ Más lento que lenguajes compilados
 
 ---
 
-## ✅ Ejercicios
+### ADR-003: Pydantic v2 para Configuración
 
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 01:
-- **1.1**: Añadir type hints a funciones
-- **1.2**: Crear config con Pydantic
-- **1.3**: Estructurar proyecto con src/ layout
+**Contexto**: Necesitamos validar configuración de forma robusta.
+
+**Decisión**: Usar Pydantic v2 para todas las configuraciones.
+
+**Alternativas Consideradas**:
+- **dataclasses**: Sin validación built-in
+- **attrs**: Menos popular, similar funcionalidad
+- **Dict/YAML directo**: Sin validación
+
+**Consecuencias**:
+- ✅ Validación automática de tipos
+- ✅ Errores claros en config inválida
+- ✅ Integración perfecta con FastAPI
+- ❌ Dependencia adicional
+
+---
+
+### ADR-013: Ruff para Linting
+
+**Contexto**: Necesitamos herramientas de calidad de código rápidas.
+
+**Decisión**: Usar Ruff como linter y formateador unificado.
+
+**Alternativas Consideradas**:
+- **Flake8 + Black + isort**: Múltiples herramientas, más lento
+- **Pylint**: Muy lento, muchos false positives
+
+**Consecuencias**:
+- ✅ 10-100x más rápido que alternativas
+- ✅ Una herramienta = una config
+- ✅ Compatible con reglas de Flake8
+- ❌ Herramienta relativamente nueva
+
+---
+
+## 🔧 Ejercicios del Módulo
+
+### Ejercicio 1.1: Type Hints
+**Objetivo**: Añadir type hints a funciones existentes.
+**Dificultad**: ⭐⭐
+
+```python
+# ANTES (sin tipos)
+def load_data(path):
+    return pd.read_csv(path)
+
+def train_model(X, y, params):
+    model = RandomForestClassifier(**params)
+    return model.fit(X, y)
+
+# TU TAREA: Añadir type hints completos
+# Hint: usa pd.DataFrame, np.ndarray, dict[str, Any]
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```python
+from pathlib import Path
+from typing import Any
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+
+def load_data(path: Path | str) -> pd.DataFrame:
+    """Carga datos desde CSV."""
+    return pd.read_csv(path)
+
+def train_model(
+    X: pd.DataFrame | np.ndarray,
+    y: pd.Series | np.ndarray,
+    params: dict[str, Any]
+) -> RandomForestClassifier:
+    """Entrena modelo con parámetros dados."""
+    model = RandomForestClassifier(**params)
+    return model.fit(X, y)
+```
+</details>
+
+---
+
+### Ejercicio 1.2: Pydantic Config
+**Objetivo**: Crear configuración validada con Pydantic.
+**Dificultad**: ⭐⭐
+
+```python
+# Crear una clase ModelConfig que valide:
+# - n_estimators: int entre 10 y 500
+# - max_depth: int opcional, entre 1 y 50
+# - random_state: int, default 42
+
+from pydantic import BaseModel, Field
+
+class ModelConfig(BaseModel):
+    # TU CÓDIGO AQUÍ
+    pass
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```python
+from pydantic import BaseModel, Field
+
+class ModelConfig(BaseModel):
+    """Configuración validada para modelo RandomForest."""
+    
+    n_estimators: int = Field(
+        default=100,
+        ge=10,
+        le=500,
+        description="Número de árboles en el bosque"
+    )
+    max_depth: int | None = Field(
+        default=None,
+        ge=1,
+        le=50,
+        description="Profundidad máxima de cada árbol"
+    )
+    random_state: int = Field(
+        default=42,
+        description="Semilla para reproducibilidad"
+    )
+
+# Uso:
+config = ModelConfig(n_estimators=200, max_depth=10)
+print(config.model_dump())  # {'n_estimators': 200, 'max_depth': 10, 'random_state': 42}
+
+# Validación automática:
+# ModelConfig(n_estimators=5)  # ❌ ValidationError: ge=10
+```
+</details>
+
+---
+
+### Ejercicio 1.3: src/ Layout
+**Objetivo**: Reorganizar código en estructura profesional.
+**Dificultad**: ⭐⭐
+
+```
+# Dado este código en un solo archivo main.py:
+# - load_data()
+# - preprocess()
+# - train()
+# - predict()
+# - FastAPI app
+
+# TU TAREA: Crear estructura src/ con:
+# src/myproject/data.py
+# src/myproject/training.py
+# src/myproject/prediction.py
+# app/fastapi_app.py
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```
+myproject/
+├── src/
+│   └── myproject/
+│       ├── __init__.py
+│       ├── data.py          # load_data()
+│       ├── training.py      # preprocess(), train()
+│       └── prediction.py    # predict()
+├── app/
+│   └── fastapi_app.py       # FastAPI app
+├── tests/
+│   └── conftest.py
+├── pyproject.toml
+└── Makefile
+```
+
+**pyproject.toml mínimo:**
+```toml
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "myproject"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas>=2.0",
+    "scikit-learn>=1.3",
+    "fastapi>=0.100",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "ruff>=0.1"]
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **Type Hints** | Anotaciones de tipos en Python que mejoran legibilidad y permiten verificación estática |
+| **Pydantic** | Librería para validación de datos usando type hints de Python |
+| **src/ Layout** | Estructura de proyecto donde el código está en `src/nombre_paquete/` |
+| **Ruff** | Linter y formateador ultrarrápido para Python escrito en Rust |
 
 ---
 
 <div align="center">
 
-[← Volver al Índice](00_INDICE.md) | [Siguiente: Diseño de Sistemas ML →](02_DISENO_SISTEMAS.md)
+**Siguiente módulo** → [02. Diseño de Sistemas ML](02_DISENO_SISTEMAS.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>

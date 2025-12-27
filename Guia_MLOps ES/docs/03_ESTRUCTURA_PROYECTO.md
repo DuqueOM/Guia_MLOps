@@ -536,60 +536,183 @@ Este checklist de estructura es lo primero que un revisor Senior mira cuando abr
 
 ---
 
-<a id="recursos-externos"></a>
+## 📺 Recursos Externos del Módulo
 
-## 📺 Recursos Externos Recomendados
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+### 🎬 Videos
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [Python Project Structure - ArjanCodes](https://www.youtube.com/watch?v=e8IIYRMnxcE) | Video |
-| 🟡 | [src Layout - Packaging Guide](https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/) | Docs |
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **Python Project Structure** | ArjanCodes | 22 min | [YouTube](https://www.youtube.com/watch?v=e8IIYRMnxcE) |
+| 🟡 | **Packaging Python Projects** | mCoding | 18 min | [YouTube](https://www.youtube.com/watch?v=v6tALyc4C10) |
+| 🟢 | **Cookiecutter Data Science** | PyData | 35 min | [YouTube](https://www.youtube.com/watch?v=nExL0SgKsDY) |
 
----
+### 📄 Documentación
 
-<a id="referencias-glosario"></a>
-
-## 🔗 Referencias del Glosario
-
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **src/ Layout**: Estructura de proyecto profesional
-- **pyproject.toml**: Archivo de configuración moderno
-- **Makefile**: Automatización de comandos
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [src Layout vs Flat](https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/) | Guía oficial de layouts |
+| 🟡 | [pyproject.toml Spec](https://packaging.python.org/en/latest/specifications/pyproject-toml/) | Especificación oficial |
 
 ---
 
-<a id="plantillas-relacionadas"></a>
+## ⚖️ Decisión Técnica: ADR-014 src/ Layout
 
-## 📋 Plantillas Relacionadas
+**Contexto**: Necesitamos una estructura de proyecto profesional y mantenible.
 
-Ver [templates/](templates/index.md) para plantillas listas:
-- [pyproject_template.toml](templates/pyproject_template.toml) — Configuración de paquete Python
-- [README_TEMPLATE.md](templates/README_TEMPLATE.md) — README profesional
-- [Makefile](templates/Makefile) — Automatización de tareas
+**Decisión**: Usar `src/` layout en todos los proyectos.
+
+**Alternativas Consideradas**:
+- **Flat layout**: Más simple pero riesgo de imports accidentales
+- **Namespace packages**: Más complejo, necesario solo para paquetes distribuidos
+
+**Consecuencias**:
+- ✅ Evita imports del código local no instalado
+- ✅ Tests siempre importan el paquete instalado
+- ✅ Estándar profesional reconocido
+- ❌ Un nivel de directorio adicional
 
 ---
 
-<a id="ejercicios"></a>
+## 🔧 Ejercicios del Módulo
 
-## ✅ Ejercicios
+### Ejercicio 3.1: Crear Estructura de Proyecto
+**Objetivo**: Crear estructura profesional desde cero.
+**Dificultad**: ⭐⭐
 
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 03:
-- **3.1**: Crear estructura de proyecto
-- **3.2**: Configurar pyproject.toml
-
-**Ejercicio rápido:**
 ```bash
-mkdir -p mi-proyecto/{src/miproyecto,app,tests,configs,data/raw,artifacts,scripts,docs}
-touch mi-proyecto/src/__init__.py mi-proyecto/src/miproyecto/__init__.py
-touch mi-proyecto/tests/__init__.py mi-proyecto/README.md
+# TU TAREA: Crear estructura completa para proyecto "mymlproject"
+# Debe incluir: src/, tests/, configs/, data/, artifacts/, docs/
 ```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```bash
+# Crear estructura
+mkdir -p mymlproject/{src/mymlproject,app,tests,configs,data/{raw,processed},artifacts,scripts,docs}
+
+# Crear archivos Python
+touch mymlproject/src/mymlproject/__init__.py
+touch mymlproject/src/mymlproject/{config.py,data.py,training.py,prediction.py}
+touch mymlproject/app/__init__.py
+touch mymlproject/app/fastapi_app.py
+touch mymlproject/tests/__init__.py
+touch mymlproject/tests/conftest.py
+
+# Crear archivos de proyecto
+touch mymlproject/{README.md,pyproject.toml,Makefile,.gitignore}
+touch mymlproject/.pre-commit-config.yaml
+
+# Estructura resultante:
+# mymlproject/
+# ├── src/mymlproject/
+# │   ├── __init__.py
+# │   ├── config.py
+# │   ├── data.py
+# │   ├── training.py
+# │   └── prediction.py
+# ├── app/fastapi_app.py
+# ├── tests/conftest.py
+# ├── configs/
+# ├── data/{raw,processed}/
+# ├── artifacts/
+# ├── scripts/
+# ├── docs/
+# ├── pyproject.toml
+# ├── Makefile
+# └── README.md
+```
+</details>
+
+---
+
+### Ejercicio 3.2: pyproject.toml Completo
+**Objetivo**: Configurar pyproject.toml profesional.
+**Dificultad**: ⭐⭐
+
+```toml
+# TU TAREA: Completar pyproject.toml para mymlproject
+[build-system]
+# ???
+
+[project]
+name = "mymlproject"
+# ???
+
+[project.optional-dependencies]
+# ???
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```toml
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mymlproject"
+version = "0.1.0"
+description = "ML project with professional structure"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Tu Nombre", email = "tu@email.com"}]
+
+dependencies = [
+    "pandas>=2.0",
+    "scikit-learn>=1.3",
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.1",
+    "pre-commit>=3.0",
+]
+api = [
+    "fastapi>=0.100",
+    "uvicorn>=0.23",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --cov=mymlproject"
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **src/ Layout** | Estructura donde código está en `src/nombre_paquete/` |
+| **pyproject.toml** | Archivo unificado de configuración de proyecto Python |
+| **Makefile** | Archivo para automatizar comandos comunes del proyecto |
+| **editable install** | `pip install -e .` instala paquete en modo desarrollo |
 
 ---
 
 <div align="center">
 
-[← Diseño de Sistemas](02_DISENO_SISTEMAS.md) | [Siguiente: Entornos →](04_ENTORNOS.md)
+**Siguiente módulo** → [04. Entornos](04_ENTORNOS.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>

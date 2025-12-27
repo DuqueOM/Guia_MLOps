@@ -980,48 +980,295 @@ Con esta mentalidad, la observabilidad deja de ser un "extra" y se convierte en 
 
 ---
 
-## 📺 Recursos Externos Recomendados
+## 📺 Recursos Externos del Módulo
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [Prometheus + Grafana - TechWorld Nana](https://www.youtube.com/watch?v=7gW5pSM6dlU) | Video |
-| 🟡 | [ML Monitoring with Evidently](https://www.youtube.com/watch?v=nGFnk7e3R-g) | Video |
+### 🎬 Videos
 
-**Documentación oficial:**
-- [Prometheus](https://prometheus.io/docs/)
-- [Grafana](https://grafana.com/docs/)
-- [Evidently AI](https://docs.evidentlyai.com/)
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **Prometheus + Grafana Tutorial** | TechWorld with Nana | 50 min | [YouTube](https://www.youtube.com/watch?v=7gW5pSM6dlU) |
+| 🟡 | **ML Model Monitoring with Evidently** | Evidently AI | 30 min | [YouTube](https://www.youtube.com/watch?v=L4Pv6ExBQPM) |
+| 🟢 | **Drift Detection Explained** | NannyML | 25 min | [YouTube](https://www.youtube.com/watch?v=82Sb8n3wN24) |
 
----
+### 📚 Cursos
 
-## 🔗 Referencias del Glosario
+| 🏷️ | Título | Plataforma | Duración | Link |
+|:--:|:-------|:-----------|:--------:|:-----|
+| 🟡 | ML Monitoring | Made With ML | 3h | [MadeWithML](https://madewithml.com/courses/mlops/monitoring/) |
 
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **Data Drift**: Cambio en distribución de features
-- **Prometheus**: Sistema de monitoreo y alertas
-- **PSI**: Population Stability Index
+### 📄 Documentación
 
----
-
-<a id="ejercicio"></a>
- 
-## ✅ Ejercicios
-
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 16:
-- **16.1**: Logging estructurado JSON
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [Evidently Docs](https://docs.evidentlyai.com/) | Documentación oficial |
+| 🟡 | [Prometheus Docs](https://prometheus.io/docs/) | Documentación de Prometheus |
+| 🟢 | [Grafana Dashboards](https://grafana.com/docs/grafana/latest/dashboards/) | Creación de dashboards |
 
 ---
 
-<a id="checkpoint"></a>
- 
-## ✅ Checkpoint
+## ⚖️ Decisión Técnica: ADR-011 Prometheus + Grafana
+
+**Contexto**: Necesitamos monitorear modelos en producción y detectar drift.
+
+**Decisión**: Usar Prometheus para métricas y Grafana para dashboards.
+
+**Alternativas Consideradas**:
+- **Datadog**: Excelente pero costoso
+- **New Relic**: Similar a Datadog
+- **CloudWatch/Stackdriver**: Vendor lock-in
+
+**Consecuencias**:
+- ✅ Open source, sin costo
+- ✅ Estándar de la industria
+- ✅ Alertas configurables
+- ✅ Integración con K8s nativa
+- ❌ Más setup que SaaS
+
+---
+
+## 🔧 Ejercicios del Módulo
+
+### Ejercicio 16.1: Logging Estructurado
+**Objetivo**: Implementar logging profesional en JSON.
+**Dificultad**: ⭐⭐
+
+```python
+# TU TAREA: Configurar logging estructurado
+
+import logging
+import json
+from datetime import datetime
+
+class JSONFormatter(logging.Formatter):
+    """Formatter que produce logs en JSON."""
+    
+    def format(self, record):
+        log_data = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "level": record.levelname,
+            "message": record.getMessage(),
+            "module": record.module,
+            # TODO: Añadir más campos útiles
+        }
+        return json.dumps(log_data)
+
+# TODO: Configurar logger con este formatter
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```python
+import logging
+import json
+import sys
+from datetime import datetime
+from typing import Any
+
+class JSONFormatter(logging.Formatter):
+    """Formatter que produce logs en JSON estructurado."""
+    
+    def format(self, record: logging.LogRecord) -> str:
+        log_data: dict[str, Any] = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "module": record.module,
+            "function": record.funcName,
+            "line": record.lineno,
+        }
+        
+        # Añadir campos extra si existen
+        if hasattr(record, "customer_id"):
+            log_data["customer_id"] = record.customer_id
+        if hasattr(record, "prediction"):
+            log_data["prediction"] = record.prediction
+        if hasattr(record, "latency_ms"):
+            log_data["latency_ms"] = record.latency_ms
+            
+        # Añadir exception si existe
+        if record.exc_info:
+            log_data["exception"] = self.formatException(record.exc_info)
+            
+        return json.dumps(log_data)
+
+
+def setup_logger(name: str = "ml_api") -> logging.Logger:
+    """Configura logger con formato JSON."""
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+    
+    # Handler para stdout
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(JSONFormatter())
+    logger.addHandler(handler)
+    
+    return logger
+
+
+# Uso:
+logger = setup_logger()
+logger.info("Prediction made", extra={"customer_id": 123, "prediction": 1, "latency_ms": 45})
+# Output: {"timestamp": "2024-01-15T10:30:00Z", "level": "INFO", "message": "Prediction made", ...}
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **Data Drift** | Cambio en la distribución de features entre training y producción |
+| **Concept Drift** | Cambio en la relación P(Y\|X) entre features y target |
+| **PSI** | Population Stability Index - métrica para detectar drift |
+| **Prometheus** | Sistema open source de monitoreo y alertas basado en métricas |
+| **Grafana** | Plataforma de visualización para dashboards de métricas |
+
+---
+
+## 🏁 CHECKPOINT FASE 3: MLOps Core Completado
+
+> 🎯 **¡Has completado los módulos 11-16!**
+>
+> Ahora dominas las prácticas que distinguen un proyecto ML profesional:
+> - ✅ Testing para ML con 80%+ coverage
+> - ✅ CI/CD con GitHub Actions
+> - ✅ Docker multi-stage y docker-compose
+> - ✅ APIs de producción con FastAPI
+> - ✅ Dashboards interactivos con Streamlit
+> - ✅ Observabilidad con Prometheus/Grafana y drift detection
+
+---
+
+### 📋 Exámenes de Hito: Testing y Deployment
+
+#### Examen 3: Testing (Extracto)
+
+**Código a Revisar:**
+```python
+# tests/test_model.py
+
+def test_model():
+    model = load_model()
+    data = pd.read_csv("data/test.csv")
+    predictions = model.predict(data)
+    assert len(predictions) == len(data)
+```
+
+**Problemas a identificar:** ¿Qué falta en este test?
+
+<details>
+<summary>📝 Ver Solución</summary>
+
+**Errores:**
+1. No usa fixtures (hardcoded paths)
+2. No verifica tipos de predicciones
+3. No valida rangos válidos
+4. No es reproducible (depende de archivo externo)
+
+**Test Corregido:**
+```python
+import pytest
+import numpy as np
+
+@pytest.fixture
+def sample_data():
+    return pd.DataFrame({
+        "feature1": [1.0, 2.0, 3.0],
+        "feature2": [0.5, 1.5, 2.5],
+    })
+
+@pytest.fixture
+def trained_model(sample_data):
+    # Modelo entrenado en fixture
+    return train_model(sample_data, labels=[0, 1, 0])
+
+def test_predictions_shape(trained_model, sample_data):
+    predictions = trained_model.predict(sample_data)
+    assert len(predictions) == len(sample_data)
+    
+def test_predictions_valid_range(trained_model, sample_data):
+    predictions = trained_model.predict(sample_data)
+    assert all(p in [0, 1] for p in predictions)
+    
+def test_predictions_type(trained_model, sample_data):
+    predictions = trained_model.predict(sample_data)
+    assert isinstance(predictions, np.ndarray)
+```
+</details>
+
+---
+
+### 🎤 Simulacro de Entrevista: Nivel Mid
+
+> **60 preguntas** para validar MLOps Core (Módulos 07-16)
+> **Tiempo**: 90 minutos
+> **Objetivo**: Preparación para posiciones Mid ML Engineer
+
+#### Preguntas de Muestra
+
+**Testing ML (10 preguntas)**
+1. ¿Qué es la pirámide de testing y cómo aplica a ML?
+2. ¿Cómo testeas que un modelo no tiene data leakage?
+3. ¿Qué fixtures usarías en `conftest.py` para tests ML?
+
+**CI/CD (10 preguntas)**
+4. ¿Cómo configurarías matrix testing en GitHub Actions?
+5. ¿Qué es un coverage gate y por qué es importante?
+6. ¿Cómo integras security scanning en tu pipeline?
+
+**Docker (10 preguntas)**
+7. ¿Por qué usar multi-stage builds para ML?
+8. ¿Cómo optimizas el tamaño de imagen Docker para ML?
+9. ¿Qué es un usuario non-root y por qué usarlo?
+
+**APIs (10 preguntas)**
+10. ¿Cómo manejas errores en FastAPI para ML?
+11. ¿Qué endpoints de health check implementarías?
+12. ¿Cómo validas inputs con Pydantic en APIs ML?
+
+**Observabilidad (10 preguntas)**
+13. ¿Qué métricas capturarías para un modelo en producción?
+14. ¿Cómo detectas data drift en producción?
+15. ¿Diferencia entre logging estructurado y tradicional?
+
+<details>
+<summary>💡 Ver Respuestas de Muestra</summary>
+
+**1. Pirámide de testing en ML:**
+> Base: unit tests (funciones individuales), Medio: integration tests (pipeline completo), Top: E2E tests (API funcionando). En ML agregamos: tests de datos (schema, rangos), tests de modelo (reproducibilidad, métricas mínimas).
+
+**7. Multi-stage builds:**
+> Separamos build (instalar dependencias, compilar) de runtime (solo lo necesario para ejecutar). Reduce imagen de ~2GB a ~500MB. Stage 1: instala todo, Stage 2: copia solo wheels y código.
+
+**14. Detectar data drift:**
+> PSI (Population Stability Index) para features categóricas, KS-test para numéricas. Umbral típico: PSI > 0.2 = drift significativo. Herramientas: Evidently, Alibi Detect, Great Expectations.
+</details>
+
+---
+
+[Ver simulacro completo →](simulacros/SIMULACRO_ENTREVISTA_MID.md)
+
+---
+
+## ✅ Checkpoint del Módulo
 
 - [ ] Tienes endpoint `/metrics` en tu API
 - [ ] Logs en formato JSON estructurado
 - [ ] Script de drift detection funcional
 - [ ] Alertas configuradas para métricas críticas
+
+---
+
+## 🔜 Siguiente Fase: Producción
+
+Con MLOps Core completado, es hora de aprender **estrategias de despliegue e infraestructura**.
+
+**[Comenzar Fase 4 → Módulo 17: Despliegue](17_DESPLIEGUE.md)**
 
 ---
 

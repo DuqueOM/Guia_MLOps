@@ -697,45 +697,139 @@ Monitoring: Prometheus + Grafana
 
 | 🏷️ | Recurso | Tipo | Duración |
 |:--:|:--------|:-----|:--------:|
-| 🔴 | [Kubernetes Tutorial - TechWorld Nana](https://www.youtube.com/watch?v=X48VuDVv0do) | Video | 4h |
-| 🟡 | [Terraform Tutorial - freeCodeCamp](https://www.youtube.com/watch?v=7xngnjfIlK4) | Video | 2.5h |
-| 🟢 | [Kubernetes Fundamentals - LF](https://training.linuxfoundation.org/) | Curso | 35h |
+## 📺 Recursos Externos del Módulo
+
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
+
+### 🎬 Videos
+
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **Kubernetes Tutorial** | TechWorld Nana | 4h | [YouTube](https://www.youtube.com/watch?v=X48VuDVv0do) |
+| 🔴 | **Terraform Tutorial** | freeCodeCamp | 2.5h | [YouTube](https://www.youtube.com/watch?v=7xngnjfIlK4) |
+| 🟡 | **Helm Charts Explained** | TechWorld Nana | 30 min | [YouTube](https://www.youtube.com/watch?v=-ykwb1d0DXU) |
+
+### 📄 Documentación
+
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [Kubernetes Docs](https://kubernetes.io/docs/) | Documentación oficial |
+| 🟡 | [Terraform Docs](https://developer.hashicorp.com/terraform/docs) | HashiCorp docs |
 
 ---
 
-## 🔗 Referencias del Glosario
+## ⚖️ Decisión Técnica: ADR-009 Terraform
 
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones detalladas de:
-- **Kubernetes**: Orquestación de contenedores
-- **HPA**: Horizontal Pod Autoscaler
-- **ConfigMap/Secret**: Configuración en K8s
-- **Terraform**: Infrastructure as Code
+**Contexto**: Necesitamos gestionar infraestructura de forma reproducible.
+
+**Decisión**: Usar Terraform para IaC en AWS/GCP.
+
+**Alternativas Consideradas**:
+- **CloudFormation**: Solo AWS, menos portable
+- **Pulumi**: Code-first pero más complejo
+- **Ansible**: Mejor para configuración que infraestructura
+
+**Consecuencias**:
+- ✅ Multi-cloud (AWS, GCP, Azure)
+- ✅ Estado declarativo
+- ✅ Plan antes de apply
+- ❌ Curva de aprendizaje inicial
 
 ---
 
-<a id="ejercicio"></a>
+## 🔧 Ejercicios del Módulo
 
-## ✅ Ejercicio
+### Ejercicio 18.1: Leer Kubernetes Manifest
+**Objetivo**: Entender deployment y service de K8s.
+**Dificultad**: ⭐⭐
 
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulos 17-18
+```yaml
+# ¿Qué hace este manifest?
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ml-api
+  template:
+    spec:
+      containers:
+      - name: api
+        image: myregistry/ml-api:v1
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```
+ANÁLISIS DEL MANIFEST:
+
+1. Deployment "ml-api":
+   - Crea 2 réplicas del pod
+   - Selector matchLabels para encontrar pods
+
+2. Container "api":
+   - Imagen: myregistry/ml-api:v1
+   - Resources requests: mínimo garantizado
+     - 512Mi RAM, 250m CPU (0.25 cores)
+   - Resources limits: máximo permitido
+     - 1Gi RAM, 500m CPU (0.5 cores)
+
+3. Comportamiento:
+   - K8s programa pods en nodos con recursos disponibles
+   - Si excede limits → throttling (CPU) o OOMKilled (memory)
+   - HPA puede escalar basado en % de requests
+
+4. Mejoras recomendadas:
+   - Añadir livenessProbe y readinessProbe
+   - Definir securityContext (non-root)
+   - Usar configMapRef para variables
+```
+</details>
 
 ---
 
-<a id="checkpoint"></a>
+## 🔗 Glosario del Módulo
 
-## ✅ Checkpoint
+| Término | Definición |
+|---------|------------|
+| **Kubernetes** | Orquestador de contenedores para escalar aplicaciones |
+| **Terraform** | Herramienta IaC declarativa para provisionar infraestructura |
+| **HPA** | Horizontal Pod Autoscaler - escala pods basado en métricas |
+| **ConfigMap** | Objeto K8s para configuración no sensible |
 
-Para este nivel:
-- [ ] Entiendes el concepto de IaC (infraestructura como código)
-- [ ] Puedes leer un deployment.yaml de K8s
-- [ ] Sabes qué hace un HPA y cuándo usarlo
-- [ ] Entiendes la diferencia entre ConfigMap y Secret
-- [ ] Sabes cuándo escalar más allá de Docker
+---
+
+## 🏁 FIN DE FASE 4: Producción
+
+> 🎯 **¡Has completado los módulos 17-18!**
+>
+> Ahora entiendes deployment y infraestructura para producción:
+> - ✅ Estrategias de despliegue (blue-green, canary)
+> - ✅ Plataformas cloud (Cloud Run, Lambda, K8s)
+> - ✅ Infrastructure as Code con Terraform
+> - ✅ Kubernetes basics
+
+**Siguiente**: Fase 5 - Senior/Staff (Documentación, Observabilidad Avanzada, FinOps)
 
 ---
 
 <div align="center">
 
-[← Despliegue](17_DESPLIEGUE.md) | [Siguiente: Documentación →](19_DOCUMENTACION.md)
+**Siguiente módulo** → [19. Documentación](19_DOCUMENTACION.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>

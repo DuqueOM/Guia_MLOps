@@ -820,64 +820,151 @@ app/
 
 ---
 
-## 📺 Recursos Externos Recomendados
+## 📺 Recursos Externos del Módulo
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-| 🏷️ | Recurso | Tipo | Duración |
-|:--:|:--------|:-----|:--------:|
-| 🔴 | [Streamlit Crash Course - Patrick Loeber](https://www.youtube.com/watch?v=JwSS70SZdyM) | Video | 45 min |
-| 🟡 | [30 Days of Streamlit](https://30days.streamlit.app/) | Curso | 30 días |
-| 🟡 | [Streamlit Multi-page Apps](https://www.youtube.com/watch?v=nSw96qUbK9o) | Video | 20 min |
-| 🟢 | [Streamlit Gallery](https://streamlit.io/gallery) | Ejemplos | - |
+### 🎬 Videos
+
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **Streamlit Crash Course** | Patrick Loeber | 45 min | [YouTube](https://www.youtube.com/watch?v=JwSS70SZdyM) |
+| 🟡 | **Streamlit Multi-page Apps** | Streamlit | 20 min | [YouTube](https://www.youtube.com/watch?v=nSw96qUbK9o) |
+| 🟢 | **30 Days of Streamlit** | Streamlit | Curso | [30days](https://30days.streamlit.app/) |
+
+### 📄 Documentación
+
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [Streamlit Docs](https://docs.streamlit.io/) | Documentación oficial |
+| 🟡 | [Streamlit Gallery](https://streamlit.io/gallery) | Ejemplos de apps |
 
 ---
 
-## 🔗 Referencias del Glosario
+## 🔧 Ejercicios del Módulo
 
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **Streamlit**: Framework para dashboards en Python
-- **@st.cache_resource**: Decorator para cachear modelos
-- **Plotly**: Librería de visualizaciones interactivas
+### Ejercicio 15.1: Dashboard de Predicción
+**Objetivo**: Crear dashboard interactivo para modelo ML.
+**Dificultad**: ⭐⭐⭐
 
- ---
- 
- <a id="ejercicio"></a>
- 
- ## ✅ Ejercicios
- 
- Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 15:
-- **15.1**: Dashboard de predicción
+```python
+import streamlit as st
 
-**Ejercicio completo:**
-Crea un dashboard Streamlit para BankChurn con:
-1. Tab Overview: Distribución de churn, KPIs
-2. Tab Analysis: Factores de riesgo por segmento
-3. Tab Predictor: Formulario para predecir churn de un cliente
+# TU TAREA: Crear dashboard con:
+# 1. Sidebar con inputs para features
+# 2. Botón de predicción
+# 3. Mostrar resultado con gauge chart
+# 4. Explicación de factores (feature importance)
+```
 
-**Bonus**:
-- Añade gauge chart para probabilidad de churn
-- Implementa SHAP waterfall plot para explicar predicciones
-- Usa multi-page structure
+<details>
+<summary>💡 Ver solución</summary>
 
- ---
- 
- <a id="checkpoint"></a>
- 
- ## 🎤 Checkpoint: Simulacro Mid
- 
- > 🎯 **¡Has completado ML Core + Deploy!** (Módulos 07-15)
-> 
-> Si buscas posiciones **Mid-Level ML Engineer**, ahora es buen momento para practicar:
-> 
-> **[→ SIMULACRO_ENTREVISTA_MID.md](SIMULACRO_ENTREVISTA_MID.md)**
-> - 60 preguntas de pipelines, testing, CI/CD, Docker, APIs
-> - Enfoque en implementación end-to-end y debugging
+```python
+import streamlit as st
+import joblib
+import plotly.graph_objects as go
+
+st.set_page_config(page_title="Churn Predictor", layout="wide")
+
+@st.cache_resource
+def load_model():
+    return joblib.load("artifacts/model.joblib")
+
+def create_gauge(probability: float) -> go.Figure:
+    """Crea gauge chart para probabilidad."""
+    color = "red" if probability > 0.7 else "orange" if probability > 0.3 else "green"
+    
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=probability * 100,
+        title={"text": "Churn Risk"},
+        gauge={
+            "axis": {"range": [0, 100]},
+            "bar": {"color": color},
+            "steps": [
+                {"range": [0, 30], "color": "lightgreen"},
+                {"range": [30, 70], "color": "lightyellow"},
+                {"range": [70, 100], "color": "lightcoral"}
+            ]
+        }
+    ))
+    return fig
+
+# Sidebar - Inputs
+st.sidebar.header("Customer Features")
+credit_score = st.sidebar.slider("Credit Score", 300, 850, 650)
+age = st.sidebar.slider("Age", 18, 80, 35)
+tenure = st.sidebar.slider("Tenure (years)", 0, 20, 5)
+balance = st.sidebar.number_input("Balance", 0, 250000, 50000)
+num_products = st.sidebar.selectbox("Products", [1, 2, 3, 4])
+has_credit_card = st.sidebar.checkbox("Has Credit Card", True)
+is_active = st.sidebar.checkbox("Is Active Member", True)
+
+# Main content
+st.title("🔮 Churn Prediction Dashboard")
+
+if st.sidebar.button("Predict", type="primary"):
+    model = load_model()
+    
+    features = [[credit_score, age, tenure, balance, 
+                 num_products, int(has_credit_card), int(is_active)]]
+    
+    probability = model.predict_proba(features)[0][1]
+    prediction = model.predict(features)[0]
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.plotly_chart(create_gauge(probability), use_container_width=True)
+    
+    with col2:
+        risk = "🔴 HIGH" if probability > 0.7 else "🟡 MEDIUM" if probability > 0.3 else "🟢 LOW"
+        st.metric("Risk Level", risk)
+        st.metric("Probability", f"{probability:.1%}")
+        
+        if probability > 0.5:
+            st.warning("⚠️ Customer at risk of churning!")
+        else:
+            st.success("✅ Customer likely to stay")
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **Streamlit** | Framework Python para crear dashboards web rápidamente |
+| **@st.cache_resource** | Decorator para cachear modelos y recursos pesados |
+| **Plotly** | Librería para gráficos interactivos |
+| **Multi-page App** | Estructura con múltiples páginas en Streamlit |
+
+---
+
+## 🏁 FIN DE FASE 3: MLOps Core
+
+> 🎯 **¡Has completado los módulos 11-16!**
+>
+> Ahora dominas MLOps Core:
+> - ✅ Testing profesional para ML
+> - ✅ CI/CD con GitHub Actions
+> - ✅ Containerización con Docker
+> - ✅ APIs con FastAPI
+> - ✅ Dashboards con Streamlit
+> - ✅ Observabilidad básica
+
+**Siguiente**: Fase 4 - Producción (Despliegue, Infraestructura)
 
 ---
 
 <div align="center">
 
-[← FastAPI Producción](14_FASTAPI.md) | [Siguiente: Observabilidad →](16_OBSERVABILIDAD.md)
+**Siguiente módulo** → [16. Observabilidad](16_OBSERVABILIDAD.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>

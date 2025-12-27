@@ -166,6 +166,8 @@ Al completar este programa serás capaz de:
 
 **Validar**: `make check-01`
 
+**Preparación**: [Ejercicios Puente Mes 1](ejercicios/EJERCICIOS_PUENTE_MES1.md) — De Python básico a SOLID
+
 ---
 
 ### Módulo 02 — Ingeniería de Datos (4 días)
@@ -195,6 +197,10 @@ Al completar este programa serás capaz de:
 **Mini-Proyecto**: `FeatureEngineer` class con transformadores serializados.
 
 **Validar**: `make check-03`
+
+**Submódulos adicionales**:
+- [03A: Refactoring Notebook → Producción](03A_REFACTORING_NOTEBOOK_PRODUCCION.md)
+- [03B: Common Utils y Librerías Compartidas](03B_COMMON_UTILS_LIBRERIAS.md)
 
 ---
 
@@ -318,6 +324,61 @@ Al completar este programa serás capaz de:
 
 ---
 
+## 🚀 Módulos Avanzados (Senior/Staff)
+
+Estos módulos cubren temas avanzados para nivel Senior/Staff:
+
+### Módulo 20 — Observabilidad Avanzada y Drift (3 días)
+
+| Contenido | Entregable |
+|:----------|:-----------|
+| Detección estadística de drift (KS-test, PSI) | Detector funcionando |
+| EvidentlyAI / Alibi Detect | Reportes automatizados |
+| Alertas multi-nivel | Sistema de alertas |
+| Métricas ML → KPIs de negocio | Dashboard de impacto |
+
+**Mini-Proyecto**: Sistema que detecta datos corruptos antes de retrain.
+
+**Documento**: [20_OBSERVABILIDAD_AVANZADA_DRIFT.md](20_OBSERVABILIDAD_AVANZADA_DRIFT.md)
+
+**Examen relacionado**: [EXAM_05_PRODUCTION](examenes/EXAM_05_PRODUCTION.md)
+
+---
+
+### Módulo 21 — Cloud FinOps y Estrategia (2 días)
+
+| Contenido | Entregable |
+|:----------|:-----------|
+| Costos ML: Training vs Inference | Calculadora de costos |
+| Spot vs On-Demand vs Reserved | Estrategia documentada |
+| Auto-scaling inteligente | HPA configurado |
+| Cálculo de TCO | Análisis completo |
+
+**Mini-Proyecto**: Reducir TCO del Portfolio en 30%.
+
+**Documento**: [21_CLOUD_FINOPS.md](21_CLOUD_FINOPS.md)
+
+**Recursos**: [Material de Apoyo](apoyo/index.md)
+
+---
+
+### Módulo 22 — Infrastructure as Code Empresarial (3 días)
+
+| Contenido | Entregable |
+|:----------|:-----------|
+| Gestión de estado Terraform | State locking configurado |
+| Arquitectura multi-ambiente | Dev/Staging/Prod |
+| Módulos reutilizables | Terraform modules |
+| CI/CD para infraestructura | Pipeline de infra |
+
+**Mini-Proyecto**: Refactorizar infra/ para soportar Staging.
+
+**Documento**: [22_IAC_EMPRESARIAL.md](22_IAC_EMPRESARIAL.md)
+
+**Examen Final**: [EXAM_06_INTEGRATION](examenes/EXAM_06_INTEGRATION.md)
+
+---
+
 ## 📊 Rúbrica de Evaluación (100 puntos por módulo)
 
 | Criterio | Puntos | Descripción |
@@ -334,13 +395,26 @@ Al completar este programa serás capaz de:
 
 ## 📈 Progreso Sugerido
 
+### Ruta Acelerada (8 semanas)
 ```
 Semana 1:   Módulos 00-01 (Fundamentos Python)
-Semana 2:   Módulos 02-03 (Datos y Features)
+Semana 2:   Módulos 02-03 + 03B/03C (Datos, Features, Refactoring)
 Semana 3:   Módulo 04 (Modelado completo)
 Semana 4:   Módulos 05-06 (Tracking + API)
 Semana 5:   Módulos 07-08 (Dashboard + CI/CD)
 Semana 6:   Módulos 09-11 (Docs + Mantenimiento)
+Semana 7:   Módulos 20-21 (Observabilidad + FinOps)
+Semana 8:   Módulo 22 + Proyecto Integrador (IaC + Consolidación)
+```
+
+### Ruta Principal (24 semanas)
+```
+Mes 1:      Módulos 00-03 + Ejercicios Puente
+Mes 2:      Módulos 04-06 (Modelado + Tracking + API)
+Mes 3:      Módulos 07-11 (Dashboard + CI/CD + Docs)
+Mes 4:      Módulos 20-22 (Avanzados)
+Mes 5:      Proyecto Integrador + Práctica
+Mes 6:      Preparación Entrevistas + Pulido Portfolio
 ```
 
 ---
@@ -351,9 +425,9 @@ La guía incluye simulacros de entrevista adaptados a cada nivel de experiencia:
 
 | Nivel | Simulacro | Preguntas | Cuándo Usar |
 |:-----:|-----------|:---------:|-------------|
-| 🟢 Junior | [SIMULACRO_ENTREVISTA_JUNIOR.md](SIMULACRO_ENTREVISTA_JUNIOR.md) | 50 | Semanas 1-4 |
-| 🟡 Mid | [SIMULACRO_ENTREVISTA_MID.md](SIMULACRO_ENTREVISTA_MID.md) | 60 | Semanas 5-6 |
-| 🔴 Senior | [SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md](SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md) + [PARTE2](SIMULACRO_ENTREVISTA_SENIOR_PARTE2.md) | 115 | Semanas 7-8 |
+| 🟢 Junior | [Simulacro Junior](simulacros/SIMULACRO_ENTREVISTA_JUNIOR.md) | 50 | Semanas 1-4 |
+| 🟡 Mid | [Simulacro Mid](simulacros/SIMULACRO_ENTREVISTA_MID.md) | 60 | Semanas 5-6 |
+| 🔴 Senior | [Simulacro Senior P1](simulacros/SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md) + [P2](simulacros/SIMULACRO_ENTREVISTA_SENIOR_PARTE2.md) | 115 | Semanas 7-8 |
 
 **Progresión recomendada**:
 1. **Junior**: Python básico, ML fundamentos, Git, estructura de proyecto
@@ -361,8 +435,8 @@ La guía incluye simulacros de entrevista adaptados a cada nivel de experiencia:
 3. **Senior**: System design, arquitectura, liderazgo, trade-offs
 
 **Material complementario**:
-- [Speech de Portafolio](APENDICE_A_SPEECH_PORTAFOLIO.md) — Guión de 5-7 min
-- [Talking Points](APENDICE_B_TALKING_POINTS.md) — Puntos clave concisos
+- [Speech de Portafolio](entrevistas/APENDICE_A_SPEECH_PORTAFOLIO.md) — Guión de 5-7 min
+- [Talking Points](entrevistas/APENDICE_B_TALKING_POINTS.md) — Puntos clave concisos
 
 ---
 

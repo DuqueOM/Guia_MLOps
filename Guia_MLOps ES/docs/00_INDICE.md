@@ -48,23 +48,32 @@ Al completar esta guía serás capaz de:
 │                                                                            │
 │   1. LEER          2. REPLICAR         3. PRACTICAR      4. VALIDAR        │
 │   ─────────        ──────────          ───────────       ──────────        │
-│   El módulo        En uno de los       Ejercicios de     Comparar con      │
-│   teórico          3 proyectos         EJERCICIOS.md     el portafolio     │
+│   El módulo        En uno de los       Ejercicios        Examen de         │
+│   completo         3 proyectos         del módulo        hito              │
 │                                                                            │
-│   💡 Cada módulo tiene sección "📦 Cómo se usó en el Portafolio" que       │
-│      referencia código real de BankChurn, CarVision o TelecomAI.           │
+│   💡 Cada módulo incluye TODO integrado:                                   │
+│      • 📺 Recursos externos (videos, cursos, docs)                         │
+│      • ⚖️ Decisiones técnicas (ADRs)                                       │
+│      • 🔧 Ejercicios con soluciones                                        │
+│      • 🔗 Glosario del módulo                                              │
+│      • 📦 Aplicación en el portafolio                                      │
 │                                                                            │
 └────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 🧠 Sistema de Estudio (Protocolo E)
+### 🏁 Checkpoints de Fase
 
-- **[Study Tools](study_tools/index.md)**
-- **[Protocolo E](study_tools/PROTOCOLO_E.md)**
-- **[Diario de Errores](study_tools/DIARIO_ERRORES.md)**
-- **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)**
-- **[Badges y Checkpoints](study_tools/BADGES_CHECKPOINTS.md)**
-- **[Simulacros Performance-Based](study_tools/SIMULACRO_PERFORMANCE_BASED.md)**
+| Fase | Módulo Final | Incluye |
+|:----:|:------------:|---------|
+| **Fase 1** | [Módulo 06](06_VERSIONADO_DATOS.md) | Examen Hito 1 + Simulacro Junior |
+| **Fase 2** | [Módulo 10](10_EXPERIMENT_TRACKING.md) | Examen Hito 2 |
+| **Fase 3** | [Módulo 16](16_OBSERVABILIDAD.md) | Exámenes 3-4 + Simulacro Mid |
+| **Fase 4** | [Módulo 18](18_INFRAESTRUCTURA.md) | Examen Hito 5 |
+| **Fase 5** | [Módulo 23](23_PROYECTO_INTEGRADOR.md) | Examen Final + Simulacro Senior + Prep Entrevistas |
+
+### 🧠 Sistema de Estudio
+
+> **Nota**: Las herramientas de estudio (protocolo de repaso, diario de errores, cierre semanal) ahora están integradas en cada módulo y en los checkpoints de fase.
 
 ### Rutas de Aprendizaje
 
@@ -82,7 +91,7 @@ Al completar esta guía serás capaz de:
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════════╗
-║                         RUTA PRINCIPAL (24 SEMANAS / 6 MESES)                   ║
+║                         RUTA PRINCIPAL (24 SEMANAS / 6 MESES)                    ║
 ╠══════════════════════════════════════════════════════════════════════════════════╣
 ║  MES 1 (Sem 1-4):   Fundamentos (01–05)                                          ║
 ║  MES 2 (Sem 5-8):   Datos + DVC + Pipelines (06–07)                              ║
@@ -121,10 +130,10 @@ Al completar esta guía serás capaz de:
 ║  FASE 5: ESPECIALIZACIÓN (Semana 8)                                              ║
 ║  ──────────────────────────────────                                              ║
 ║  [19] Documentación (Model Cards)           ┌──────────────────────────────────┐ ║
-║  [20] Proyecto Integrador ─────────────────→│  🎯 PORTAFOLIO COMPLETO          │ ║
-║  [21] Glosario MLOps                        │     3 proyectos production-ready │ ║
-║  [22] Checklist Profesional                 │     CI/CD ≥80% coverage          │ ║
-║  [23] Recursos y Referencias                │     Listo para entrevistas       │ ║
+║  [20] Observabilidad Avanzada + Drift ─────→│  🎯 PORTAFOLIO COMPLETO          │ ║
+║  [21] Cloud FinOps                          │     3 proyectos production-ready │ ║
+║  [22] IaC Empresarial                       │     CI/CD ≥80% coverage          │ ║
+║  [23] Proyecto Integrador ─────────────────→│     Listo para entrevistas       │ ║
 ║                                             └──────────────────────────────────┘ ║
 ║                                                                                  ║
 ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -149,7 +158,9 @@ Al completar esta guía serás capaz de:
 
 **📦 Aplicación en el Portafolio**: Todo el código de `common_utils/`, `pyproject.toml` y `.pre-commit-config.yaml`.
 
-> 🎤 **Checkpoint Junior**: Al completar esta fase, practica con [SIMULACRO_ENTREVISTA_JUNIOR.md](SIMULACRO_ENTREVISTA_JUNIOR.md)
+> 🎤 **Checkpoint Junior**: Al completar esta fase, practica con [Simulacro Junior](simulacros/SIMULACRO_ENTREVISTA_JUNIOR.md)
+>
+> 📋 **Examen de Hito**: [EXAM_01_SETUP](examenes/EXAM_01_SETUP.md)
 
 ---
 
@@ -190,7 +201,9 @@ Al completar esta guía serás capaz de:
 - `app/fastapi_app.py` → API de predicción
 - `app/streamlit_app.py` → Dashboard interactivo
 
-> 🎤 **Checkpoint Mid**: Al completar esta fase, practica con [SIMULACRO_ENTREVISTA_MID.md](SIMULACRO_ENTREVISTA_MID.md)
+> 🎤 **Checkpoint Mid**: Al completar esta fase, practica con [Simulacro Mid](simulacros/SIMULACRO_ENTREVISTA_MID.md)
+>
+> 📋 **Exámenes de Hito**: [EXAM_03_TESTING](examenes/EXAM_03_TESTING.md) | [EXAM_04_DEPLOYMENT](examenes/EXAM_04_DEPLOYMENT.md)
 
 ---
 
@@ -210,62 +223,49 @@ Al completar esta guía serás capaz de:
 
 ---
 
-### FASE 5: Especialización y Maestría (Semana 8)
+### FASE 5: Especialización Senior/Staff (Semana 8)
 
-> **Objetivo**: Documentación profesional, validación del portafolio y preparación para entrevistas.
+> **Objetivo**: Documentación profesional, observabilidad avanzada, infraestructura empresarial y proyecto integrador.
 
 | # | Módulo | Qué Aprenderás | Tiempo |
 |:-:|--------|----------------|:------:|
 | 19 | [Documentación ML](19_DOCUMENTACION.md) | Model Cards, Dataset Cards, MkDocs | 3h |
-| 20 | [Proyecto Integrador](20_PROYECTO_INTEGRADOR.md) | Rúbrica 100 puntos, checklist final | 4h |
-| 21 | [Glosario MLOps](21_GLOSARIO.md) | 100+ términos esenciales | Referencia |
-| 22 | [Checklist Profesional](22_CHECKLIST.md) | Verificación pre-deploy, auditoría | 2h |
-| 23 | [Recursos y Referencias](23_RECURSOS.md) | Libros, cursos, papers, comunidades | Referencia |
+| 20 | [Observabilidad Avanzada y Drift](20_OBSERVABILIDAD_AVANZADA_DRIFT.md) | KS-test, PSI, EvidentlyAI, alertas multi-nivel | 3h |
+| 21 | [Cloud FinOps](21_CLOUD_FINOPS.md) | Costos ML, Spot vs On-Demand, auto-scaling, TCO | 2h |
+| 22 | [IaC Empresarial](22_IAC_EMPRESARIAL.md) | Terraform state, multi-ambiente, CI/CD para infra | 3h |
+| 23 | [Proyecto Integrador](23_PROYECTO_INTEGRADOR.md) | Rúbrica 100 puntos, checklist final | 4h |
 
 **📦 Aplicación en el Portafolio**:
 - `docs/` en cada proyecto → Model Cards y READMEs profesionales
 - `RUNBOOK.md` → Guía de operaciones
 
-> 🎤 **Checkpoint Senior**: Al completar toda la guía, practica con [SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md](SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md) + [PARTE2](SIMULACRO_ENTREVISTA_SENIOR_PARTE2.md)
+> 🎤 **Checkpoint Senior**: Al completar toda la guía, usa el **Módulo 23** que incluye el examen final, simulacro senior completo y preparación de entrevistas integrada.
 
 ---
 
 ## 📚 Material Complementario
 
-### Práctica y Evaluación
+### 📚 [Material de Apoyo](apoyo/index.md)
 
-| Recurso | Descripción | Cuándo Usarlo |
-|---------|-------------|---------------|
-| [Ejercicios](EJERCICIOS.md) | Problemas prácticos por módulo | Después de cada módulo |
-| [Soluciones](EJERCICIOS_SOLUCIONES.md) | Respuestas detalladas | Para verificar o desbloquear |
-| [Rúbrica de Evaluación](RUBRICA_EVALUACION.md) | Criterios 100 puntos | Al finalizar un proyecto |
+| Recurso | Descripción |
+|---------|-------------|
+| [Glosario MLOps](apoyo/GLOSARIO.md) | 100+ términos esenciales |
+| [Checklist Profesional](apoyo/CHECKLIST.md) | Verificación pre-deploy, auditoría |
+| [Recursos Externos](apoyo/RECURSOS.md) | Libros, cursos, papers, comunidades |
+| [Rúbrica de Evaluación](apoyo/RUBRICA_EVALUACION.md) | Criterios 100 puntos |
+| [Plantillas](apoyo/PLANTILLAS.md) | Templates reutilizables |
+| [Guía Audiovisual](apoyo/GUIA_AUDIOVISUAL.md) | Cómo crear demos y videos |
+| [Guía de Mantenimiento](apoyo/MAINTENANCE_GUIDE.md) | Operaciones y runbooks |
+| [Scripts Operacionales](apoyo/GUIA_SCRIPTS_OPERACIONALES.md) | Scripts de demo, testing, auditoría |
 
-### Preparación de Entrevistas
+> **Nota**: Ejercicios, exámenes, simulacros, ADRs y recursos por módulo ahora están **integrados directamente en cada módulo**. Ver la tabla de Checkpoints de Fase arriba para ubicarlos.
 
-| Nivel | Recurso | Descripción | Cuándo Usarlo |
-|:-----:|---------|-------------|---------------|
-| 🟢 | [Simulacro Junior](SIMULACRO_ENTREVISTA_JUNIOR.md) | 50 preguntas fundamentales | Semana 4-5 |
-| 🟡 | [Simulacro Mid](SIMULACRO_ENTREVISTA_MID.md) | 60 preguntas técnicas | Semana 6-7 |
-| 🔴 | [Simulacro Senior Parte 1](SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md) | 50+ preguntas avanzadas | Semana 8 |
-| 🔴 | [Simulacro Senior Parte 2](SIMULACRO_ENTREVISTA_SENIOR_PARTE2.md) | System design, casos prácticos | Semana 8 |
-
-| Recurso Complementario | Descripción |
-|------------------------|-------------|
-| [Speech de Portafolio](APENDICE_A_SPEECH_PORTAFOLIO.md) | Guión completo 5-7 min |
-| [Talking Points](APENDICE_B_TALKING_POINTS.md) | Puntos clave concisos |
-
-### Recursos Adicionales
+### 📅 Planificación
 
 | Recurso | Descripción |
 |---------|-------------|
 | [SYLLABUS](SYLLABUS.md) | Programa detallado semana a semana |
 | [Plan de Estudios](PLAN_ESTUDIOS.md) | Cronograma día a día |
-| [Decisiones Técnicas](DECISIONES_TECH.md) | ADRs: por qué cada herramienta |
-| [Plantillas](PLANTILLAS.md) | Templates reutilizables |
-| [Guía Audiovisual](GUIA_AUDIOVISUAL.md) | Cómo crear demos y videos |
-| [Guía de Mantenimiento](MAINTENANCE_GUIDE.md) | Operaciones y runbooks |
-| 🔧 **[Guía de Scripts Operacionales](GUIA_SCRIPTS_OPERACIONALES.md)** | **Scripts de demo, testing, auditoría y Makefile del portafolio** ⭐ NUEVO |
-| 📺 **[Recursos por Módulo](RECURSOS_POR_MODULO.md)** | **Videos YouTube, Coursera y documentación por módulo** |
 
 ---
 
@@ -354,7 +354,7 @@ curl http://localhost:8000/health
 | ML Engineering | 07-10 | 18h | 2 |
 | MLOps Core | 11-16 | 26h | 2 |
 | Producción | 17-18 | 7h | 1 |
-| Especialización | 19-23 | 12h | 1 |
+| Especialización Senior | 19-23 | 15h | 1 |
 | **TOTAL** | 23 módulos | **~86h** | **8 semanas** |
 
 **Dedicación sugerida**: 10-12 horas/semana

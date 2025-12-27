@@ -1023,51 +1023,364 @@ dvc repro  # Si tienes dvc.yaml configurado
 
 ---
 
-## 📺 Recursos Externos Recomendados
+## 📺 Recursos Externos del Módulo
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [DVC Tutorial - DataTalks](https://www.youtube.com/watch?v=kLKBcPonMYw) | Video |
-| 🟡 | [DVC Documentation](https://dvc.org/doc) | Docs |
+### 🎬 Videos
 
----
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **DVC Tutorial - Data Version Control** | DVCorg | 12 min | [YouTube](https://www.youtube.com/watch?v=kLKBcPonMYw) |
+| 🔴 | **DVC Pipelines Deep Dive** | DVCorg | 18 min | [YouTube](https://www.youtube.com/watch?v=71IGzyH95UY) |
+| 🟡 | **MLOps with DVC and CML** | DataTalksClub | 45 min | [YouTube](https://www.youtube.com/watch?v=9BgIDqAzfuA) |
 
-## 🔗 Referencias del Glosario
+### 📚 Cursos
 
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **DVC**: Data Version Control
-- **Remote Storage**: Almacenamiento externo para datos
-- **dvc.yaml**: Definición de pipelines reproducibles
+| 🏷️ | Título | Plataforma | Duración | Link |
+|:--:|:-------|:-----------|:--------:|:-----|
+| 🟡 | Iterative Tools for ML | DVCorg | 4h | [Learn.iterative.ai](https://learn.iterative.ai/) |
 
----
+### 📄 Documentación
 
-## ✅ Ejercicios
-
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 06:
-- **6.1**: Configurar DVC en proyecto
-- **6.2**: Push/pull de datos
-
----
-
-## 🎤 Checkpoint: Simulacro Junior
-
-> 🎯 **¡Has completado los fundamentos!** (Módulos 01-06)
-> 
-> Si buscas posiciones **Junior ML Engineer**, ahora es buen momento para practicar:
-> 
-> **[→ SIMULACRO_ENTREVISTA_JUNIOR.md](SIMULACRO_ENTREVISTA_JUNIOR.md)**
-> - 50 preguntas de Python, ML básico, Git y estructura
-> - Enfoque en fundamentos y capacidad de aprendizaje
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [DVC Get Started](https://dvc.org/doc/start) | Tutorial oficial paso a paso |
+| 🟡 | [DVC Remote Storage](https://dvc.org/doc/user-guide/data-management/remote-storage) | Configuración de remotes S3/GCS |
 
 ---
 
-## 🔜 Siguiente Paso
+## ⚖️ Decisión Técnica: ADR-009 DVC
 
-Con datos versionados, es hora de construir **pipelines de sklearn avanzados**.
+**Contexto**: Necesitamos versionar datasets grandes sin guardarlos en Git.
 
-**[Ir a Módulo 07: sklearn Pipelines →](07_SKLEARN_PIPELINES.md)**
+**Decisión**: Usar DVC (Data Version Control).
+
+**Alternativas Consideradas**:
+- **Git LFS**: Pago por storage, menos features
+- **S3 directo**: Sin versionado semántico
+- **Delta Lake**: Overkill para nuestro tamaño
+
+**Consecuencias**:
+- ✅ Versionado semántico de datos
+- ✅ Pipelines reproducibles con `dvc.yaml`
+- ✅ Integración con Git (`.dvc` files)
+- ❌ Curva de aprendizaje adicional
+
+---
+
+## 🔧 Ejercicios del Módulo
+
+### Ejercicio 6.1: Inicializar DVC
+**Objetivo**: Configurar DVC en un proyecto.
+**Dificultad**: ⭐⭐
+
+```bash
+# TU TAREA: Ejecutar y documentar cada paso
+
+# 1. Inicializar DVC
+dvc init
+
+# 2. Añadir remote local (para práctica)
+dvc remote add -d localremote /tmp/dvc-storage
+
+# 3. Trackear datos
+dvc add data/raw/dataset.csv
+
+# 4. Commitear archivos .dvc
+git add data/raw/dataset.csv.dvc data/raw/.gitignore
+git commit -m "chore(data): track dataset with DVC"
+
+# PREGUNTA: ¿Qué archivos se crean? ¿Qué contiene el .dvc?
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+**Archivos creados:**
+- `data/raw/dataset.csv.dvc` — Metadatos del archivo (hash MD5)
+- `data/raw/.gitignore` — Ignora el archivo real, trackea solo el `.dvc`
+
+**Contenido del .dvc:**
+```yaml
+outs:
+- md5: abc123def456...
+  size: 1234567
+  path: dataset.csv
+```
+
+**Flujo completo:**
+```bash
+# Inicializar
+dvc init
+git add .dvc .dvcignore
+git commit -m "chore: initialize DVC"
+
+# Configurar remote
+dvc remote add -d myremote s3://my-bucket/dvc-storage
+git add .dvc/config
+git commit -m "chore(dvc): configure S3 remote"
+
+# Trackear datos
+dvc add data/raw/dataset.csv
+git add data/raw/dataset.csv.dvc data/raw/.gitignore
+git commit -m "chore(data): track dataset with DVC"
+
+# Push datos al remote
+dvc push
+```
+</details>
+
+---
+
+### Ejercicio 6.2: Pipeline DVC
+**Objetivo**: Definir pipeline reproducible.
+**Dificultad**: ⭐⭐
+
+```yaml
+# dvc.yaml
+# TU TAREA: Definir pipeline de 3 stages
+
+stages:
+  prepare:
+    cmd: python src/data.py
+    deps:
+      # ¿Qué dependencias?
+    outs:
+      # ¿Qué outputs?
+
+  train:
+    cmd: python src/training.py
+    deps:
+      # ???
+    outs:
+      # ???
+    metrics:
+      # ???
+
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+      # ???
+    metrics:
+      # ???
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```yaml
+stages:
+  prepare:
+    cmd: python src/data.py
+    deps:
+      - src/data.py
+      - data/raw/dataset.csv
+    outs:
+      - data/processed/train.csv
+      - data/processed/test.csv
+
+  train:
+    cmd: python src/training.py
+    deps:
+      - src/training.py
+      - data/processed/train.csv
+    params:
+      - train.n_estimators
+      - train.max_depth
+    outs:
+      - models/model.joblib
+    metrics:
+      - metrics/train_metrics.json:
+          cache: false
+
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+      - src/evaluate.py
+      - models/model.joblib
+      - data/processed/test.csv
+    metrics:
+      - metrics/eval_metrics.json:
+          cache: false
+    plots:
+      - plots/confusion_matrix.png
+```
+
+**Ejecutar pipeline:**
+```bash
+dvc repro          # Ejecuta stages necesarios
+dvc metrics show   # Muestra métricas
+dvc plots show     # Genera visualizaciones
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **DVC** | Data Version Control - herramienta para versionar datos y pipelines ML |
+| **Remote Storage** | Almacenamiento externo (S3, GCS, Azure) para datos versionados |
+| **dvc.yaml** | Archivo que define stages de un pipeline reproducible |
+| **dvc.lock** | Archivo generado con hashes exactos de cada stage ejecutado |
+
+---
+
+## 🏁 CHECKPOINT FASE 1: Fundamentos Completados
+
+> 🎯 **¡Has completado los módulos 01-06!**
+>
+> Ahora tienes las bases de un MLOps Engineer profesional:
+> - ✅ Python moderno con type hints y Pydantic
+> - ✅ Diseño de sistemas ML
+> - ✅ Estructura de proyectos profesional
+> - ✅ Entornos reproducibles
+> - ✅ Git profesional con pre-commit
+> - ✅ Versionado de datos con DVC
+
+---
+
+### 📋 Examen de Hito 1: Setup Profesional
+
+> **Formato**: Self-Correction Code Review  
+> **Duración**: 45-60 minutos  
+> **Puntaje mínimo**: 70/100
+
+#### Ejercicio de Examen: Type Hints y Estructura
+
+**Código a Revisar:**
+```python
+# archivo: src/bankchurn/training.py
+
+def load_data(path):
+    """Carga datos desde CSV."""
+    import pandas as pd
+    return pd.read_csv(path)
+
+def prepare_features(df, target_col, features):
+    X = df[features]
+    y = df[target_col]
+    return X, y
+
+def train_model(X, y, n_estimators=100, max_depth=None):
+    from sklearn.ensemble import RandomForestClassifier
+    model = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth)
+    model.fit(X, y)
+    return model
+```
+
+**Tu tarea**: Identifica TODOS los errores y propón correcciones.
+
+<details>
+<summary>📝 Ver Solución del Examen</summary>
+
+**Errores Encontrados:**
+
+| # | Problema | Severidad | Corrección |
+|---|----------|-----------|------------|
+| 1 | `load_data(path)` sin type hints | 🟡 | `path: str \| Path` → `pd.DataFrame` |
+| 2 | Import dentro de función | 🟢 | Mover imports al inicio |
+| 3 | `prepare_features` sin tipos | 🟡 | Añadir tipos a parámetros y retorno |
+| 4 | `train_model` sin tipo retorno | 🟡 | `-> RandomForestClassifier` |
+| 5 | Sin `random_state` | 🟡 | Añadir para reproducibilidad |
+
+**Código Corregido:**
+```python
+from pathlib import Path
+from typing import Tuple, Sequence, Optional
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+
+def load_data(path: str | Path) -> pd.DataFrame:
+    """Carga datos desde CSV."""
+    return pd.read_csv(path)
+
+def prepare_features(
+    df: pd.DataFrame,
+    target_col: str,
+    features: Sequence[str]
+) -> Tuple[pd.DataFrame, pd.Series]:
+    """Separa features y target."""
+    return df[list(features)], df[target_col]
+
+def train_model(
+    X: pd.DataFrame,
+    y: pd.Series,
+    n_estimators: int = 100,
+    max_depth: Optional[int] = None
+) -> RandomForestClassifier:
+    """Entrena modelo Random Forest."""
+    model = RandomForestClassifier(
+        n_estimators=n_estimators,
+        max_depth=max_depth,
+        random_state=42
+    )
+    return model.fit(X, y)
+```
+</details>
+
+---
+
+### 🎤 Simulacro de Entrevista: Nivel Junior
+
+> **50 preguntas** para validar fundamentos (Módulos 01-06)
+> **Tiempo**: 60 minutos
+> **Objetivo**: Preparación para posiciones Junior ML Engineer
+
+#### Preguntas de Muestra
+
+**Python Moderno (10 preguntas)**
+1. ¿Qué son los type hints y por qué usarlos en ML?
+2. ¿Diferencia entre `dataclass` y Pydantic `BaseModel`?
+3. ¿Qué hace `Field(ge=0, le=100)` en Pydantic?
+
+**Estructura de Proyecto (8 preguntas)**
+4. ¿Por qué usar `src/` layout en vez de flat layout?
+5. ¿Qué es `pip install -e .` y cuándo usarlo?
+6. ¿Qué debe contener un `pyproject.toml` mínimo?
+
+**Git Profesional (8 preguntas)**
+7. ¿Qué es un Conventional Commit? Da un ejemplo.
+8. ¿Para qué sirve pre-commit y qué hooks usarías?
+9. ¿Diferencia entre `git merge` y `git rebase`?
+
+**DVC y Datos (8 preguntas)**
+10. ¿Por qué no versionar datos directamente en Git?
+11. ¿Qué contiene un archivo `.dvc`?
+12. ¿Cómo reproducir un experimento con DVC?
+
+<details>
+<summary>💡 Ver Respuestas de Muestra</summary>
+
+**1. Type hints en ML:**
+> Documentan tipos esperados, ayudan al IDE con autocompletado, y permiten validación estática con mypy. En ML, evitan errores como pasar un `np.array` donde se esperaba `pd.DataFrame`.
+
+**4. src/ layout:**
+> Evita que Python importe el código local en vez del paquete instalado. Es el estándar profesional que permite `pip install -e .` y tests aislados.
+
+**7. Conventional Commit:**
+> `feat(training): add cross-validation support`
+> - `feat`: nueva funcionalidad
+> - `(training)`: scope/módulo afectado
+> - descripción en imperativo
+
+**11. Archivo .dvc:**
+> Contiene el hash MD5 del archivo real, su tamaño y path. El archivo real se ignora en Git y se almacena en el remote de DVC.
+</details>
+
+---
+
+[Ver simulacro completo →](simulacros/SIMULACRO_ENTREVISTA_JUNIOR.md)
+
+---
+
+## 🔜 Siguiente Fase: ML Engineering
+
+Con los fundamentos completados, es hora de construir **pipelines de sklearn avanzados**.
+
+**[Comenzar Fase 2 → Módulo 07: sklearn Pipelines](07_SKLEARN_PIPELINES.md)**
 
 ---
 

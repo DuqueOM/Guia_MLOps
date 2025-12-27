@@ -535,36 +535,141 @@ pytest tests/test_features.py -v
 
 ---
 
-## 📺 Recursos Externos Recomendados
+## 📺 Recursos Externos del Módulo
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [Feature Engineering for ML - Krish Naik](https://www.youtube.com/watch?v=6WDFfaYtN6s) | Video |
-| 🟡 | [Avoiding Data Leakage](https://www.youtube.com/watch?v=NfOYWZnPK3I) | Video |
+### 🎬 Videos
+
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **Feature Engineering for ML** | Krish Naik | 35 min | [YouTube](https://www.youtube.com/watch?v=6WDFfaYtN6s) |
+| 🔴 | **Avoiding Data Leakage** | StatQuest | 15 min | [YouTube](https://www.youtube.com/watch?v=NfOYWZnPK3I) |
+| 🟡 | **Feature Stores Explained** | Feast | 25 min | [YouTube](https://www.youtube.com/watch?v=DaNv-Wf1jBY) |
+
+### 📄 Documentación
+
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [sklearn Preprocessing](https://scikit-learn.org/stable/modules/preprocessing.html) | Transformaciones estándar |
+| 🟡 | [Feature Engine](https://feature-engine.trainindata.com/) | Librería de feature engineering |
 
 ---
 
-## 🔗 Referencias del Glosario
+## 🔧 Ejercicios del Módulo
 
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **Data Leakage**: Filtración de información del target
-- **Feature Engineering**: Creación de variables predictivas
-- **ColumnTransformer**: Procesamiento paralelo de columnas
+### Ejercicio 8.1: Detectar Data Leakage
+**Objetivo**: Identificar fugas de información en features.
+**Dificultad**: ⭐⭐⭐
+
+```python
+# ¿Cuáles de estas features tienen data leakage para predecir churn?
+features = [
+    'tenure',           # Meses como cliente
+    'monthly_charges',  # Cargo mensual
+    'total_charges',    # Total pagado
+    'contract_end_date',# Fecha fin contrato
+    'churn_reason',     # Razón de baja
+    'support_tickets',  # Tickets de soporte
+    'days_since_churn', # Días desde la baja
+]
+# TU TAREA: Clasifica cada feature como SAFE o LEAKAGE
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```python
+features_analysis = {
+    'tenure': 'SAFE',           # Info disponible antes del churn
+    'monthly_charges': 'SAFE',  # Info disponible antes
+    'total_charges': 'SAFE',    # Calculable antes del churn
+    'contract_end_date': 'SAFE',# Conocido de antemano
+    'churn_reason': 'LEAKAGE',  # Solo existe DESPUÉS del churn
+    'support_tickets': 'SAFE',  # Histórico antes del churn
+    'days_since_churn': 'LEAKAGE', # Información del futuro
+}
+
+# Regla: Si la feature solo puede conocerse DESPUÉS del evento
+# que intentas predecir, es data leakage.
+
+# Casos sutiles de leakage:
+# - 'avg_monthly_charges_next_3_months' → Futuro
+# - 'last_login_before_churn' → Implica conocer cuándo fue el churn
+# - 'customer_segment_based_on_churn' → Derivada del target
+```
+</details>
 
 ---
 
-## ✅ Ejercicios
+### Ejercicio 8.2: Pipeline Anti-Leakage
+**Objetivo**: Crear pipeline que evite leakage.
+**Dificultad**: ⭐⭐⭐
 
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 08:
-- **8.1**: Detectar data leakage
-- **8.2**: Pipeline sin leakage
+```python
+# TU TAREA: ¿Qué está mal en este código?
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)  # Todo el dataset
+
+X_train, X_test = train_test_split(X_scaled, test_size=0.2)
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```python
+# PROBLEMA: El scaler ve datos de test antes del split
+# Esto es data leakage porque la media/std incluye test
+
+# CORRECTO: Fit solo en train
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+
+# Opción 1: Split primero, luego fit
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)  # Fit en train
+X_test_scaled = scaler.transform(X_test)        # Solo transform en test
+
+# Opción 2 (mejor): Usar Pipeline
+pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('model', RandomForestClassifier())
+])
+
+# El pipeline hace fit solo en train automáticamente
+pipeline.fit(X_train, y_train)
+predictions = pipeline.predict(X_test)
+
+# En cross-validation, el pipeline garantiza
+# que cada fold hace fit solo en su train
+cross_val_score(pipeline, X, y, cv=5)  # Correcto!
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **Data Leakage** | Usar información del futuro o del target para crear features |
+| **Feature Engineering** | Proceso de crear variables predictivas a partir de datos raw |
+| **Feature Store** | Sistema centralizado para almacenar y servir features |
+| **Target Encoding** | Codificar categorías usando la media del target (riesgo de leakage) |
 
 ---
 
 <div align="center">
 
-[← sklearn Pipelines](07_SKLEARN_PIPELINES.md) | [Siguiente: Training Profesional →](09_TRAINING_PROFESIONAL.md)
+**Siguiente módulo** → [09. Training Profesional](09_TRAINING_PROFESIONAL.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>

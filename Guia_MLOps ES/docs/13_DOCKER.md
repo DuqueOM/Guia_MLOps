@@ -946,49 +946,200 @@ HEALTHCHECK CMD curl -f http://localhost:8000/health
 
 ---
 
-## 📺 Recursos Externos Recomendados
+## 📺 Recursos Externos del Módulo
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [Docker Tutorial - TechWorld Nana](https://www.youtube.com/watch?v=3c-iBn73dDE) | Video |
-| 🟡 | [Multi-stage Builds](https://www.youtube.com/watch?v=zpkqNPwEzac) | Video |
+### 🎬 Videos
 
-**Documentación oficial:**
-- [Docker Multi-stage Builds](https://docs.docker.com/build/building/multi-stage/)
-- [Dockerfile Best Practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **Docker Tutorial for Beginners** | TechWorld Nana | 2.5h | [YouTube](https://www.youtube.com/watch?v=3c-iBn73dDE) |
+| 🔴 | **Multi-stage Docker Builds** | Docker | 15 min | [YouTube](https://www.youtube.com/watch?v=zpkqNPwEzac) |
+| 🟡 | **Docker Compose Tutorial** | TechWorld Nana | 1h | [YouTube](https://www.youtube.com/watch?v=HG6yIjZapSA) |
 
----
+### 📄 Documentación
 
-## 🔗 Referencias del Glosario
-
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **Multi-stage Build**: Separar build de runtime
-- **Docker Compose**: Orquestar múltiples contenedores
-- **Non-root user**: Seguridad en contenedores
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [Dockerfile Best Practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/) | Guía oficial |
+| 🟡 | [Multi-stage Builds](https://docs.docker.com/build/building/multi-stage/) | Optimización de imágenes |
 
 ---
 
-## 📋 Plantillas Relacionadas
+## ⚖️ Decisión Técnica: ADR-006 Docker Multi-stage
 
-Ver [templates/](templates/index.md) para plantillas listas:
-- [Dockerfile](templates/Dockerfile) — Multi-stage completo para ML APIs
-- [Dockerfile_template](templates/Dockerfile_template) — Versión simplificada
-- [docker-compose.yml](templates/docker-compose.yml) — Stack con servicios
+**Contexto**: Necesitamos imágenes Docker pequeñas y seguras para producción.
+
+**Decisión**: Usar multi-stage builds con bases slim.
+
+**Alternativas Consideradas**:
+- **Single-stage**: Más simple pero imágenes ~2GB
+- **Distroless**: Más seguro pero difícil de debuggear
+- **Alpine**: Más pequeño pero problemas con algunas libs Python
+
+**Consecuencias**:
+- ✅ Imágenes de ~500MB vs ~2GB
+- ✅ Sin herramientas de build en runtime
+- ✅ Más rápido de desplegar
+- ❌ Dockerfiles más complejos
 
 ---
 
-<a id="ejercicio"></a>
+## 🔧 Ejercicios del Módulo
 
-## ✅ Ejercicios
+### Ejercicio 13.1: Dockerfile Multi-stage
+**Objetivo**: Crear Dockerfile optimizado para ML API.
+**Dificultad**: ⭐⭐⭐
 
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 13:
-- **13.1**: Dockerfile multi-stage
-- **13.2**: Docker Compose para stack ML
+```dockerfile
+# TU TAREA: Crear Dockerfile que:
+# 1. Use multi-stage build
+# 2. Instale dependencias en stage 1
+# 3. Copie solo lo necesario a stage 2
+# 4. Use usuario non-root
+# 5. Incluya healthcheck
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```dockerfile
+# Stage 1: Builder
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+# Instalar dependencias de build
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar solo requirements primero (mejor cache)
+COPY requirements.txt .
+RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
+
+# Stage 2: Runtime
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Instalar wheels pre-compilados
+COPY --from=builder /wheels /wheels
+RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
+
+# Crear usuario non-root
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
+
+# Copiar código
+COPY --chown=appuser:appuser src/ ./src/
+COPY --chown=appuser:appuser app/ ./app/
+COPY --chown=appuser:appuser artifacts/ ./artifacts/
+
+# Cambiar a non-root
+USER appuser
+
+# Variables de entorno
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Puerto
+EXPOSE 8000
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Comando
+CMD ["uvicorn", "app.fastapi_app:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+</details>
 
 ---
 
-[← CI/CD GitHub Actions](12_CI_CD.md) | [Siguiente: FastAPI Producción →](14_FASTAPI.md)
+### Ejercicio 13.2: Docker Compose Stack
+**Objetivo**: Orquestar servicios ML con docker-compose.
+**Dificultad**: ⭐⭐⭐
+
+```yaml
+# docker-compose.yml
+# TU TAREA: Crear stack con:
+# - API ML
+# - MLflow server
+# - Prometheus
+# - Volúmenes persistentes
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```yaml
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./artifacts:/app/artifacts:ro
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on:
+      - mlflow
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.9.0
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlflow
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+
+volumes:
+  mlflow_data:
+  prometheus_data:
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **Multi-stage Build** | Dockerfile con múltiples FROM para separar build y runtime |
+| **Docker Compose** | Herramienta para definir y ejecutar multi-container apps |
+| **Non-root User** | Usuario sin privilegios para mayor seguridad |
+| **Healthcheck** | Comando que verifica que el contenedor está healthy |
+
+---
+
+<div align="center">
+
+**Siguiente módulo** → [14. FastAPI](14_FASTAPI.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>

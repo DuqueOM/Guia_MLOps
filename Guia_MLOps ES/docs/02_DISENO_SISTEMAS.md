@@ -1059,45 +1059,218 @@ flowchart LR
 
 ---
 
-## 📺 Recursos Externos Recomendados
+## 📺 Recursos Externos del Módulo
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [System Design for ML - Chip Huyen](https://www.youtube.com/watch?v=2h2Z2j8PmKc) | Video |
-| 🟡 | [C4 Model - Simon Brown](https://www.youtube.com/watch?v=x2-rSnhpw0g) | Video |
-| 🟢 | [ML Canvas](https://www.ownml.co/machine-learning-canvas) | Herramienta |
+### 🎬 Videos
+
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **System Design for ML** | Chip Huyen | 45 min | [YouTube](https://www.youtube.com/watch?v=2h2Z2j8PmKc) |
+| 🔴 | **C4 Model for Software Architecture** | Simon Brown | 50 min | [YouTube](https://www.youtube.com/watch?v=x2-rSnhpw0g) |
+| 🟡 | **ML System Design Interview** | Data Interview Pro | 30 min | [YouTube](https://www.youtube.com/watch?v=uF1V2MqX2U0) |
+
+### 📚 Cursos
+
+| 🏷️ | Título | Plataforma | Duración | Link |
+|:--:|:-------|:-----------|:--------:|:-----|
+| 🟡 | Machine Learning System Design | Educative | 8h | [Educative](https://www.educative.io/courses/machine-learning-system-design) |
+| 🟢 | Designing ML Systems | O'Reilly (Chip Huyen) | Libro | [O'Reilly](https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/) |
+
+### 📄 Documentación
+
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [ML Canvas](https://www.ownml.co/machine-learning-canvas) | Plantilla interactiva |
+| 🔴 | [C4 Model](https://c4model.com/) | Documentación oficial C4 |
+| 🟡 | [ADR GitHub](https://adr.github.io/) | Templates y ejemplos ADR |
 
 ---
 
-## 🔗 Referencias del Glosario
+## ⚖️ Decisiones Técnicas del Módulo
 
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **ADR**: Architecture Decision Record
-- **C4 Model**: Modelo de documentación de arquitectura
-- **ML Canvas**: Plantilla para diseño de proyectos ML
+### ADR-000: Metodología de Diseño
+
+**Contexto**: Necesitamos un proceso sistemático para diseñar sistemas ML.
+
+**Decisión**: Usar ML Canvas + C4 Model + ADRs.
+
+**Alternativas Consideradas**:
+- **Solo diagramas libres**: Inconsistente entre proyectos
+- **UML completo**: Overkill para proyectos ML
+- **Sin documentación**: Deuda técnica acumulada
+
+**Consecuencias**:
+- ✅ Proceso repetible y consistente
+- ✅ Documentación como código
+- ✅ Decisiones auditables
+- ❌ Overhead inicial en proyectos pequeños
 
 ---
 
-## ✅ Ejercicios
+## 🔧 Ejercicios del Módulo
 
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 02:
-- **2.1**: Completar ML Canvas para un proyecto
-- **2.2**: Escribir un ADR para una decisión técnica
+### Ejercicio 2.1: ML Canvas Completo
+**Objetivo**: Documentar un proyecto ML usando ML Canvas.
+**Dificultad**: ⭐⭐
+
+```markdown
+# TU TAREA: Completa el ML Canvas para BankChurn-Predictor
+
+## 1. Problema de Negocio
+- ¿Qué problema resuelve?
+- ¿Cuál es el impacto económico?
+
+## 2. Fuentes de Datos
+- ¿De dónde vienen los datos?
+- ¿Qué volumen tienen?
+
+## 3. Características del Modelo
+- ¿Qué features usarás?
+- ¿Qué algoritmo elegirás?
+
+## 4. Restricciones
+- ¿Latencia máxima?
+- ¿Requisitos de privacidad?
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```markdown
+# ML Canvas: BankChurn-Predictor
+
+## 1. Problema de Negocio
+- **Problema**: Predecir qué clientes abandonarán el banco en los próximos 30 días
+- **Impacto**: Retener 5% de churners → $2M/año en CLV preservado
+- **KPI**: Reducir churn rate de 20% a 15%
+
+## 2. Fuentes de Datos
+- **Origen**: CRM bancario (tabla customers), transacciones, interacciones
+- **Volumen**: 10K clientes activos, 500K transacciones/mes
+- **Frecuencia**: Batch diario para features, real-time para scoring
+
+## 3. Características del Modelo
+- **Features**: tenure, balance, num_products, is_active, geography, age
+- **Target**: churned (0/1) en ventana de 30 días
+- **Algoritmo**: Random Forest (interpretabilidad para compliance)
+- **Métricas**: Recall ≥ 0.80, Precision ≥ 0.70
+
+## 4. Restricciones
+- **Latencia**: < 200ms para scoring individual
+- **Privacidad**: No usar datos PII directamente
+- **Compliance**: Modelo explicable para auditoría bancaria
+- **Infraestructura**: Debe correr en AWS con budget limitado
+
+## 5. Integración
+- **Input**: API REST recibe customer_id
+- **Output**: probability, risk_level, top_3_factors
+- **Downstream**: Dashboard ejecutivo, CRM alerts
+
+## 6. Métricas de Éxito
+- **ML**: F1 ≥ 0.75, AUC ≥ 0.85
+- **Negocio**: Reducción churn 5pp en 6 meses
+- **Sistema**: Uptime 99.5%, P95 latency < 200ms
+```
+</details>
 
 ---
 
-## 🔜 Siguiente Paso
+### Ejercicio 2.2: Escribir un ADR
+**Objetivo**: Documentar una decisión técnica con ADR.
+**Dificultad**: ⭐⭐
 
-Con el diseño completo, es hora de configurar un **entorno de desarrollo profesional**.
+```markdown
+# ADR-XXX: [Tu Decisión]
 
-**[Ir a Módulo 03: Estructura de Proyecto →](03_ESTRUCTURA_PROYECTO.md)**
+## Contexto
+[¿Por qué necesitas tomar esta decisión?]
+
+## Decisión
+[¿Qué decidiste?]
+
+## Alternativas Consideradas
+[¿Qué otras opciones evaluaste?]
+
+## Consecuencias
+[¿Qué implica esta decisión?]
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```markdown
+# ADR-004: FastAPI para APIs de Inferencia
+
+## Estado
+Aceptado
+
+## Contexto
+Necesitamos exponer modelos ML como APIs REST. Los requisitos son:
+- Latencia baja (<100ms overhead)
+- Validación automática de inputs
+- Documentación auto-generada
+- Async para múltiples requests
+
+## Decisión
+Usar FastAPI como framework para todas las APIs de inferencia.
+
+## Alternativas Consideradas
+
+### Flask
+- ✅ Simple, ampliamente conocido
+- ❌ Sync por defecto, validación manual
+- ❌ Docs manuales con Swagger
+
+### Django REST
+- ✅ Batteries-included, ORM potente
+- ❌ Overkill para microservicios ML
+- ❌ Overhead de performance
+
+### gRPC
+- ✅ Muy rápido, tipado fuerte
+- ❌ Más complejo de implementar
+- ❌ Debugging menos intuitivo
+
+## Consecuencias
+
+### Positivas
+- Validación automática con Pydantic
+- Docs OpenAPI auto-generadas en /docs
+- Async nativo para alto throughput
+- Type hints = código autodocumentado
+
+### Negativas
+- Framework relativamente nuevo
+- Menos recursos legacy que Flask
+- Requiere entender async/await
+
+## Referencias
+- [FastAPI Docs](https://fastapi.tiangolo.com/)
+- Módulo 14: APIs de Producción
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **ML Canvas** | Template de 1 página para diseñar proyectos ML end-to-end |
+| **C4 Model** | Modelo jerárquico de arquitectura: Context, Container, Component, Code |
+| **ADR** | Architecture Decision Record - documento que captura decisiones técnicas |
+| **SLA/SLI/SLO** | Acuerdos, indicadores y objetivos de nivel de servicio |
 
 ---
 
 <div align="center">
 
-[← Volver al Índice](00_INDICE.md) | [Siguiente: Estructura de Proyecto →](03_ESTRUCTURA_PROYECTO.md)
+**Siguiente módulo** → [03. Estructura de Proyecto](03_ESTRUCTURA_PROYECTO.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>

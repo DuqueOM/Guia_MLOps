@@ -1181,41 +1181,170 @@ Monitoring:     Drift detection en producción
 
 ---
 
-## 📺 Recursos Externos Recomendados
+## 📺 Recursos Externos del Módulo
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [pytest Tutorial - ArjanCodes](https://www.youtube.com/watch?v=cHYq1MRoyI0) | Video |
-| 🟡 | [Testing for Data Science - Eric Ma](https://www.youtube.com/watch?v=0ysyWk-ox-8) | Video |
+### 🎬 Videos
 
-**Documentación oficial:**
-- [pytest Documentation](https://docs.pytest.org/)
-- [pytest-cov](https://pytest-cov.readthedocs.io/)
-- [Great Expectations](https://greatexpectations.io/) - Data validation
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **pytest Tutorial** | ArjanCodes | 25 min | [YouTube](https://www.youtube.com/watch?v=cHYq1MRoyI0) |
+| 🔴 | **Testing for Data Science** | PyData | 45 min | [YouTube](https://www.youtube.com/watch?v=0ysyWk-ox-8) |
+| 🟡 | **Great Expectations Tutorial** | DataTalksClub | 30 min | [YouTube](https://www.youtube.com/watch?v=_bHnN-UzBOU) |
 
----
+### 📄 Documentación
 
-## 🔗 Referencias del Glosario
-
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **conftest.py**: Fixtures compartidas de pytest
-- **Coverage**: Porcentaje de código ejecutado por tests
-- **Fixture**: Setup reutilizable para tests
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [pytest Documentation](https://docs.pytest.org/) | Guía oficial |
+| 🟡 | [Great Expectations](https://greatexpectations.io/) | Data validation |
 
 ---
 
-## ✅ Ejercicios
+## 🔧 Ejercicios del Módulo
 
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 11:
-- **11.1**: Test de validación de datos
-- **11.2**: Test de pipeline ML
+### Ejercicio 11.1: Test de Validación de Datos
+**Objetivo**: Crear test que valide schema de datos.
+**Dificultad**: ⭐⭐
+
+```python
+# TU TAREA: Crear test que verifique:
+# - Columnas esperadas existen
+# - No hay nulls en columnas críticas
+# - Valores están en rangos válidos
+
+def test_data_validation(sample_data):
+    # ???
+    pass
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```python
+import pytest
+import pandas as pd
+
+@pytest.fixture
+def sample_data():
+    return pd.DataFrame({
+        'age': [25, 35, 45],
+        'balance': [1000, 2500, 5000],
+        'churned': [0, 1, 0]
+    })
+
+def test_schema_has_required_columns(sample_data):
+    """Verifica columnas requeridas."""
+    required = ['age', 'balance', 'churned']
+    missing = set(required) - set(sample_data.columns)
+    assert not missing, f"Missing columns: {missing}"
+
+def test_no_nulls_in_critical_columns(sample_data):
+    """Verifica no hay nulls en columnas críticas."""
+    critical = ['age', 'churned']
+    for col in critical:
+        null_count = sample_data[col].isnull().sum()
+        assert null_count == 0, f"Nulls in {col}: {null_count}"
+
+def test_age_in_valid_range(sample_data):
+    """Verifica edad en rango válido."""
+    assert sample_data['age'].min() >= 18
+    assert sample_data['age'].max() <= 120
+
+def test_target_is_binary(sample_data):
+    """Verifica target es binario."""
+    unique_values = sample_data['churned'].unique()
+    assert set(unique_values).issubset({0, 1})
+```
+</details>
+
+---
+
+### Ejercicio 11.2: Test de Pipeline ML
+**Objetivo**: Testear que pipeline produce predicciones válidas.
+**Dificultad**: ⭐⭐⭐
+
+```python
+# TU TAREA: Crear test que verifique:
+# - Pipeline puede entrenarse
+# - Predicciones tienen shape correcto
+# - Predicciones están en rango válido
+
+def test_pipeline_predictions(trained_pipeline, sample_data):
+    # ???
+    pass
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```python
+import pytest
+import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+
+@pytest.fixture
+def trained_pipeline(sample_data):
+    """Pipeline entrenado para tests."""
+    X = sample_data[['age', 'balance']]
+    y = sample_data['churned']
+    
+    pipe = Pipeline([
+        ('scaler', StandardScaler()),
+        ('model', RandomForestClassifier(n_estimators=10, random_state=42))
+    ])
+    pipe.fit(X, y)
+    return pipe
+
+def test_pipeline_can_predict(trained_pipeline, sample_data):
+    """Pipeline puede hacer predicciones."""
+    X = sample_data[['age', 'balance']]
+    predictions = trained_pipeline.predict(X)
+    assert predictions is not None
+
+def test_predictions_shape(trained_pipeline, sample_data):
+    """Predicciones tienen shape correcto."""
+    X = sample_data[['age', 'balance']]
+    predictions = trained_pipeline.predict(X)
+    assert len(predictions) == len(X)
+
+def test_predictions_are_binary(trained_pipeline, sample_data):
+    """Predicciones son binarias."""
+    X = sample_data[['age', 'balance']]
+    predictions = trained_pipeline.predict(X)
+    assert set(np.unique(predictions)).issubset({0, 1})
+
+def test_predict_proba_in_range(trained_pipeline, sample_data):
+    """Probabilidades están en [0, 1]."""
+    X = sample_data[['age', 'balance']]
+    probas = trained_pipeline.predict_proba(X)
+    assert probas.min() >= 0
+    assert probas.max() <= 1
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **conftest.py** | Archivo para fixtures compartidas entre tests |
+| **Coverage** | Porcentaje de código ejecutado por tests |
+| **Fixture** | Función que provee datos/setup reutilizable para tests |
+| **Data Test** | Test que valida schema, rangos y distribuciones de datos |
 
 ---
 
 <div align="center">
 
-[← Volver al Índice](00_INDICE.md) | [Siguiente: CI/CD →](12_CI_CD.md)
+**Siguiente módulo** → [12. CI/CD](12_CI_CD.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>

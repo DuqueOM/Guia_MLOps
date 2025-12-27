@@ -1256,47 +1256,128 @@ act -j test --matrix project:BankChurn-Predictor
 
 ---
 
-## 📺 Recursos Externos Recomendados
+## 📺 Recursos Externos del Módulo
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [GitHub Actions Tutorial - TechWorld Nana](https://www.youtube.com/watch?v=R8_veQiYBjI) | Video |
-| 🟡 | [CI/CD for ML - Made With ML](https://madewithml.com/courses/mlops/cicd/) | Tutorial |
+### 🎬 Videos
 
-**Documentación oficial:**
-- [GitHub Actions](https://docs.github.com/en/actions)
-- [pre-commit](https://pre-commit.com/)
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **GitHub Actions Tutorial** | TechWorld Nana | 1h | [YouTube](https://www.youtube.com/watch?v=R8_veQiYBjI) |
+| 🟡 | **CI/CD for ML** | Made With ML | 45 min | [MadeWithML](https://madewithml.com/courses/mlops/cicd/) |
+| 🟢 | **GitHub Actions for Python** | mCoding | 20 min | [YouTube](https://www.youtube.com/watch?v=WTofttoD2xg) |
 
----
+### 📄 Documentación
 
-## 🔗 Referencias del Glosario
-
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **CI/CD**: Integración y despliegue continuo
-- **GitHub Actions**: Automatización de workflows
-- **pre-commit**: Hooks de validación antes de commit
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [GitHub Actions](https://docs.github.com/en/actions) | Documentación oficial |
+| 🟡 | [Actions Marketplace](https://github.com/marketplace?type=actions) | Acciones reutilizables |
 
 ---
 
-## 📋 Plantillas Relacionadas
+## ⚖️ Decisión Técnica: ADR-005 GitHub Actions
 
-Ver [templates/](templates/index.md) para plantillas listas:
-- [ci_github_actions.yml](templates/ci_github_actions.yml) — Pipeline CI/CD completo
-- [ci_template.yml](templates/ci_template.yml) — Versión mínima para quick start
+**Contexto**: Necesitamos automatizar testing, linting y deployment.
+
+**Decisión**: Usar GitHub Actions como plataforma CI/CD.
+
+**Alternativas Consideradas**:
+- **Jenkins**: Más flexible pero requiere infraestructura propia
+- **GitLab CI**: Excelente pero vendor lock-in
+- **CircleCI**: Potente pero con límites en free tier
+
+**Consecuencias**:
+- ✅ Integración nativa con GitHub
+- ✅ Free tier generoso para open source
+- ✅ Marketplace con acciones reutilizables
+- ❌ Menos flexible que Jenkins para casos complejos
 
 ---
 
-## ✅ Ejercicios
+## 🔧 Ejercicios del Módulo
 
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 12:
-- **12.1**: GitHub Actions workflow básico
+### Ejercicio 12.1: GitHub Actions Básico
+**Objetivo**: Crear workflow de CI para proyecto ML.
+**Dificultad**: ⭐⭐
+
+```yaml
+# .github/workflows/ci.yml
+# TU TAREA: Completar workflow que:
+# 1. Ejecute en push y PR
+# 2. Instale dependencias
+# 3. Ejecute tests con coverage
+# 4. Falle si coverage < 80%
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install -e ".[dev]"
+      
+      - name: Run linting
+        run: |
+          ruff check .
+          ruff format --check .
+      
+      - name: Run tests with coverage
+        run: |
+          pytest tests/ -v \
+            --cov=src \
+            --cov-report=xml \
+            --cov-fail-under=80
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **CI** | Continuous Integration - integrar código frecuentemente |
+| **CD** | Continuous Deployment - desplegar automáticamente |
+| **Workflow** | Archivo YAML que define jobs y steps |
+| **Matrix** | Ejecutar mismo job con diferentes configuraciones |
 
 ---
 
 <div align="center">
 
-[← Volver al Índice](00_INDICE.md) | [Siguiente: Docker Avanzado →](13_DOCKER.md)
+**Siguiente módulo** → [13. Docker](13_DOCKER.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>

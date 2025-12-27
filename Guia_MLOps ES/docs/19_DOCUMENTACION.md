@@ -598,77 +598,123 @@ Incluye:
 
 > Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [Model Cards - Google](https://modelcards.withgoogle.com/about) | Documentación |
-| 🟡 | [MkDocs Tutorial](https://www.youtube.com/watch?v=Q-YA_dA8C20) | Video |
+## 📺 Recursos Externos del Módulo
+
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
+
+### 🎬 Videos
+
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **MkDocs Tutorial** | James Willett | 30 min | [YouTube](https://www.youtube.com/watch?v=Q-YA_dA8C20) |
+| 🟡 | **Model Cards for ML** | Google | 15 min | [Google](https://modelcards.withgoogle.com/about) |
+
+### 📄 Documentación
+
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [Model Cards](https://modelcards.withgoogle.com/) | Estándar de Google |
+| 🟡 | [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) | Tema MkDocs |
 
 ---
 
-## 🔗 Referencias del Glosario
+## 🔧 Ejercicios del Módulo
 
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **Model Card**: Documentación estandarizada de modelos
-- **ADR**: Architecture Decision Record
-- **MkDocs**: Generador de documentación
+### Ejercicio 19.1: Model Card
+**Objetivo**: Documentar modelo ML con Model Card.
+**Dificultad**: ⭐⭐
+
+```markdown
+# TU TAREA: Completar Model Card para BankChurn
+
+## Model Details
+- Owner: ???
+- Version: ???
+- Type: ???
+
+## Intended Use
+- Primary: ???
+- Out-of-scope: ???
+
+## Training Data
+- Source: ???
+- Size: ???
+
+## Evaluation
+- Metrics: ???
+- Performance: ???
+
+## Limitations
+- ???
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```markdown
+# Model Card: BankChurn Predictor
+
+## Model Details
+- **Owner**: ML Team
+- **Version**: 1.2.0 (2024-01)
+- **Type**: Binary Classification (Random Forest)
+- **License**: MIT
+- **Contact**: ml-team@company.com
+
+## Intended Use
+- **Primary**: Predecir probabilidad de churn de clientes bancarios
+- **Users**: Equipo de retención, marketing
+- **Out-of-scope**: Decisiones automatizadas de crédito, scoring financiero
+
+## Training Data
+- **Source**: CRM interno (2020-2023)
+- **Size**: 10,000 clientes, 50,000 transacciones
+- **Features**: age, tenure, balance, num_products, geography
+- **Target**: churned (binary, 30-day window)
+
+## Evaluation
+| Metric | Train | Test | Threshold |
+|--------|-------|------|-----------|
+| F1 | 0.82 | 0.78 | ≥ 0.75 |
+| Recall | 0.85 | 0.80 | ≥ 0.80 |
+| AUC | 0.91 | 0.87 | ≥ 0.85 |
+
+## Ethical Considerations
+- No usa datos demográficos sensibles (race, gender)
+- Modelo explicable con SHAP
+- Human-in-the-loop para acciones de retención
+
+## Limitations
+- Performance menor en clientes nuevos (tenure < 6 meses)
+- No captura eventos macroeconómicos
+- Requiere actualización trimestral
+
+## Maintenance
+- **Retrain**: Trimestral o si AUC < 0.80
+- **Monitoring**: Drift detection semanal
+- **Owner**: ML Team
+```
+</details>
 
 ---
 
-## 📋 Plantillas Relacionadas
+## 🔗 Glosario del Módulo
 
-Ver [templates/](templates/index.md) para plantillas listas:
-- [model_card_template.md](templates/model_card_template.md) — Documentación completa de modelos
-- [dataset_card_template.md](templates/dataset_card_template.md) — Documentación de datasets
-
----
-
-## 🎬 Material Audiovisual
-
-Documentar tu trabajo también incluye crear demos visuales profesionales.
-
-> 📺 **Ver [GUIA_AUDIOVISUAL.md](GUIA_AUDIOVISUAL.md)** para:
-> - Crear GIFs demostrativos de cada proyecto
-> - Capturar screenshots profesionales
-> - Producir video principal del portafolio
-> - Scripts y comandos para demos
-
-| Material | Propósito |
-|----------|-----------|
-| GIFs (3-5 por proyecto) | README, documentación rápida |
-| Screenshots | Issues, PRs, documentación |
-| Video principal (5-7 min) | LinkedIn, presentaciones |
-
----
-
-<a id="ejercicio"></a>
-
-## ✅ Ejercicio
-
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 19:
-- **19.1**: Crear Model Card
-- **19.2**: Crear Dataset Card
-
----
-
-<a id="checkpoint"></a>
-
-## ✅ Checkpoint
-
-- [ ] El `README` tiene un `Quick Start` que se ejecuta sin pasos ocultos.
-- [ ] El repo enlaza a documentación navegable (MkDocs o estructura clara en `docs/`).
-- [ ] La Model Card describe propósito, datos, métricas, limitaciones y mantenimiento.
-- [ ] Tienes un checklist mínimo de Responsible AI y sabes cuándo aplicarlo en PRs/releases.
-
-## 🔜 Siguiente Paso
-
-Con documentación lista, es hora del **Proyecto Integrador**.
-
-**[Ir a Módulo 20: Proyecto Integrador →](20_PROYECTO_INTEGRADOR.md)**
+| Término | Definición |
+|---------|------------|
+| **Model Card** | Documento estandarizado que describe un modelo ML |
+| **Dataset Card** | Documentación de dataset (fuente, schema, limitaciones) |
+| **MkDocs** | Generador de sitios de documentación desde Markdown |
+| **Responsible AI** | Prácticas para desarrollo ético de sistemas ML |
 
 ---
 
 <div align="center">
 
-[← Infraestructura](18_INFRAESTRUCTURA.md) | [Siguiente: Proyecto Integrador →](20_PROYECTO_INTEGRADOR.md)
+**Siguiente módulo** → [20. Observabilidad Avanzada](20_OBSERVABILIDAD_AVANZADA_DRIFT.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>

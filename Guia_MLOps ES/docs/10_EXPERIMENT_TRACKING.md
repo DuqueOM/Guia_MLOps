@@ -722,40 +722,237 @@ mlflow ui --backend-store-uri file:./mlruns
 
 ---
 
-## 📺 Recursos Externos Recomendados
+## 📺 Recursos Externos del Módulo
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [MLflow Tutorial - Krish Naik](https://www.youtube.com/watch?v=qdcHHrsXA48) | Video |
-| 🟡 | [MLflow Complete Course](https://www.youtube.com/watch?v=MHcqGxA6JPs) | Video |
+### 🎬 Videos
 
-**Documentación oficial:**
-- [MLflow Tracking](https://mlflow.org/docs/latest/tracking.html)
-- [MLflow Model Registry](https://mlflow.org/docs/latest/model-registry.html)
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **MLflow Tutorial** | Krish Naik | 40 min | [YouTube](https://www.youtube.com/watch?v=qdcHHrsXA48) |
+| 🔴 | **MLflow Complete Course** | DataTalksClub | 1.5h | [YouTube](https://www.youtube.com/watch?v=MHcqGxA6JPs) |
+| 🟡 | **Weights & Biases Quickstart** | W&B | 20 min | [YouTube](https://www.youtube.com/watch?v=BN2BT0SZSJw) |
 
----
+### 📄 Documentación
 
-## 🔗 Referencias del Glosario
-
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **MLflow**: Plataforma de experiment tracking
-- **Model Registry**: Registro de versiones de modelos
-- **Artifact**: Archivo asociado a un experimento
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [MLflow Tracking](https://mlflow.org/docs/latest/tracking.html) | Guía oficial tracking |
+| 🔴 | [MLflow Model Registry](https://mlflow.org/docs/latest/model-registry.html) | Registro de modelos |
 
 ---
 
-## ✅ Ejercicios
+## ⚖️ Decisión Técnica: ADR-010 MLflow
 
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 10:
-- **10.1**: MLflow básico (params, metrics, model)
-- **10.2**: Comparar múltiples experimentos
+**Contexto**: Necesitamos trackear experimentos y versionar modelos.
+
+**Decisión**: Usar MLflow para experiment tracking y model registry.
+
+**Alternativas Consideradas**:
+- **Weights & Biases**: Mejor UI pero SaaS (costo)
+- **Neptune**: Escalable pero pago
+- **TensorBoard**: Solo para deep learning
+
+**Consecuencias**:
+- ✅ Open source, self-hosted
+- ✅ Model Registry integrado
+- ✅ Integración con sklearn, PyTorch, etc.
+- ❌ UI menos pulida que W&B
+
+---
+
+## 🔧 Ejercicios del Módulo
+
+### Ejercicio 10.1: MLflow Básico
+**Objetivo**: Trackear un experimento con MLflow.
+**Dificultad**: ⭐⭐
+
+```python
+import mlflow
+
+# TU TAREA: Completar el tracking
+def train_with_mlflow(X_train, y_train, X_test, y_test, params):
+    # 1. Iniciar run
+    # 2. Log params
+    # 3. Entrenar modelo
+    # 4. Log metrics
+    # 5. Log model
+    pass
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```python
+import mlflow
+import mlflow.sklearn
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import f1_score, accuracy_score
+
+def train_with_mlflow(X_train, y_train, X_test, y_test, params: dict):
+    """Entrena modelo con tracking completo en MLflow."""
+    
+    # Configurar experimento
+    mlflow.set_experiment("bankchurn-classifier")
+    
+    with mlflow.start_run():
+        # 1. Log parámetros
+        mlflow.log_params(params)
+        
+        # 2. Entrenar modelo
+        model = RandomForestClassifier(
+            n_estimators=params['n_estimators'],
+            max_depth=params.get('max_depth'),
+            random_state=42
+        )
+        model.fit(X_train, y_train)
+        
+        # 3. Evaluar
+        y_pred = model.predict(X_test)
+        metrics = {
+            'f1': f1_score(y_test, y_pred),
+            'accuracy': accuracy_score(y_test, y_pred)
+        }
+        
+        # 4. Log métricas
+        mlflow.log_metrics(metrics)
+        
+        # 5. Log modelo
+        mlflow.sklearn.log_model(
+            model,
+            "model",
+            registered_model_name="bankchurn-rf"
+        )
+        
+        # 6. Log artifacts adicionales
+        # mlflow.log_artifact("configs/config.yaml")
+        
+        print(f"Run ID: {mlflow.active_run().info.run_id}")
+        return model, metrics
+
+# Uso:
+params = {'n_estimators': 100, 'max_depth': 10}
+model, metrics = train_with_mlflow(X_train, y_train, X_test, y_test, params)
+```
+</details>
+
+---
+
+### Ejercicio 10.2: Comparar Experimentos
+**Objetivo**: Ejecutar y comparar múltiples configuraciones.
+**Dificultad**: ⭐⭐⭐
+
+```python
+# TU TAREA: Ejecutar grid de experimentos y encontrar el mejor
+
+configs = [
+    {'n_estimators': 50, 'max_depth': 5},
+    {'n_estimators': 100, 'max_depth': 10},
+    {'n_estimators': 200, 'max_depth': 15},
+]
+
+# ¿Cómo organizarías estos experimentos en MLflow?
+# ¿Cómo encontrarías el mejor?
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```python
+import mlflow
+from mlflow.tracking import MlflowClient
+
+def run_experiments(X_train, y_train, X_test, y_test, configs: list):
+    """Ejecuta múltiples configuraciones y las compara."""
+    
+    mlflow.set_experiment("bankchurn-hyperparameter-search")
+    
+    results = []
+    for config in configs:
+        with mlflow.start_run():
+            # Tag para identificar el experimento
+            mlflow.set_tag("config_name", f"rf_{config['n_estimators']}_{config['max_depth']}")
+            
+            # Entrenar y evaluar
+            model, metrics = train_model(X_train, y_train, X_test, y_test, config)
+            
+            results.append({
+                'run_id': mlflow.active_run().info.run_id,
+                'config': config,
+                'f1': metrics['f1']
+            })
+    
+    return results
+
+def find_best_run(experiment_name: str, metric: str = "f1"):
+    """Encuentra el mejor run de un experimento."""
+    client = MlflowClient()
+    experiment = client.get_experiment_by_name(experiment_name)
+    
+    runs = client.search_runs(
+        experiment_ids=[experiment.experiment_id],
+        order_by=[f"metrics.{metric} DESC"],
+        max_results=1
+    )
+    
+    if runs:
+        best = runs[0]
+        print(f"Best run: {best.info.run_id}")
+        print(f"Best {metric}: {best.data.metrics[metric]}")
+        print(f"Params: {best.data.params}")
+        return best
+    return None
+
+# Ejecutar experimentos
+results = run_experiments(X_train, y_train, X_test, y_test, configs)
+
+# Encontrar el mejor
+best_run = find_best_run("bankchurn-hyperparameter-search", "f1")
+
+# Promover a producción
+client = MlflowClient()
+client.transition_model_version_stage(
+    name="bankchurn-rf",
+    version=1,
+    stage="Production"
+)
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **MLflow** | Plataforma open source para gestión del ciclo de vida ML |
+| **Run** | Una ejecución de un experimento con parámetros específicos |
+| **Model Registry** | Sistema para versionar y gestionar modelos en producción |
+| **Artifact** | Archivo guardado junto con un run (modelo, plots, configs) |
+
+---
+
+## 🏁 FIN DE FASE 2: ML Engineering
+
+> 🎯 **¡Has completado los módulos 07-10!**
+>
+> Ahora dominas las técnicas de ML Engineering profesional:
+> - ✅ Pipelines sklearn reproducibles
+> - ✅ Feature engineering sin data leakage
+> - ✅ Training profesional con cross-validation
+> - ✅ Experiment tracking con MLflow
+
+**Siguiente**: Fase 3 - MLOps Core (Testing, CI/CD, Docker, APIs)
 
 ---
 
 <div align="center">
 
-[← Training Profesional](09_TRAINING_PROFESIONAL.md) | [Siguiente: Testing ML →](11_TESTING_ML.md)
+**Siguiente módulo** → [11. Testing ML](11_TESTING_ML.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>

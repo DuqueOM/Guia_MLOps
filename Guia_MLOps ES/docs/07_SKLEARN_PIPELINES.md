@@ -1192,41 +1192,247 @@ cat CarVision-Market-Intelligence/src/carvision/features.py
 
 ---
 
-## 📺 Recursos Externos Recomendados
+## 📺 Recursos Externos del Módulo
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [sklearn Pipelines - Data School](https://www.youtube.com/watch?v=irHhDMbw3xo) | Video |
-| 🟡 | [Custom Transformers - ArjanCodes](https://www.youtube.com/watch?v=e8IIYRMnxcE) | Video |
+### 🎬 Videos
 
-**Documentación oficial:**
-- [sklearn Pipeline](https://scikit-learn.org/stable/modules/compose.html)
-- [ColumnTransformer](https://scikit-learn.org/stable/modules/generated/sklearn.compose.ColumnTransformer.html)
-- [Custom Transformers](https://scikit-learn.org/stable/developers/develop.html)
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **Sklearn Pipeline Tutorial** | Data School | 28 min | [YouTube](https://www.youtube.com/watch?v=irHhDMbw3xo) |
+| 🔴 | **ColumnTransformer Explained** | Data School | 35 min | [YouTube](https://www.youtube.com/watch?v=NGq8wnH5VSo) |
+| 🟡 | **Custom Transformers in Sklearn** | PyData | 32 min | [YouTube](https://www.youtube.com/watch?v=BFaadIqWlAg) |
+| 🟢 | **Sklearn Pipeline Best Practices** | PyData Berlin | 45 min | [YouTube](https://www.youtube.com/watch?v=0UWXCAYn8rk) |
+
+### 📚 Cursos
+
+| 🏷️ | Título | Plataforma | Duración | Link |
+|:--:|:-------|:-----------|:--------:|:-----|
+| 🔴 | ML Pipelines with scikit-learn | DataCamp | 4h | [DataCamp](https://www.datacamp.com/courses/machine-learning-with-scikit-learn) |
+| 🟡 | Feature Engineering for ML | Coursera (Google) | 5 weeks | [Coursera](https://www.coursera.org/learn/feature-engineering) |
+
+### 📄 Documentación
+
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [sklearn Pipeline User Guide](https://scikit-learn.org/stable/modules/compose.html) | Guía oficial de pipelines |
+| 🟡 | [Custom Transformers](https://scikit-learn.org/stable/developers/develop.html) | Cómo crear transformers custom |
 
 ---
 
-## 🔗 Referencias del Glosario
+## ⚖️ Decisión Técnica: ADR-002 scikit-learn
 
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **Pipeline**: Cadena de transformaciones + modelo
-- **ColumnTransformer**: Procesamiento paralelo de columnas
-- **Data Leakage**: Filtración de información del target
+**Contexto**: Necesitamos un framework ML para clasificación/regresión tabular.
+
+**Decisión**: Usar scikit-learn como framework principal.
+
+**Alternativas Consideradas**:
+- **XGBoost/LightGBM**: Más performance, menos integración con pipelines
+- **PyTorch**: Overkill para datos tabulares
+
+**Consecuencias**:
+- ✅ Pipelines unificados con `Pipeline` y `ColumnTransformer`
+- ✅ Fácil de testear y serializar
+- ✅ Documentación excelente
+- ❌ Menos performance que gradient boosting dedicado
 
 ---
 
-## ✅ Ejercicios
+## 🔧 Ejercicios del Módulo
 
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 07:
-- **7.1**: Pipeline básico con scaler + modelo
-- **7.2**: ColumnTransformer para features mixtas
+### Ejercicio 7.1: Pipeline Básico
+**Objetivo**: Crear un pipeline con preprocesamiento.
+**Dificultad**: ⭐⭐
+
+```python
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+
+# TU TAREA: Crear pipeline con:
+# 1. StandardScaler para features numéricas
+# 2. RandomForestClassifier
+
+pipe = Pipeline([
+    # TU CÓDIGO
+])
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```python
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+
+pipe = Pipeline([
+    ('scaler', StandardScaler()),
+    ('classifier', RandomForestClassifier(
+        n_estimators=100,
+        random_state=42
+    ))
+])
+
+# Uso:
+pipe.fit(X_train, y_train)
+predictions = pipe.predict(X_test)
+
+# Serialización:
+import joblib
+joblib.dump(pipe, 'artifacts/pipeline.joblib')
+```
+</details>
+
+---
+
+### Ejercicio 7.2: ColumnTransformer
+**Objetivo**: Procesar columnas numéricas y categóricas por separado.
+**Dificultad**: ⭐⭐⭐
+
+```python
+# Dado un DataFrame con:
+# - numeric_cols = ['age', 'balance', 'salary']
+# - categorical_cols = ['geography', 'gender']
+
+# TU TAREA: Crear ColumnTransformer que:
+# - Aplique StandardScaler a numéricas
+# - Aplique OneHotEncoder a categóricas
+
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+
+preprocessor = ColumnTransformer([
+    # TU CÓDIGO
+])
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```python
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+
+numeric_cols = ['age', 'balance', 'salary']
+categorical_cols = ['geography', 'gender']
+
+# Pipelines individuales para cada tipo
+numeric_transformer = Pipeline([
+    ('imputer', SimpleImputer(strategy='median')),
+    ('scaler', StandardScaler())
+])
+
+categorical_transformer = Pipeline([
+    ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
+    ('encoder', OneHotEncoder(handle_unknown='ignore'))
+])
+
+# ColumnTransformer combina ambos
+preprocessor = ColumnTransformer([
+    ('num', numeric_transformer, numeric_cols),
+    ('cat', categorical_transformer, categorical_cols)
+])
+
+# Pipeline completo con modelo
+full_pipeline = Pipeline([
+    ('preprocessor', preprocessor),
+    ('classifier', RandomForestClassifier(random_state=42))
+])
+```
+</details>
+
+---
+
+### Ejercicio 7.3: Custom Transformer
+**Objetivo**: Crear un transformer personalizado.
+**Dificultad**: ⭐⭐⭐
+
+```python
+from sklearn.base import BaseEstimator, TransformerMixin
+
+# TU TAREA: Crear AgeGroupTransformer que:
+# - Añada columna 'age_group' basada en rangos de edad
+# - 0-30: 'young', 31-50: 'middle', 51+: 'senior'
+
+class AgeGroupTransformer(BaseEstimator, TransformerMixin):
+    def fit(self, X, y=None):
+        # TU CÓDIGO
+        return self
+    
+    def transform(self, X):
+        # TU CÓDIGO
+        pass
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```python
+import pandas as pd
+import numpy as np
+from sklearn.base import BaseEstimator, TransformerMixin
+
+class AgeGroupTransformer(BaseEstimator, TransformerMixin):
+    """Transformer que añade categoría de edad."""
+    
+    def __init__(self, age_column: str = 'age'):
+        self.age_column = age_column
+    
+    def fit(self, X, y=None):
+        # No hay nada que aprender
+        return self
+    
+    def transform(self, X):
+        X = X.copy()
+        
+        # Crear bins de edad
+        bins = [0, 30, 50, np.inf]
+        labels = ['young', 'middle', 'senior']
+        
+        X['age_group'] = pd.cut(
+            X[self.age_column],
+            bins=bins,
+            labels=labels
+        )
+        return X
+    
+    def get_feature_names_out(self, input_features=None):
+        """Para compatibilidad con sklearn >= 1.0"""
+        return list(input_features) + ['age_group']
+
+
+# Uso en pipeline:
+pipeline = Pipeline([
+    ('age_groups', AgeGroupTransformer(age_column='age')),
+    ('preprocessor', preprocessor),
+    ('classifier', RandomForestClassifier())
+])
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **Pipeline** | Cadena de transformaciones + modelo que se serializa como unidad |
+| **ColumnTransformer** | Aplica diferentes transformaciones a diferentes columnas en paralelo |
+| **Data Leakage** | Filtración de información del target al training, causando métricas infladas |
+| **fit_transform** | Método que aprende parámetros y transforma en un solo paso |
 
 ---
 
 <div align="center">
 
-[← Volver al Índice](00_INDICE.md) | [Siguiente: Ingeniería de Features →](08_INGENIERIA_FEATURES.md)
+**Siguiente módulo** → [08. Ingeniería de Features](08_INGENIERIA_FEATURES.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>

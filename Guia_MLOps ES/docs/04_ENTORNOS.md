@@ -1153,44 +1153,146 @@ make test
 
 ---
 
-## 📺 Recursos Externos Recomendados
+## 📺 Recursos Externos del Módulo
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [Python Virtual Environments - Corey Schafer](https://www.youtube.com/watch?v=Kg1Yvry_Ydk) | Video |
-| 🟡 | [pip-tools Tutorial](https://www.youtube.com/watch?v=LAig6s9Hkj0) | Video |
+### 🎬 Videos
 
----
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **Python Virtual Environments** | Corey Schafer | 16 min | [YouTube](https://www.youtube.com/watch?v=Kg1Yvry_Ydk) |
+| 🔴 | **pip-tools for Dependency Management** | ArjanCodes | 15 min | [YouTube](https://www.youtube.com/watch?v=LAig6s9Hkj0) |
+| 🟡 | **uv: The Fast Python Package Manager** | ArjanCodes | 12 min | [YouTube](https://www.youtube.com/watch?v=_FdjW47Au30) |
+| 🟢 | **DevContainers in VS Code** | VS Code | 10 min | [YouTube](https://www.youtube.com/watch?v=b1RavPr_878) |
 
-## 🔗 Referencias del Glosario
+### 📄 Documentación
 
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **venv**: Entornos virtuales de Python
-- **pip-tools**: Gestión de dependencias
-- **pyproject.toml**: Configuración de proyecto moderno
-
----
-
-## ✅ Ejercicios
-
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 04:
-- **4.1**: Crear entorno virtual
-- **4.2**: Configurar pip-tools
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [venv Documentation](https://docs.python.org/3/library/venv.html) | Guía oficial venv |
+| 🟡 | [pip-tools Docs](https://pip-tools.readthedocs.io/) | Documentación pip-tools |
+| 🟢 | [uv Docs](https://github.com/astral-sh/uv) | Reemplazo rápido de pip |
 
 ---
 
-## 🔜 Siguiente Paso
+## ⚖️ Decisión Técnica: ADR-012 Gestión de Dependencias
 
-Con el entorno configurado, es hora de dominar **Git profesionalmente**.
+**Contexto**: Necesitamos dependencias reproducibles y fáciles de mantener.
 
-**[Ir a Módulo 05: Git Profesional →](05_GIT_PROFESIONAL.md)**
+**Decisión**: Usar pip-tools (pip-compile + pip-sync) con pyproject.toml.
+
+**Alternativas Consideradas**:
+- **Poetry**: Más completo pero más complejo
+- **Conda**: Mejor para deps científicas (CUDA), peor para apps
+- **pip directo**: Sin lock file, no reproducible
+
+**Consecuencias**:
+- ✅ Lock files para reproducibilidad exacta
+- ✅ Compatible con pyproject.toml estándar
+- ✅ Sin overhead de herramientas pesadas
+- ❌ Requiere pip-compile manual cuando actualizas
+
+---
+
+## 🔧 Ejercicios del Módulo
+
+### Ejercicio 4.1: Entorno Virtual Completo
+**Objetivo**: Crear y configurar entorno virtual.
+**Dificultad**: ⭐
+
+```bash
+# TU TAREA: Crear entorno, instalar proyecto en modo editable
+cd mi-proyecto
+# ???
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```bash
+# 1. Crear entorno virtual
+python -m venv .venv
+
+# 2. Activar (Linux/Mac)
+source .venv/bin/activate
+# Windows: .venv\Scripts\activate
+
+# 3. Actualizar pip
+pip install --upgrade pip
+
+# 4. Instalar proyecto en modo editable con deps dev
+pip install -e ".[dev]"
+
+# 5. Verificar instalación
+python -c "import mymlproject; print('OK')"
+pip list | grep mymlproject
+
+# 6. Desactivar cuando termines
+deactivate
+```
+</details>
+
+---
+
+### Ejercicio 4.2: pip-tools Workflow
+**Objetivo**: Usar pip-compile para lock files.
+**Dificultad**: ⭐⭐
+
+```bash
+# TU TAREA: Generar requirements.txt desde pyproject.toml
+pip install pip-tools
+# ??? generar lock file
+# ??? sincronizar entorno
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```bash
+# Instalar pip-tools
+pip install pip-tools
+
+# Generar requirements.txt desde pyproject.toml
+pip-compile pyproject.toml -o requirements.txt
+
+# Generar requirements-dev.txt con extras
+pip-compile pyproject.toml --extra dev -o requirements-dev.txt
+
+# Sincronizar entorno (instala exactamente lo del lock)
+pip-sync requirements.txt requirements-dev.txt
+
+# Actualizar una dependencia específica
+pip-compile --upgrade-package pandas pyproject.toml -o requirements.txt
+
+# Makefile target recomendado:
+# requirements.txt: pyproject.toml
+#     pip-compile pyproject.toml -o requirements.txt
+# 
+# sync: requirements.txt
+#     pip-sync requirements.txt requirements-dev.txt
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **venv** | Módulo estándar para crear entornos virtuales aislados |
+| **pip-tools** | pip-compile (generar locks) + pip-sync (sincronizar entorno) |
+| **lock file** | Archivo con versiones exactas de todas las dependencias |
+| **editable install** | `pip install -e .` permite editar código sin reinstalar |
 
 ---
 
 <div align="center">
 
-[← Estructura de Proyecto](03_ESTRUCTURA_PROYECTO.md) | [Siguiente: Git Profesional →](05_GIT_PROFESIONAL.md)
+**Siguiente módulo** → [05. Git Profesional](05_GIT_PROFESIONAL.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>

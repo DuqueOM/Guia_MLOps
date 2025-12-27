@@ -820,36 +820,223 @@ mlflow ui  # Abre http://localhost:5000
 
 ---
 
-## 📺 Recursos Externos Recomendados
+## 📺 Recursos Externos del Módulo
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> 🏷️ Sistema: 🔴 Obligatorio | 🟡 Recomendado | 🟢 Complementario
 
-| 🏷️ | Recurso | Tipo |
-|:--:|:--------|:-----|
-| 🔴 | [Cross-Validation - StatQuest](https://www.youtube.com/watch?v=fSytzGwwBVw) | Video |
-| 🟡 | [ML Training Best Practices](https://www.youtube.com/watch?v=uQc5BZw5o_g) | Video |
+### 🎬 Videos
+
+| 🏷️ | Título | Canal | Duración | Link |
+|:--:|:-------|:------|:--------:|:-----|
+| 🔴 | **Cross-Validation Explained** | StatQuest | 12 min | [YouTube](https://www.youtube.com/watch?v=fSytzGwwBVw) |
+| 🔴 | **Hyperparameter Tuning** | Krish Naik | 25 min | [YouTube](https://www.youtube.com/watch?v=HdlDYng8g9s) |
+| 🟡 | **Optuna Tutorial** | Weights & Biases | 30 min | [YouTube](https://www.youtube.com/watch?v=P6NwZVl8ttc) |
+
+### 📄 Documentación
+
+| 🏷️ | Recurso | Descripción |
+|:--:|:--------|:------------|
+| 🔴 | [sklearn Cross-validation](https://scikit-learn.org/stable/modules/cross_validation.html) | Guía oficial CV |
+| 🟡 | [Optuna Docs](https://optuna.readthedocs.io/) | Hyperparameter optimization |
 
 ---
 
-## 🔗 Referencias del Glosario
+## 🔧 Ejercicios del Módulo
 
-Ver [21_GLOSARIO.md](21_GLOSARIO.md) para definiciones de:
-- **Cross-Validation**: Validación cruzada para evaluar modelos
-- **class_weight**: Manejo de clases desbalanceadas
-- **Reproducibility**: Resultados repetibles con random_state
+### Ejercicio 9.1: Trainer Class
+**Objetivo**: Implementar clase de entrenamiento profesional.
+**Dificultad**: ⭐⭐⭐
+
+```python
+# TU TAREA: Completa la clase Trainer
+
+class Trainer:
+    def __init__(self, config):
+        self.config = config
+        self.model_ = None
+    
+    def cross_validate(self, X, y):
+        """Ejecuta CV estratificado."""
+        # ???
+    
+    def train(self, X, y):
+        """Entrena modelo final."""
+        # ???
+    
+    def save(self, path):
+        """Guarda modelo y métricas."""
+        # ???
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```python
+from pathlib import Path
+import json
+import joblib
+from sklearn.model_selection import cross_val_score, StratifiedKFold
+from sklearn.pipeline import Pipeline
+
+class Trainer:
+    def __init__(self, config: dict):
+        self.config = config
+        self.model_ = None
+        self.cv_scores_ = None
+        self.metrics_ = {}
+    
+    def cross_validate(self, X, y, cv: int = 5) -> dict:
+        """Ejecuta CV estratificado."""
+        pipeline = self._build_pipeline()
+        
+        cv_strategy = StratifiedKFold(
+            n_splits=cv,
+            shuffle=True,
+            random_state=self.config.get('random_state', 42)
+        )
+        
+        self.cv_scores_ = cross_val_score(
+            pipeline, X, y,
+            cv=cv_strategy,
+            scoring='f1'
+        )
+        
+        return {
+            'cv_mean': self.cv_scores_.mean(),
+            'cv_std': self.cv_scores_.std(),
+            'cv_scores': self.cv_scores_.tolist()
+        }
+    
+    def train(self, X, y):
+        """Entrena modelo final con todos los datos."""
+        self.model_ = self._build_pipeline()
+        self.model_.fit(X, y)
+        return self
+    
+    def evaluate(self, X_test, y_test) -> dict:
+        """Evalúa en test set."""
+        from sklearn.metrics import f1_score, accuracy_score
+        
+        y_pred = self.model_.predict(X_test)
+        self.metrics_ = {
+            'f1': f1_score(y_test, y_pred),
+            'accuracy': accuracy_score(y_test, y_pred)
+        }
+        return self.metrics_
+    
+    def save(self, output_dir: Path):
+        """Guarda modelo y métricas."""
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Guardar modelo
+        joblib.dump(self.model_, output_dir / 'model.joblib')
+        
+        # Guardar métricas
+        results = {
+            'cv_scores': self.cv_scores_.tolist() if self.cv_scores_ is not None else None,
+            'test_metrics': self.metrics_,
+            'config': self.config
+        }
+        with open(output_dir / 'results.json', 'w') as f:
+            json.dump(results, f, indent=2)
+    
+    def _build_pipeline(self) -> Pipeline:
+        """Construye pipeline según config."""
+        from sklearn.preprocessing import StandardScaler
+        from sklearn.ensemble import RandomForestClassifier
+        
+        return Pipeline([
+            ('scaler', StandardScaler()),
+            ('model', RandomForestClassifier(
+                n_estimators=self.config.get('n_estimators', 100),
+                max_depth=self.config.get('max_depth'),
+                random_state=self.config.get('random_state', 42)
+            ))
+        ])
+```
+</details>
 
 ---
 
-## ✅ Ejercicios
+### Ejercicio 9.2: Reproducibilidad
+**Objetivo**: Garantizar resultados reproducibles.
+**Dificultad**: ⭐⭐
 
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 09:
-- **9.1**: Implementar Trainer class
-- **9.2**: Garantizar reproducibilidad
+```python
+# TU TAREA: ¿Qué falta para garantizar reproducibilidad?
+
+def train_model(X, y):
+    model = RandomForestClassifier(n_estimators=100)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    model.fit(X_train, y_train)
+    return model
+```
+
+<details>
+<summary>💡 Ver solución</summary>
+
+```python
+import numpy as np
+import random
+
+def set_seeds(seed: int = 42):
+    """Fija todas las semillas para reproducibilidad."""
+    np.random.seed(seed)
+    random.seed(seed)
+    # Si usas PyTorch: torch.manual_seed(seed)
+    # Si usas TensorFlow: tf.random.set_seed(seed)
+
+def train_model(X, y, random_state: int = 42):
+    # 1. Fijar semillas globales
+    set_seeds(random_state)
+    
+    # 2. random_state en el modelo
+    model = RandomForestClassifier(
+        n_estimators=100,
+        random_state=random_state  # ← IMPORTANTE
+    )
+    
+    # 3. random_state en el split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y,
+        test_size=0.2,
+        random_state=random_state,  # ← IMPORTANTE
+        stratify=y  # ← Mantiene distribución de clases
+    )
+    
+    model.fit(X_train, y_train)
+    return model
+
+# Checklist de reproducibilidad:
+# ✅ random_state en train_test_split
+# ✅ random_state en modelo
+# ✅ random_state en cross-validation
+# ✅ Versión de dependencias fijada (requirements.txt)
+# ✅ Datos versionados (DVC)
+# ✅ Código versionado (Git commit)
+```
+</details>
+
+---
+
+## 🔗 Glosario del Módulo
+
+| Término | Definición |
+|---------|------------|
+| **Cross-Validation** | Técnica para evaluar modelo dividiendo datos en K folds |
+| **Stratified K-Fold** | CV que mantiene proporción de clases en cada fold |
+| **Hyperparameter Tuning** | Búsqueda de mejores parámetros del modelo |
+| **random_state** | Semilla para reproducibilidad de resultados aleatorios |
 
 ---
 
 <div align="center">
 
-[← Ingeniería de Features](08_INGENIERIA_FEATURES.md) | [Siguiente: Experiment Tracking →](10_EXPERIMENT_TRACKING.md)
+**Siguiente módulo** → [10. Experiment Tracking](10_EXPERIMENT_TRACKING.md)
+
+---
+
+[← Volver al Índice](00_INDICE.md)
 
 </div>
