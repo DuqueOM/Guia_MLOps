@@ -19,4 +19,11 @@ venv/
 .ipynb_checkpoints/
 
 # Guia_MLOps EN
-Guia_MLOps EN
+Guia_MLOps EN/
+
+generate_audio.py
+generate_pdfs_pro.py
+scanner_detailed.py
+scanner_detailed.py:Zone.Identifier
+scanner.py
+scanner.py:Zone.Identifier
