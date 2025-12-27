@@ -79,163 +79,185 @@ Dominar la gestión de costos cloud para cargas de trabajo ML, incluyendo estrat
 # cost_calculator.py
 """Calculadora de costos ML para AWS/GCP/Azure."""
 
-from dataclasses import dataclass
-from typing import Dict
-from enum import Enum
+from dataclasses import dataclass                   # Contenedores de datos inmutables.
+from typing import Dict                             # Type hints para diccionarios.
+from enum import Enum                               # Enumeraciones tipadas.
 
 
 class InstanceType(Enum):
-    """Tipos de instancia comunes para ML."""
-    # CPU
-    CPU_SMALL = "t3.medium"      # 2 vCPU, 4GB - $0.0416/hr
-    CPU_LARGE = "c5.2xlarge"     # 8 vCPU, 16GB - $0.34/hr
+    """
+    Tipos de instancia comunes para ML.
     
-    # GPU
-    GPU_T4 = "g4dn.xlarge"       # 1x T4, 4 vCPU - $0.526/hr
-    GPU_V100 = "p3.2xlarge"      # 1x V100, 8 vCPU - $3.06/hr
-    GPU_A100 = "p4d.24xlarge"    # 8x A100, 96 vCPU - $32.77/hr
+    Valores incluyen specs y precio/hora On-Demand.
+    """
+    # CPU - Para inferencia ligera y preprocesamiento.
+    CPU_SMALL = "t3.medium"                         # 2 vCPU, 4GB RAM - $0.0416/hr.
+    CPU_LARGE = "c5.2xlarge"                        # 8 vCPU, 16GB RAM - $0.34/hr.
+    
+    # GPU - Para entrenamiento e inferencia de modelos.
+    GPU_T4 = "g4dn.xlarge"                          # 1x NVIDIA T4, 4 vCPU - $0.526/hr.
+    GPU_V100 = "p3.2xlarge"                         # 1x NVIDIA V100, 8 vCPU - $3.06/hr.
+    GPU_A100 = "p4d.24xlarge"                       # 8x NVIDIA A100, 96 vCPU - $32.77/hr.
 
 
-# Precios por hora (AWS us-east-1, On-Demand).
+# ========== PRECIOS DE REFERENCIA ==========
+# Fuente: AWS us-east-1, On-Demand pricing (2024).
+# Nota: Precios cambian frecuentemente, verificar en consola AWS.
 HOURLY_PRICES: Dict[str, float] = {
-    "t3.medium": 0.0416,
-    "c5.2xlarge": 0.34,
-    "g4dn.xlarge": 0.526,
-    "p3.2xlarge": 3.06,
-    "p4d.24xlarge": 32.77,
+    "t3.medium": 0.0416,                            # Uso general, burstable.
+    "c5.2xlarge": 0.34,                             # Compute-optimized.
+    "g4dn.xlarge": 0.526,                           # GPU T4 (inference/training ligero).
+    "p3.2xlarge": 3.06,                             # GPU V100 (training intensivo).
+    "p4d.24xlarge": 32.77,                          # GPU A100 (LLMs, modelos grandes).
 }
 
-# Descuento Spot (típicamente 60-90% off).
-SPOT_DISCOUNT = 0.70  # 70% descuento.
+# Descuento típico de Spot Instances (60-90% off On-Demand).
+SPOT_DISCOUNT = 0.70                                # 70% descuento = pagar 30% del precio.
 
 
 @dataclass
 class TrainingJob:
-    """Representa un job de entrenamiento."""
-    name: str
-    instance_type: str
-    hours: float
-    runs_per_month: int = 1
+    """
+    Representa un job de entrenamiento.
+    
+    Attributes:
+        name: Nombre identificador del job.
+        instance_type: Tipo de instancia EC2.
+        hours: Duración promedio por ejecución.
+        runs_per_month: Frecuencia de ejecución mensual.
+    """
+    name: str                                       # Ej: "BankChurn-Train".
+    instance_type: str                              # Ej: "g4dn.xlarge".
+    hours: float                                    # Horas por ejecución.
+    runs_per_month: int = 1                         # Ejecuciones mensuales.
 
 
 @dataclass
 class InferenceEndpoint:
-    """Representa un endpoint de inferencia."""
-    name: str
-    instance_type: str
-    instances: int
-    hours_per_day: float = 24.0
+    """
+    Representa un endpoint de inferencia (API).
+    
+    Attributes:
+        name: Nombre del endpoint.
+        instance_type: Tipo de instancia.
+        instances: Número de réplicas.
+        hours_per_day: Horas de operación diaria.
+    """
+    name: str                                       # Ej: "BankChurn-API".
+    instance_type: str                              # Ej: "t3.medium".
+    instances: int                                  # Número de réplicas para HA.
+    hours_per_day: float = 24.0                     # 24 = 24/7, 12 = solo día.
 
 
 def calculate_training_cost(
-    job: TrainingJob,
-    use_spot: bool = False,
+    job: TrainingJob,                               # Configuración del job.
+    use_spot: bool = False,                         # True = usar Spot instances.
 ) -> Dict[str, float]:
     """
     Calcula costo mensual de entrenamiento.
     
-    Args:
-        job: Configuración del job.
-        use_spot: Si usar instancias Spot.
-    
     Returns:
-        Dict con costos desglosados.
+        Dict con desglose: hourly_rate, monthly_cost_usd, etc.
     """
+    # Obtener precio base (fallback a $0.5/hr si no existe).
     base_price = HOURLY_PRICES.get(job.instance_type, 0.5)
     
+    # Aplicar descuento Spot si corresponde.
     if use_spot:
-        effective_price = base_price * (1 - SPOT_DISCOUNT)
+        effective_price = base_price * (1 - SPOT_DISCOUNT)  # 30% del precio.
     else:
-        effective_price = base_price
+        effective_price = base_price                        # Precio completo.
     
+    # Costo mensual = precio/hr × horas/run × runs/mes.
     monthly_cost = effective_price * job.hours * job.runs_per_month
     
     return {
-        "job_name": job.name,
-        "instance": job.instance_type,
-        "hourly_rate": round(effective_price, 4),
-        "hours_per_run": job.hours,
-        "runs_per_month": job.runs_per_month,
-        "monthly_cost_usd": round(monthly_cost, 2),
-        "using_spot": use_spot,
+        "job_name": job.name,                       # Identificador.
+        "instance": job.instance_type,              # Tipo de instancia.
+        "hourly_rate": round(effective_price, 4),   # Precio efectivo/hr.
+        "hours_per_run": job.hours,                 # Duración por ejecución.
+        "runs_per_month": job.runs_per_month,       # Frecuencia mensual.
+        "monthly_cost_usd": round(monthly_cost, 2), # Costo total mensual.
+        "using_spot": use_spot,                     # Indicador de Spot.
     }
 
 
 def calculate_inference_cost(
-    endpoint: InferenceEndpoint,
-    days_per_month: int = 30,
+    endpoint: InferenceEndpoint,                    # Configuración del endpoint.
+    days_per_month: int = 30,                       # Días de operación.
 ) -> Dict[str, float]:
     """
     Calcula costo mensual de inferencia.
     
-    Args:
-        endpoint: Configuración del endpoint.
-        days_per_month: Días de operación.
-    
-    Returns:
-        Dict con costos desglosados.
+    Fórmula: precio/hr × instancias × horas/día × días/mes.
     """
     base_price = HOURLY_PRICES.get(endpoint.instance_type, 0.5)
     
+    # Calcular horas totales al mes.
     hours_per_month = endpoint.hours_per_day * days_per_month
+    
+    # Costo = precio × número de instancias × horas totales.
     monthly_cost = base_price * endpoint.instances * hours_per_month
     
     return {
-        "endpoint_name": endpoint.name,
-        "instance": endpoint.instance_type,
-        "instances": endpoint.instances,
-        "hours_per_day": endpoint.hours_per_day,
-        "monthly_cost_usd": round(monthly_cost, 2),
+        "endpoint_name": endpoint.name,             # Identificador.
+        "instance": endpoint.instance_type,         # Tipo de instancia.
+        "instances": endpoint.instances,            # Número de réplicas.
+        "hours_per_day": endpoint.hours_per_day,    # Horas de operación.
+        "monthly_cost_usd": round(monthly_cost, 2), # Costo mensual.
     }
 
 
-# Ejemplo: Calcular costos del Portfolio.
+# ========== EJEMPLO: CALCULAR COSTOS DEL PORTFOLIO ==========
 if __name__ == "__main__":
-    # Training jobs.
+    # Definir jobs de entrenamiento del Portfolio.
     jobs = [
         TrainingJob("BankChurn-Train", "g4dn.xlarge", hours=2, runs_per_month=4),
         TrainingJob("CarVision-Train", "p3.2xlarge", hours=8, runs_per_month=2),
         TrainingJob("TelecomAI-Train", "c5.2xlarge", hours=1, runs_per_month=8),
     ]
     
-    # Inference endpoints.
+    # Definir endpoints de inferencia.
     endpoints = [
-        InferenceEndpoint("BankChurn-API", "t3.medium", instances=2),
-        InferenceEndpoint("CarVision-API", "g4dn.xlarge", instances=1, hours_per_day=12),
+        InferenceEndpoint("BankChurn-API", "t3.medium", instances=2),  # 24/7.
+        InferenceEndpoint("CarVision-API", "g4dn.xlarge", instances=1, hours_per_day=12),  # Solo día.
     ]
     
+    # ===== REPORTE DE TRAINING =====
     print("=" * 60)
     print("COSTOS DE TRAINING (mensual)")
     print("=" * 60)
     
-    total_training = 0
+    total_training = 0                              # Acumulador.
     for job in jobs:
-        # Comparar On-Demand vs Spot.
-        od = calculate_training_cost(job, use_spot=False)
-        spot = calculate_training_cost(job, use_spot=True)
-        savings = od["monthly_cost_usd"] - spot["monthly_cost_usd"]
+        # Comparar On-Demand vs Spot para cada job.
+        od = calculate_training_cost(job, use_spot=False)   # Precio completo.
+        spot = calculate_training_cost(job, use_spot=True)  # Con descuento.
+        savings = od["monthly_cost_usd"] - spot["monthly_cost_usd"]  # Ahorro.
         
-        print(f"\n{job.name}:")
+        print(f"\n{job.name}:")                     # Nombre del job.
         print(f"  On-Demand: ${od['monthly_cost_usd']:.2f}/mes")
         print(f"  Spot:      ${spot['monthly_cost_usd']:.2f}/mes")
         print(f"  Ahorro:    ${savings:.2f}/mes ({SPOT_DISCOUNT*100:.0f}%)")
         
-        total_training += spot["monthly_cost_usd"]
+        total_training += spot["monthly_cost_usd"]  # Sumar costo Spot.
     
+    # ===== REPORTE DE INFERENCE =====
     print("\n" + "=" * 60)
     print("COSTOS DE INFERENCE (mensual)")
     print("=" * 60)
     
-    total_inference = 0
+    total_inference = 0                             # Acumulador.
     for ep in endpoints:
-        cost = calculate_inference_cost(ep)
+        cost = calculate_inference_cost(ep)         # Calcular costo.
         print(f"\n{ep.name}:")
         print(f"  Instancias: {cost['instances']}x {cost['instance']}")
         print(f"  Horas/día:  {cost['hours_per_day']}")
         print(f"  Costo:      ${cost['monthly_cost_usd']:.2f}/mes")
         
-        total_inference += cost["monthly_cost_usd"]
+        total_inference += cost["monthly_cost_usd"]  # Sumar.
     
+    # ===== RESUMEN TOTAL =====
     print("\n" + "=" * 60)
     print(f"TOTAL TRAINING:  ${total_training:.2f}/mes")
     print(f"TOTAL INFERENCE: ${total_inference:.2f}/mes")
@@ -264,70 +286,79 @@ if __name__ == "__main__":
 # spot_training.py
 """Training tolerante a interrupciones con checkpoints."""
 
-import os
-import json
-import signal
-from pathlib import Path
-from datetime import datetime
-from typing import Optional, Dict, Any
-import logging
+import os                                           # Variables de entorno.
+import json                                         # Serialización de checkpoints.
+import signal                                       # Manejo de señales del SO.
+from pathlib import Path                            # Manejo de paths.
+from datetime import datetime                       # Timestamps.
+from typing import Optional, Dict, Any              # Type hints.
+import logging                                      # Sistema de logging.
 
+# Configurar logging básico.
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class SpotInterruptionHandler:
     """
-    Maneja interrupciones de instancias Spot.
+    Maneja interrupciones de instancias Spot de forma graceful.
     
-    AWS envía señal 2 minutos antes de terminar Spot.
-    Este handler guarda checkpoint y termina gracefully.
+    Funcionamiento:
+    1. AWS envía SIGTERM 2 minutos antes de terminar Spot.
+    2. Este handler captura la señal.
+    3. Guarda checkpoint del estado actual.
+    4. Permite que el proceso termine limpiamente.
+    
+    Uso: Permite resumir entrenamiento desde el último checkpoint.
     """
     
     def __init__(self, checkpoint_dir: str = "checkpoints"):
-        self.checkpoint_dir = Path(checkpoint_dir)
-        self.checkpoint_dir.mkdir(exist_ok=True)
-        self.interrupted = False
+        """Inicializa el handler de interrupciones."""
+        self.checkpoint_dir = Path(checkpoint_dir)  # Directorio de checkpoints.
+        self.checkpoint_dir.mkdir(exist_ok=True)    # Crear si no existe.
+        self.interrupted = False                    # Flag de interrupción.
         
-        # Registrar handlers de señales.
-        signal.signal(signal.SIGTERM, self._handle_sigterm)
-        signal.signal(signal.SIGINT, self._handle_sigterm)
+        # Registrar handlers para señales del sistema operativo.
+        signal.signal(signal.SIGTERM, self._handle_sigterm)  # Señal de terminación.
+        signal.signal(signal.SIGINT, self._handle_sigterm)   # Ctrl+C.
     
     def _handle_sigterm(self, signum, frame):
-        """Handler para SIGTERM (señal de interrupción Spot)."""
+        """
+        Handler para SIGTERM (señal de interrupción Spot).
+        
+        Args:
+            signum: Número de señal recibida.
+            frame: Stack frame actual (no usado).
+        """
         logger.warning("⚠️ Spot interruption detected! Saving checkpoint...")
-        self.interrupted = True
+        self.interrupted = True                     # Marcar como interrumpido.
     
     def save_checkpoint(
         self,
-        epoch: int,
-        model_state: Dict[str, Any],
-        optimizer_state: Dict[str, Any],
-        metrics: Dict[str, float],
+        epoch: int,                                 # Época actual del entrenamiento.
+        model_state: Dict[str, Any],                # state_dict del modelo.
+        optimizer_state: Dict[str, Any],            # state_dict del optimizador.
+        metrics: Dict[str, float],                  # Métricas actuales (loss, acc).
     ) -> str:
         """
         Guarda checkpoint del entrenamiento.
         
-        Args:
-            epoch: Época actual.
-            model_state: Estado del modelo (state_dict).
-            optimizer_state: Estado del optimizador.
-            metrics: Métricas actuales.
-        
         Returns:
-            Path al checkpoint guardado.
+            Path al archivo de checkpoint guardado.
         """
+        # Construir diccionario de checkpoint.
         checkpoint = {
-            "epoch": epoch,
-            "model_state": model_state,
-            "optimizer_state": optimizer_state,
-            "metrics": metrics,
-            "timestamp": datetime.now().isoformat(),
+            "epoch": epoch,                         # Para resumir desde aquí.
+            "model_state": model_state,             # Pesos del modelo.
+            "optimizer_state": optimizer_state,     # Estado del optimizador (momentum, etc).
+            "metrics": metrics,                     # Para comparar al resumir.
+            "timestamp": datetime.now().isoformat(),  # Cuándo se guardó.
         }
         
+        # Nombre de archivo con número de época.
         path = self.checkpoint_dir / f"checkpoint_epoch_{epoch}.json"
         
-        # En producción, usarías torch.save() o joblib.
+        # Guardar (en producción usarías torch.save() o joblib).
         with open(path, "w") as f:
             json.dump(checkpoint, f, indent=2, default=str)
         
@@ -335,29 +366,35 @@ class SpotInterruptionHandler:
         return str(path)
     
     def load_latest_checkpoint(self) -> Optional[Dict[str, Any]]:
-        """Carga el checkpoint más reciente."""
+        """
+        Carga el checkpoint más reciente.
+        
+        Returns:
+            Dict con el checkpoint o None si no existe.
+        """
+        # Buscar todos los checkpoints ordenados.
         checkpoints = sorted(self.checkpoint_dir.glob("checkpoint_*.json"))
         
-        if not checkpoints:
+        if not checkpoints:                         # No hay checkpoints previos.
             logger.info("No checkpoints found, starting fresh")
             return None
         
-        latest = checkpoints[-1]
+        latest = checkpoints[-1]                    # Último (más reciente).
         logger.info(f"📂 Loading checkpoint: {latest}")
         
         with open(latest) as f:
-            return json.load(f)
+            return json.load(f)                     # Deserializar y retornar.
     
     def should_stop(self) -> bool:
-        """Retorna True si se detectó interrupción."""
-        return self.interrupted
+        """Retorna True si se detectó interrupción Spot."""
+        return self.interrupted                     # Verificar flag.
 
 
 def train_with_spot_support(
-    model,
-    train_data,
-    epochs: int = 100,
-    checkpoint_every: int = 5,
+    model,                                          # Modelo a entrenar.
+    train_data,                                     # Datos de entrenamiento.
+    epochs: int = 100,                              # Número total de épocas.
+    checkpoint_every: int = 5,                      # Guardar cada N épocas.
 ):
     """
     Entrenamiento con soporte para Spot instances.
@@ -367,35 +404,37 @@ def train_with_spot_support(
     - Guardado periódico.
     - Graceful shutdown en interrupción.
     """
-    handler = SpotInterruptionHandler()
+    handler = SpotInterruptionHandler()             # Crear handler de interrupciones.
     
-    # Intentar resumir desde checkpoint.
-    checkpoint = handler.load_latest_checkpoint()
-    start_epoch = checkpoint["epoch"] + 1 if checkpoint else 0
+    # ===== INTENTAR RESUMIR DESDE CHECKPOINT =====
+    checkpoint = handler.load_latest_checkpoint()   # Buscar checkpoint previo.
+    start_epoch = checkpoint["epoch"] + 1 if checkpoint else 0  # Época inicial.
     
     if checkpoint:
-        # Restaurar estado (pseudo-código).
+        # Restaurar estado del modelo (pseudo-código).
         # model.load_state_dict(checkpoint["model_state"])
+        # optimizer.load_state_dict(checkpoint["optimizer_state"])
         logger.info(f"Resuming from epoch {start_epoch}")
     
+    # ===== LOOP DE ENTRENAMIENTO =====
     for epoch in range(start_epoch, epochs):
-        # Verificar interrupción antes de cada época.
-        if handler.should_stop():
+        # Verificar interrupción ANTES de cada época.
+        if handler.should_stop():                   # Se detectó SIGTERM.
             logger.warning("Stopping due to Spot interruption")
-            handler.save_checkpoint(
+            handler.save_checkpoint(                # Guardar estado actual.
                 epoch=epoch,
                 model_state={"weights": "..."},
                 optimizer_state={"lr": 0.001},
                 metrics={"loss": 0.5},
             )
-            break
+            break                                   # Salir del loop limpiamente.
         
-        # Training loop (pseudo-código).
+        # Training de una época (pseudo-código).
         logger.info(f"Training epoch {epoch}/{epochs}")
         # loss = train_one_epoch(model, train_data)
         
-        # Checkpoint periódico.
-        if epoch % checkpoint_every == 0:
+        # Checkpoint periódico cada N épocas.
+        if epoch % checkpoint_every == 0:           # Guardar cada 5 épocas por defecto.
             handler.save_checkpoint(
                 epoch=epoch,
                 model_state={"weights": "..."},
@@ -403,7 +442,7 @@ def train_with_spot_support(
                 metrics={"loss": 0.5},
             )
     
-    logger.info("Training completed!")
+    logger.info("Training completed!")              # Fin del entrenamiento.
 ```
 
 ---
@@ -485,124 +524,133 @@ spec:
 # cost_aware_scaler.py
 """Scaler que balancea costo vs latencia."""
 
-from dataclasses import dataclass
-from typing import Tuple
-import logging
+from dataclasses import dataclass                   # Contenedores de datos.
+from typing import Tuple                            # Type hints para tuplas.
+import logging                                      # Sistema de logging.
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)                # Logger del módulo.
 
 
 @dataclass
 class ScalingConfig:
-    """Configuración de scaling."""
-    min_replicas: int = 2
-    max_replicas: int = 10
-    target_latency_p95_ms: float = 200.0    # Target: P95 < 200ms.
-    max_cost_per_hour: float = 10.0          # Budget: $10/hr máx.
-    cost_per_replica_hour: float = 0.50      # $0.50/replica/hr.
+    """
+    Configuración de scaling.
+    
+    Define límites y umbrales para el auto-scaler.
+    """
+    min_replicas: int = 2                           # Mínimo para HA (High Availability).
+    max_replicas: int = 10                          # Máximo para controlar costos.
+    target_latency_p95_ms: float = 200.0            # SLA: P95 < 200ms.
+    max_cost_per_hour: float = 10.0                 # Budget máximo por hora.
+    cost_per_replica_hour: float = 0.50             # Costo de cada réplica/hora.
 
 
 class CostAwareScaler:
     """
-    Scaler que optimiza costo vs latencia.
+    Auto-scaler que optimiza costo vs latencia.
     
-    Algoritmo:
-    1. Si latency > target → scale up (prioridad).
-    2. Si cost > budget → scale down (si latency OK).
-    3. Si ambos OK → mantener.
+    Algoritmo de decisión (en orden de prioridad):
+    1. Si latency > target → SCALE UP (prioridad máxima).
+    2. Si cost > budget Y latency OK → SCALE DOWN.
+    3. Si ambos OK → HOLD (mantener).
+    
+    Esto prioriza la experiencia del usuario sobre el costo.
     """
     
-    def __init__(self, config: ScalingConfig):
-        self.config = config
-        self.current_replicas = config.min_replicas
+    def __init__(self, config: ScalingConfig):      # Constructor.
+        self.config = config                        # Guardar configuración.
+        self.current_replicas = config.min_replicas # Iniciar con mínimo.
     
     def calculate_decision(
         self,
-        current_latency_p95: float,
-        current_replicas: int,
+        current_latency_p95: float,                 # Latencia P95 actual (ms).
+        current_replicas: int,                      # Número de réplicas actuales.
     ) -> Tuple[str, int]:
         """
-        Decide acción de scaling.
-        
-        Args:
-            current_latency_p95: Latencia P95 actual (ms).
-            current_replicas: Réplicas actuales.
+        Decide acción de scaling basada en métricas.
         
         Returns:
-            Tuple de (acción, nuevas_réplicas).
+            Tuple de (nombre_acción, nuevas_réplicas).
         """
+        # Calcular costo actual por hora.
         current_cost = current_replicas * self.config.cost_per_replica_hour
         
-        # Caso 1: Latencia muy alta → SCALE UP.
+        # ===== CASO 1: LATENCIA MUY ALTA (>150% del target) =====
+        # Prioridad máxima: escalar agresivamente.
         if current_latency_p95 > self.config.target_latency_p95_ms * 1.5:
-            new_replicas = min(
-                current_replicas + 2,
-                self.config.max_replicas
+            new_replicas = min(                     # Agregar 2 réplicas.
+                current_replicas + 2,               # +2 réplicas.
+                self.config.max_replicas,           # Sin exceder máximo.
             )
             return ("SCALE_UP_URGENT", new_replicas)
         
-        # Caso 2: Latencia alta → SCALE UP gradual.
+        # ===== CASO 2: LATENCIA ALTA (>100% del target) =====
+        # Escalar gradualmente (+1 réplica).
         if current_latency_p95 > self.config.target_latency_p95_ms:
-            new_replicas = min(
-                current_replicas + 1,
-                self.config.max_replicas
+            new_replicas = min(                     # Agregar 1 réplica.
+                current_replicas + 1,               # +1 réplica.
+                self.config.max_replicas,           # Sin exceder máximo.
             )
             return ("SCALE_UP", new_replicas)
         
-        # Caso 3: Latencia OK pero costo alto → SCALE DOWN.
+        # ===== CASO 3: COSTO ALTO PERO LATENCIA OK =====
+        # Solo bajar si latencia está muy por debajo del target (<70%).
         if (current_cost > self.config.max_cost_per_hour and 
             current_latency_p95 < self.config.target_latency_p95_ms * 0.7):
-            new_replicas = max(
-                current_replicas - 1,
-                self.config.min_replicas
+            new_replicas = max(                     # Quitar 1 réplica.
+                current_replicas - 1,               # -1 réplica.
+                self.config.min_replicas,           # Sin bajar del mínimo.
             )
             return ("SCALE_DOWN_COST", new_replicas)
         
-        # Caso 4: Todo OK → mantener.
+        # ===== CASO 4: TODO OK =====
+        # Mantener configuración actual.
         return ("HOLD", current_replicas)
     
     def log_decision(
         self,
-        action: str,
-        old_replicas: int,
-        new_replicas: int,
-        latency: float,
-        cost: float,
+        action: str,                                # Nombre de la acción tomada.
+        old_replicas: int,                          # Réplicas antes de la decisión.
+        new_replicas: int,                          # Réplicas después.
+        latency: float,                             # Latencia que disparó la decisión.
+        cost: float,                                # Costo actual por hora.
     ):
-        """Log la decisión de scaling."""
+        """Log la decisión de scaling para auditoría."""
         logger.info(
-            f"Scaling: {action} | "
-            f"Replicas: {old_replicas}→{new_replicas} | "
-            f"Latency P95: {latency:.0f}ms | "
-            f"Cost: ${cost:.2f}/hr"
+            f"Scaling: {action} | "                 # Acción tomada.
+            f"Replicas: {old_replicas}→{new_replicas} | "  # Cambio.
+            f"Latency P95: {latency:.0f}ms | "      # Métrica de latencia.
+            f"Cost: ${cost:.2f}/hr"                 # Costo horario.
         )
 
 
-# Ejemplo de uso.
+# ========== EJEMPLO DE USO ==========
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO)         # Configurar logging.
     
+    # Crear configuración de scaling.
     config = ScalingConfig(
-        min_replicas=2,
-        max_replicas=10,
-        target_latency_p95_ms=200,
-        max_cost_per_hour=5.0,
-        cost_per_replica_hour=0.50,
+        min_replicas=2,                             # Mínimo 2 para HA.
+        max_replicas=10,                            # Máximo 10 por costos.
+        target_latency_p95_ms=200,                  # SLA: P95 < 200ms.
+        max_cost_per_hour=5.0,                      # Budget: $5/hr.
+        cost_per_replica_hour=0.50,                 # $0.50 por réplica/hr.
     )
     
-    scaler = CostAwareScaler(config)
+    scaler = CostAwareScaler(config)                # Crear scaler.
     
-    # Simular escenarios.
+    # Simular diferentes escenarios de carga.
     scenarios = [
-        (150, 2),   # Latencia OK, pocas réplicas.
-        (250, 2),   # Latencia alta, pocas réplicas.
-        (350, 3),   # Latencia muy alta.
-        (120, 8),   # Latencia baja, muchas réplicas (caro).
+        (150, 2),                                   # Latencia OK, pocas réplicas → HOLD.
+        (250, 2),                                   # Latencia alta, pocas réplicas → SCALE_UP.
+        (350, 3),                                   # Latencia muy alta → SCALE_UP_URGENT.
+        (120, 8),                                   # Latencia baja, muchas réplicas → SCALE_DOWN.
     ]
     
+    # Evaluar cada escenario.
     for latency, replicas in scenarios:
         action, new_replicas = scaler.calculate_decision(latency, replicas)
-        cost = replicas * config.cost_per_replica_hour
+        cost = replicas * config.cost_per_replica_hour  # Costo actual.
         scaler.log_decision(action, replicas, new_replicas, latency, cost)
 ```
 
@@ -616,54 +664,77 @@ if __name__ == "__main__":
 
 ```python
 # tco_calculator.py
-"""Calculadora de TCO para arquitecturas MLOps."""
+"""Calculadora de TCO (Total Cost of Ownership) para arquitecturas MLOps."""
 
-from dataclasses import dataclass, field
-from typing import List, Dict
-from enum import Enum
+from dataclasses import dataclass, field            # Contenedores de datos.
+from typing import List, Dict                       # Type hints.
+from enum import Enum                               # Enumeraciones.
 
 
 class CostCategory(Enum):
-    COMPUTE = "compute"
-    STORAGE = "storage"
-    NETWORK = "network"
-    SERVICES = "managed_services"
-    LABOR = "labor"
+    """
+    Categorías de costos cloud.
+    
+    Permite agrupar y analizar costos por tipo.
+    """
+    COMPUTE = "compute"                             # EC2, Lambda, EKS, etc.
+    STORAGE = "storage"                             # S3, EBS, EFS.
+    NETWORK = "network"                             # Data transfer, ALB, NAT.
+    SERVICES = "managed_services"                   # CloudWatch, Secrets Manager.
+    LABOR = "labor"                                 # Costo de personal (opcional).
 
 
 @dataclass
 class CostItem:
-    """Item de costo individual."""
-    name: str
-    category: CostCategory
-    monthly_cost: float
-    notes: str = ""
+    """
+    Item de costo individual.
+    
+    Representa un recurso o servicio con su costo mensual.
+    """
+    name: str                                       # Nombre descriptivo.
+    category: CostCategory                          # Categoría para agrupación.
+    monthly_cost: float                             # Costo mensual en USD.
+    notes: str = ""                                 # Notas adicionales (specs, etc).
 
 
 @dataclass
 class TCOAnalysis:
-    """Análisis completo de TCO."""
-    project_name: str
-    items: List[CostItem] = field(default_factory=list)
+    """
+    Análisis completo de TCO.
     
-    def add_item(self, item: CostItem):
+    Agrega múltiples CostItems y genera reportes.
+    """
+    project_name: str                               # Nombre del proyecto.
+    items: List[CostItem] = field(default_factory=list)  # Lista de items.
+    
+    def add_item(self, item: CostItem):             # Añadir item a la lista.
+        """Añade un item de costo al análisis."""
         self.items.append(item)
     
-    def total_monthly(self) -> float:
+    def total_monthly(self) -> float:               # Sumar todos los costos mensuales.
+        """Retorna costo mensual total."""
         return sum(i.monthly_cost for i in self.items)
     
-    def total_annual(self) -> float:
+    def total_annual(self) -> float:                # Costo anual = mensual * 12.
+        """Retorna costo anual total."""
         return self.total_monthly() * 12
     
-    def by_category(self) -> Dict[str, float]:
-        result = {}
-        for item in self.items:
-            cat = item.category.value
-            result[cat] = result.get(cat, 0) + item.monthly_cost
+    def by_category(self) -> Dict[str, float]:      # Agrupar por categoría.
+        """Retorna costos agrupados por categoría."""
+        result = {}                                 # Diccionario de resultados.
+        for item in self.items:                     # Iterar items.
+            cat = item.category.value               # Obtener nombre de categoría.
+            result[cat] = result.get(cat, 0) + item.monthly_cost  # Sumar.
         return result
     
     def generate_report(self) -> str:
-        """Genera reporte de TCO."""
+        """
+        Genera reporte de TCO formateado.
+        
+        Returns:
+            String con el reporte completo.
+        """
+        # Encabezado del reporte.
         lines = [
             "=" * 60,
             f"TCO ANALYSIS: {self.project_name}",
@@ -673,11 +744,13 @@ class TCOAnalysis:
             "-" * 40,
         ]
         
+        # Desglose por categoría (ordenado por costo descendente).
         by_cat = self.by_category()
         for cat, cost in sorted(by_cat.items(), key=lambda x: -x[1]):
-            pct = (cost / self.total_monthly()) * 100
+            pct = (cost / self.total_monthly()) * 100  # Porcentaje del total.
             lines.append(f"  {cat:20} ${cost:>10,.2f} ({pct:>5.1f}%)")
         
+        # Totales.
         lines.extend([
             "",
             "-" * 40,
@@ -686,93 +759,102 @@ class TCOAnalysis:
             "=" * 60,
         ])
         
-        return "\n".join(lines)
+        return "\n".join(lines)                     # Unir líneas con saltos.
 
 
 def calculate_portfolio_tco() -> TCOAnalysis:
-    """Calcula TCO del Portfolio MLOps."""
-    tco = TCOAnalysis("ML-MLOps-Portfolio")
+    """
+    Calcula TCO del Portfolio MLOps.
     
-    # COMPUTE.
+    Returns:
+        TCOAnalysis con todos los costos del portfolio.
+    """
+    tco = TCOAnalysis("ML-MLOps-Portfolio")         # Crear análisis.
+    
+    # ========== COMPUTE ==========
+    # Training jobs (usando Spot para ahorro).
     tco.add_item(CostItem(
-        "BankChurn Training (Spot)",
-        CostCategory.COMPUTE,
-        monthly_cost=15.80,
+        name="BankChurn Training (Spot)",           # Modelo de churn.
+        category=CostCategory.COMPUTE,
+        monthly_cost=15.80,                         # $15.80/mes.
         notes="g4dn.xlarge, 2hr/run, 4 runs/month, 70% Spot discount"
     ))
     tco.add_item(CostItem(
-        "CarVision Training (Spot)",
-        CostCategory.COMPUTE,
-        monthly_cost=14.69,
+        name="CarVision Training (Spot)",           # Modelo de visión.
+        category=CostCategory.COMPUTE,
+        monthly_cost=14.69,                         # $14.69/mes.
         notes="p3.2xlarge, 8hr/run, 2 runs/month, 70% Spot discount"
     ))
+    
+    # APIs de inferencia (On-Demand para disponibilidad).
     tco.add_item(CostItem(
-        "BankChurn API (On-Demand)",
-        CostCategory.COMPUTE,
-        monthly_cost=59.90,
-        notes="2x t3.medium, 24/7"
+        name="BankChurn API (On-Demand)",           # API de predicción.
+        category=CostCategory.COMPUTE,
+        monthly_cost=59.90,                         # $59.90/mes.
+        notes="2x t3.medium, 24/7"                  # 2 réplicas 24/7.
     ))
     tco.add_item(CostItem(
-        "CarVision API (On-Demand)",
-        CostCategory.COMPUTE,
-        monthly_cost=189.36,
-        notes="1x g4dn.xlarge, 12hr/day"
+        name="CarVision API (On-Demand)",           # API de imágenes.
+        category=CostCategory.COMPUTE,
+        monthly_cost=189.36,                        # $189.36/mes.
+        notes="1x g4dn.xlarge, 12hr/day"            # Solo horario laboral.
     ))
     
-    # STORAGE.
+    # ========== STORAGE ==========
     tco.add_item(CostItem(
-        "S3 - Datasets",
-        CostCategory.STORAGE,
-        monthly_cost=23.00,
-        notes="~1TB, S3 Standard"
+        name="S3 - Datasets",                       # Datos de entrenamiento.
+        category=CostCategory.STORAGE,
+        monthly_cost=23.00,                         # $23/mes.
+        notes="~1TB, S3 Standard"                   # Tier Standard para acceso frecuente.
     ))
     tco.add_item(CostItem(
-        "S3 - Model Artifacts",
-        CostCategory.STORAGE,
-        monthly_cost=5.00,
-        notes="~200GB, S3 Standard-IA"
+        name="S3 - Model Artifacts",                # Modelos guardados.
+        category=CostCategory.STORAGE,
+        monthly_cost=5.00,                          # $5/mes.
+        notes="~200GB, S3 Standard-IA"              # Infrequent Access para artefactos.
     ))
     tco.add_item(CostItem(
-        "ECR - Docker Images",
-        CostCategory.STORAGE,
-        monthly_cost=10.00,
-        notes="~100GB images"
-    ))
-    
-    # NETWORK.
-    tco.add_item(CostItem(
-        "Data Transfer (Egress)",
-        CostCategory.NETWORK,
-        monthly_cost=45.00,
-        notes="~500GB egress/month"
-    ))
-    tco.add_item(CostItem(
-        "Load Balancer",
-        CostCategory.NETWORK,
-        monthly_cost=18.00,
-        notes="ALB + LCU"
+        name="ECR - Docker Images",                 # Imágenes Docker.
+        category=CostCategory.STORAGE,
+        monthly_cost=10.00,                         # $10/mes.
+        notes="~100GB images"                       # Imágenes de contenedores.
     ))
     
-    # MANAGED SERVICES.
+    # ========== NETWORK ==========
     tco.add_item(CostItem(
-        "CloudWatch Logs",
-        CostCategory.SERVICES,
-        monthly_cost=15.00,
-        notes="Ingestion + Storage"
+        name="Data Transfer (Egress)",              # Tráfico de salida.
+        category=CostCategory.NETWORK,
+        monthly_cost=45.00,                         # $45/mes.
+        notes="~500GB egress/month"                 # Tráfico hacia internet.
     ))
     tco.add_item(CostItem(
-        "Secrets Manager",
-        CostCategory.SERVICES,
-        monthly_cost=2.00,
-        notes="~5 secrets"
+        name="Load Balancer",                       # Balanceador de carga.
+        category=CostCategory.NETWORK,
+        monthly_cost=18.00,                         # $18/mes.
+        notes="ALB + LCU"                           # Application Load Balancer.
     ))
     
-    return tco
+    # ========== MANAGED SERVICES ==========
+    tco.add_item(CostItem(
+        name="CloudWatch Logs",                     # Logging centralizado.
+        category=CostCategory.SERVICES,
+        monthly_cost=15.00,                         # $15/mes.
+        notes="Ingestion + Storage"                 # Ingesta y almacenamiento.
+    ))
+    tco.add_item(CostItem(
+        name="Secrets Manager",                     # Gestión de secretos.
+        category=CostCategory.SERVICES,
+        monthly_cost=2.00,                          # $2/mes.
+        notes="~5 secrets"                          # API keys, credenciales.
+    ))
+    
+    return tco                                      # Retornar análisis completo.
 
 
+# ========== EJEMPLO DE USO ==========
 if __name__ == "__main__":
-    tco = calculate_portfolio_tco()
-    print(tco.generate_report())
+    tco = calculate_portfolio_tco()                 # Calcular TCO.
+    print(tco.generate_report())                    # Imprimir reporte.
 ```
 
 **Output esperado:**
