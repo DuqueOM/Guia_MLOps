@@ -200,12 +200,13 @@ output "lock_table" {
 # scripts/state_management.py
 """Utilidades para gestión de estado Terraform."""
 
-import subprocess
-import json
-from pathlib import Path
-from typing import Dict, List
-import logging
+import subprocess                                   # Ejecutar comandos del sistema.
+import json                                         # Parsear output JSON de Terraform.
+from pathlib import Path                            # Manejo de paths.
+from typing import Dict, List                       # Type hints.
+import logging                                      # Sistema de logging.
 
+# Configurar logging básico.
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -216,145 +217,189 @@ class TerraformStateManager:
     
     Best practices implementadas:
     - Backup antes de operaciones destructivas.
-    - Validación de drift.
-    - Importación de recursos existentes.
+    - Validación de drift (diferencias entre estado y realidad).
+    - Importación de recursos existentes al estado.
+    - Wrapper seguro para comandos Terraform.
     """
     
     def __init__(self, env_path: str):
         """
+        Inicializa el gestor de estado.
+        
         Args:
             env_path: Path al directorio del ambiente (ej: environments/prod).
         """
-        self.env_path = Path(env_path)
-        self.state_file = self.env_path / "terraform.tfstate"
+        self.env_path = Path(env_path)              # Convertir a Path object.
+        self.state_file = self.env_path / "terraform.tfstate"  # Path al state file.
     
     def run_terraform(self, *args) -> subprocess.CompletedProcess:
-        """Ejecuta comando Terraform."""
-        cmd = ["terraform"] + list(args)
-        logger.info(f"Running: {' '.join(cmd)}")
+        """
+        Ejecuta comando Terraform de forma segura.
+        
+        Args:
+            *args: Argumentos para el comando terraform.
+            
+        Returns:
+            CompletedProcess con stdout, stderr y returncode.
+        """
+        cmd = ["terraform"] + list(args)            # Construir comando completo.
+        logger.info(f"Running: {' '.join(cmd)}")    # Log del comando.
         return subprocess.run(
-            cmd,
-            cwd=self.env_path,
-            capture_output=True,
-            text=True
+            cmd,                                    # Comando a ejecutar.
+            cwd=self.env_path,                      # Directorio de trabajo.
+            capture_output=True,                    # Capturar stdout/stderr.
+            text=True,                              # Retornar como string.
         )
     
     def init(self, reconfigure: bool = False) -> bool:
         """
-        Inicializa Terraform.
+        Inicializa Terraform (descarga providers, configura backend).
         
         Args:
-            reconfigure: Si True, reconfigura backend.
+            reconfigure: Si True, reconfigura backend ignorando estado previo.
+            
+        Returns:
+            True si la inicialización fue exitosa.
         """
-        args = ["init"]
-        if reconfigure:
-            args.append("-reconfigure")
+        args = ["init"]                             # Comando base.
+        if reconfigure:                             # Opción para reconfigurar.
+            args.append("-reconfigure")             # Ignorar configuración previa.
         
-        result = self.run_terraform(*args)
-        if result.returncode != 0:
+        result = self.run_terraform(*args)          # Ejecutar.
+        if result.returncode != 0:                  # Verificar éxito.
             logger.error(f"Init failed: {result.stderr}")
             return False
         return True
     
     def plan(self, out_file: str = "plan.out") -> Dict:
         """
-        Genera plan de cambios.
+        Genera plan de cambios sin aplicarlos.
         
+        Args:
+            out_file: Archivo donde guardar el plan.
+            
         Returns:
-            Dict con resumen de cambios.
+            Dict con conteo de cambios: {"add": N, "change": N, "destroy": N}.
         """
+        # Ejecutar plan con output JSON.
         result = self.run_terraform("plan", f"-out={out_file}", "-json")
         
+        # Inicializar contadores.
         changes = {"add": 0, "change": 0, "destroy": 0}
         
-        for line in result.stdout.split("\n"):
-            if line.strip():
+        # Parsear cada línea del output JSON.
+        for line in result.stdout.split("\n"):     # Terraform emite JSON line by line.
+            if line.strip():                        # Ignorar líneas vacías.
                 try:
-                    data = json.loads(line)
-                    if data.get("type") == "planned_change":
+                    data = json.loads(line)         # Parsear JSON.
+                    if data.get("type") == "planned_change":  # Es un cambio.
                         action = data.get("change", {}).get("action")
-                        if action == "create":
+                        if action == "create":      # Recurso nuevo.
                             changes["add"] += 1
-                        elif action == "update":
+                        elif action == "update":    # Recurso modificado.
                             changes["change"] += 1
-                        elif action == "delete":
+                        elif action == "delete":    # Recurso a eliminar.
                             changes["destroy"] += 1
-                except json.JSONDecodeError:
-                    pass
+                except json.JSONDecodeError:        # Línea no es JSON válido.
+                    pass                            # Ignorar (logs, etc).
         
-        return changes
+        return changes                              # Retornar resumen.
     
     def detect_drift(self) -> List[str]:
         """
-        Detecta drift entre estado y realidad.
+        Detecta drift entre estado guardado y realidad en el cloud.
+        
+        Drift ocurre cuando alguien modifica recursos fuera de Terraform.
         
         Returns:
-            Lista de recursos con drift.
+            Lista de descripciones de recursos con drift.
         """
+        # -detailed-exitcode: 0=sin cambios, 1=error, 2=hay cambios.
         result = self.run_terraform("plan", "-detailed-exitcode")
         
-        # Exit code 2 = hay cambios (drift).
+        # Exit code 2 = hay cambios (drift detectado).
         if result.returncode == 2:
-            logger.warning("⚠️ Drift detected!")
-            # Parsear output para identificar recursos.
-            drifted = []
+            logger.warning("⚠️ Drift detected!")   # Advertir sobre drift.
+            
+            # Parsear output para identificar recursos afectados.
+            drifted = []                            # Lista de recursos con drift.
             for line in result.stdout.split("\n"):
+                # Buscar líneas que indican cambios.
                 if "will be" in line or "must be" in line:
-                    drifted.append(line.strip())
+                    drifted.append(line.strip())    # Agregar a lista.
             return drifted
         
-        logger.info("✅ No drift detected")
-        return []
+        logger.info("✅ No drift detected")         # Todo OK.
+        return []                                   # Lista vacía = sin drift.
     
-    def import_resource(self, address: str, resource_id: str) -> bool:
+    def import_resource(
+        self,
+        address: str,                               # Dirección Terraform del recurso.
+        resource_id: str,                           # ID del recurso en el cloud.
+    ) -> bool:
         """
-        Importa recurso existente al estado.
+        Importa recurso existente al estado de Terraform.
+        
+        Útil cuando:
+        - Recursos fueron creados manualmente.
+        - Se migra infraestructura existente a IaC.
         
         Args:
             address: Dirección Terraform (ej: aws_instance.web).
-            resource_id: ID del recurso en el cloud.
+            resource_id: ID del recurso en el cloud (ej: i-1234567890abcdef0).
+            
+        Returns:
+            True si la importación fue exitosa.
         """
         result = self.run_terraform("import", address, resource_id)
-        if result.returncode != 0:
+        if result.returncode != 0:                  # Verificar éxito.
             logger.error(f"Import failed: {result.stderr}")
             return False
-        logger.info(f"✅ Imported {address}")
+        logger.info(f"✅ Imported {address}")        # Confirmar éxito.
         return True
     
     def backup_state(self) -> str:
-        """Crea backup del estado actual."""
-        from datetime import datetime
+        """
+        Crea backup del estado actual antes de operaciones riesgosas.
         
+        Returns:
+            Path al archivo de backup, o string vacío si falló.
+        """
+        from datetime import datetime               # Import local para timestamp.
+        
+        # Generar nombre único con timestamp.
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_name = f"terraform.tfstate.backup.{timestamp}"
         
-        result = self.run_terraform("state", "pull")
-        if result.returncode == 0:
-            backup_path = self.env_path / backup_name
-            backup_path.write_text(result.stdout)
+        # Extraer estado actual del backend remoto.
+        result = self.run_terraform("state", "pull")  # Pull state from backend.
+        if result.returncode == 0:                  # Si tuvo éxito.
+            backup_path = self.env_path / backup_name  # Path completo.
+            backup_path.write_text(result.stdout)   # Escribir contenido.
             logger.info(f"✅ State backed up to {backup_path}")
             return str(backup_path)
         
-        logger.error("Failed to backup state")
-        return ""
+        logger.error("Failed to backup state")      # Error al hacer backup.
+        return ""                                   # Retornar vacío.
 
 
-# Ejemplo de uso.
+# ========== EJEMPLO DE USO ==========
 if __name__ == "__main__":
+    # Crear manager para el ambiente de producción.
     manager = TerraformStateManager("environments/prod")
     
-    # Inicializar.
+    # Paso 1: Inicializar Terraform.
     manager.init()
     
-    # Detectar drift.
+    # Paso 2: Detectar drift (cambios fuera de Terraform).
     drift = manager.detect_drift()
-    if drift:
-        print("Recursos con drift:")
+    if drift:                                       # Si hay drift.
+        print("Recursos con drift:")               # Mostrar afectados.
         for r in drift:
             print(f"  - {r}")
     
-    # Generar plan.
-    changes = manager.plan()
+    # Paso 3: Generar plan de cambios.
+    changes = manager.plan()                        # Plan sin aplicar.
     print(f"\nPlan: +{changes['add']} ~{changes['change']} -{changes['destroy']}")
 ```
 

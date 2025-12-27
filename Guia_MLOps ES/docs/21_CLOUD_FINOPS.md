@@ -900,95 +900,117 @@ El Portfolio actual tiene TCO de ~$400/mes. Tu objetivo: **reducir a $280/mes (-
 # ejercicio_tco_reduction.py
 """Ejercicio: Reducir TCO del Portfolio en 30%."""
 
-from dataclasses import dataclass
-from typing import List, Tuple
+from dataclasses import dataclass                   # Contenedores de datos.
+from typing import List, Tuple                      # Type hints.
 
 
 @dataclass
 class OptimizationStrategy:
-    """Estrategia de optimización."""
-    name: str
-    current_cost: float
-    optimized_cost: float
-    implementation: str
-    risk: str  # "low", "medium", "high"
+    """
+    Estrategia de optimización de costos.
+    
+    Representa una oportunidad de reducción con su
+    impacto esperado y nivel de riesgo.
+    """
+    name: str                                       # Nombre descriptivo.
+    current_cost: float                             # Costo actual mensual.
+    optimized_cost: float                           # Costo después de optimizar.
+    implementation: str                             # Cómo implementar.
+    risk: str                                       # "low", "medium", "high".
     
     @property
-    def savings(self) -> float:
+    def savings(self) -> float:                     # Propiedad calculada.
+        """Ahorro mensual en USD."""
         return self.current_cost - self.optimized_cost
     
     @property
-    def savings_pct(self) -> float:
+    def savings_pct(self) -> float:                 # Propiedad calculada.
+        """Porcentaje de ahorro."""
         return (self.savings / self.current_cost) * 100
 
 
 def propose_optimizations() -> List[OptimizationStrategy]:
-    """Propone estrategias de optimización."""
+    """
+    Propone estrategias de optimización.
     
+    Returns:
+        Lista de estrategias ordenadas por impacto.
+    """
     return [
+        # Estrategia 1: Reserved Instances para APIs 24/7.
         OptimizationStrategy(
             name="Reserved Instances para BankChurn API",
-            current_cost=59.90,
-            optimized_cost=35.94,  # 40% descuento RI 1yr.
+            current_cost=59.90,                     # On-Demand actual.
+            optimized_cost=35.94,                   # 40% descuento con RI 1yr.
             implementation="Comprar RI 1-year para 2x t3.medium",
-            risk="low"
+            risk="low"                              # Bajo riesgo: compromiso conocido.
         ),
+        # Estrategia 2: Reducir horas de operación.
         OptimizationStrategy(
             name="Apagar CarVision API en noches",
-            current_cost=189.36,
-            optimized_cost=94.68,  # 12hr → 6hr/día.
+            current_cost=189.36,                    # 12hr/día actual.
+            optimized_cost=94.68,                   # Reducir a 6hr/día.
             implementation="Schedule: 8am-8pm únicamente",
-            risk="medium"
+            risk="medium"                           # Medio: requiere validar uso nocturno.
         ),
+        # Estrategia 3: Storage tiering.
         OptimizationStrategy(
             name="Migrar datasets antiguos a S3 Glacier",
-            current_cost=23.00,
-            optimized_cost=8.00,
+            current_cost=23.00,                     # S3 Standard actual.
+            optimized_cost=8.00,                    # Glacier para datos antiguos.
             implementation="Lifecycle policy: 30 días → Glacier",
-            risk="low"
+            risk="low"                              # Bajo: políticas automáticas.
         ),
+        # Estrategia 4: Right-sizing.
         OptimizationStrategy(
             name="Right-size BankChurn API",
-            current_cost=59.90,
-            optimized_cost=29.95,  # t3.medium → t3.small.
+            current_cost=59.90,                     # t3.medium actual.
+            optimized_cost=29.95,                   # t3.small (50% ahorro).
             implementation="Reducir a t3.small (validar latencia)",
-            risk="medium"
+            risk="medium"                           # Medio: requiere pruebas de carga.
         ),
     ]
 
 
-def calculate_optimized_tco(strategies: List[OptimizationStrategy]) -> Tuple[float, float]:
+def calculate_optimized_tco(
+    strategies: List[OptimizationStrategy],         # Lista de estrategias.
+) -> Tuple[float, float]:
     """
-    Calcula TCO optimizado.
+    Calcula TCO optimizado aplicando todas las estrategias.
     
     Returns:
-        Tuple de (total_savings, new_tco).
+        Tuple de (ahorro_total, nuevo_tco).
     """
-    current_tco = 397.75  # TCO actual.
-    total_savings = sum(s.savings for s in strategies)
-    new_tco = current_tco - total_savings
+    current_tco = 397.75                            # TCO actual del portfolio.
+    total_savings = sum(s.savings for s in strategies)  # Sumar ahorros.
+    new_tco = current_tco - total_savings           # Nuevo TCO.
     
     return total_savings, new_tco
 
 
+# ========== EJEMPLO DE USO ==========
 if __name__ == "__main__":
-    strategies = propose_optimizations()
+    strategies = propose_optimizations()            # Obtener estrategias.
     
+    # Imprimir encabezado.
     print("=" * 60)
     print("PLAN DE OPTIMIZACIÓN DE TCO")
     print("=" * 60)
     
+    # Mostrar cada estrategia.
     for s in strategies:
-        print(f"\n📌 {s.name}")
-        print(f"   Actual:     ${s.current_cost:.2f}/mes")
-        print(f"   Optimizado: ${s.optimized_cost:.2f}/mes")
-        print(f"   Ahorro:     ${s.savings:.2f}/mes ({s.savings_pct:.0f}%)")
-        print(f"   Riesgo:     {s.risk}")
-        print(f"   Cómo:       {s.implementation}")
+        print(f"\n📌 {s.name}")                      # Nombre.
+        print(f"   Actual:     ${s.current_cost:.2f}/mes")  # Costo actual.
+        print(f"   Optimizado: ${s.optimized_cost:.2f}/mes")  # Costo optimizado.
+        print(f"   Ahorro:     ${s.savings:.2f}/mes ({s.savings_pct:.0f}%)")  # Ahorro.
+        print(f"   Riesgo:     {s.risk}")           # Nivel de riesgo.
+        print(f"   Cómo:       {s.implementation}")  # Implementación.
     
+    # Calcular totales.
     savings, new_tco = calculate_optimized_tco(strategies)
-    reduction_pct = (savings / 397.75) * 100
+    reduction_pct = (savings / 397.75) * 100        # Porcentaje de reducción.
     
+    # Imprimir resumen.
     print("\n" + "=" * 60)
     print("RESUMEN")
     print("=" * 60)
