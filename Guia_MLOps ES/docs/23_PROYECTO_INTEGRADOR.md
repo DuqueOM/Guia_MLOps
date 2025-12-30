@@ -58,9 +58,10 @@
  - **20.7** [Consejos Profesionales](#207-consejos-profesionales)
  - **20.8** [Recursos Externos Recomendados](#208-recursos-externos-recomendados)
  - **20.9** [Referencias del Glosario](#209-referencias-del-glosario)
- - [✅ Ejercicio](#ejercicio)
- - **20.10** [Entrega](#2010-entrega)
- - [✅ Checkpoint](#checkpoint)
+- [✅ Ejercicio](#ejercicio)
+- **20.10** [Entrega](#2010-entrega)
+- **23.11** [🔬 Ingeniería Inversa: Arquitectura Monorepo](#2011-monorepo) ⭐ NUEVO
+- [✅ Checkpoint](#checkpoint)
  
  ---
  
@@ -537,6 +538,201 @@ if __name__ == "__main__":
 2. CI pasando (verde)
 3. README con badges actualizados
 4. Self-assessment del checklist completado
+
+---
+
+<a id="2011-monorepo"></a>
+
+## 23.11 🔬 Ingeniería Inversa Pedagógica: Arquitectura Monorepo
+
+> **Objetivo**: Entender cómo escalar de 1 proyecto a 3 proyectos compartiendo código.
+
+### 23.11.1 🎯 El "Por Qué" Arquitectónico
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    EVOLUCIÓN DEL PORTAFOLIO: 1 → 3 PROYECTOS                     │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│  PROBLEMA 1: ¿Cómo comparto código entre BankChurn, CarVision y TelecomAI?      │
+│  DECISIÓN: common_utils/ como librería interna instalable                       │
+│  RESULTADO: DRY a nivel de portafolio, logger y seeds consistentes              │
+│                                                                                 │
+│  PROBLEMA 2: ¿Cómo mantengo CI/CD para 3 proyectos sin duplicar workflows?      │
+│  DECISIÓN: Matriz de GitHub Actions con strategy.matrix.project                 │
+│  RESULTADO: Un workflow, 3 proyectos testeados en paralelo                      │
+│                                                                                 │
+│  PROBLEMA 3: ¿Cómo evito que cambios en un proyecto rompan otros?               │
+│  DECISIÓN: Cada proyecto tiene su propio pyproject.toml y tests aislados        │
+│  RESULTADO: Independencia con código compartido opcional                        │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 23.11.2 🔍 Anatomía del Monorepo
+
+**Estructura**: `ML-MLOps-Portfolio/`
+
+```
+ML-MLOps-Portfolio/
+│
+├── common_utils/                    # ← LIBRERÍA COMPARTIDA
+│   ├── __init__.py                  # Exports: setup_logging, set_seed
+│   ├── logger.py                    # Logging consistente para todos
+│   └── seed.py                      # Reproducibilidad centralizada
+│
+├── BankChurn-Predictor/             # ← PROYECTO 1 (independiente)
+│   ├── src/bankchurn/
+│   │   └── training.py              # from common_utils import setup_logging
+│   ├── tests/
+│   ├── pyproject.toml               # Dependencias propias
+│   └── Dockerfile
+│
+├── CarVision-Market-Intelligence/   # ← PROYECTO 2 (independiente)
+│   ├── src/carvision/
+│   │   └── training.py              # from common_utils import set_seed
+│   ├── tests/
+│   └── pyproject.toml
+│
+├── TelecomAI-Customer-Intelligence/ # ← PROYECTO 3 (independiente)
+│   ├── src/telecom/
+│   └── ...
+│
+├── .github/workflows/
+│   └── ci-mlops.yml                 # ← UN workflow para los 3 proyectos
+│
+├── infra/                           # Docker Compose, Prometheus, etc.
+└── Makefile                         # Comandos raíz delegando a sub-proyectos
+```
+
+### 23.11.3 📦 common_utils: Código Compartido
+
+```python
+# common_utils/__init__.py
+"""
+API pública de utilidades compartidas.
+
+Todas las funciones aquí son usadas por BankChurn, CarVision y TelecomAI
+para garantizar consistencia en logging y reproducibilidad.
+"""
+
+from common_utils.logger import setup_logging    # Logging consistente.
+from common_utils.seed import set_seed           # Seeds para reproducibilidad.
+
+__version__ = "1.0.0"                            # Versión de la librería.
+__all__ = ["setup_logging", "set_seed"]          # Exports explícitos.
+```
+
+```python
+# common_utils/seed.py
+"""Reproducibilidad centralizada para todos los proyectos."""
+
+import os                                        # Variables de entorno.
+import random                                    # Random de Python.
+import numpy as np                               # NumPy random.
+
+DEFAULT_SEED = 42                                # Valor por defecto.
+
+
+def set_seed(seed: int = DEFAULT_SEED) -> int:
+    """
+    Configura seeds globales para reproducibilidad.
+    
+    Esta función setea el seed para Python, NumPy, y opcionalmente
+    PyTorch/TensorFlow si están instalados.
+    """
+    os.environ["PYTHONHASHSEED"] = str(seed)     # Hash determinístico.
+    random.seed(seed)                            # Random de Python.
+    np.random.seed(seed)                         # NumPy.
+    
+    # PyTorch (opcional, si está instalado).
+    try:
+        import torch
+        torch.manual_seed(seed)                  # CPU.
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)     # GPU.
+    except ImportError:
+        pass  # PyTorch no instalado.
+    
+    return seed
+```
+
+### 23.11.4 🔄 CI/CD con Matriz de Proyectos
+
+```yaml
+# .github/workflows/ci-mlops.yml
+name: CI/CD MLOps Portfolio
+
+on:
+  push:
+    branches: [main, develop]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false                           # No cancelar otros si uno falla.
+      matrix:
+        python-version: ['3.11', '3.12']         # Probar múltiples versiones.
+        project:                                 # ← LOS 3 PROYECTOS
+          - BankChurn-Predictor
+          - CarVision-Market-Intelligence
+          - TelecomAI-Customer-Intelligence
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Install dependencies
+        working-directory: ${{ matrix.project }} # ← Cambia a cada proyecto.
+        run: pip install -e ".[dev]"
+      
+      - name: Run tests
+        working-directory: ${{ matrix.project }}
+        run: pytest --cov --cov-fail-under=80
+```
+
+### 23.11.5 🧪 Laboratorio de Replicación
+
+```bash
+# Paso 1: Crear estructura monorepo desde cero
+mkdir mi-portfolio-ml && cd mi-portfolio-ml
+
+# Paso 2: Crear common_utils
+mkdir -p common_utils
+cat > common_utils/__init__.py << 'EOF'
+from common_utils.logger import setup_logging
+from common_utils.seed import set_seed
+__all__ = ["setup_logging", "set_seed"]
+EOF
+
+# Paso 3: Crear primer proyecto usando common_utils
+mkdir -p proyecto1/src/proyecto1
+cat > proyecto1/src/proyecto1/training.py << 'EOF'
+import sys
+sys.path.insert(0, "../..")  # Para desarrollo local.
+from common_utils import setup_logging, set_seed
+
+logger = setup_logging(__name__)
+set_seed(42)
+
+def train():
+    logger.info("Training con seed reproducible")
+EOF
+
+# Paso 4: Verificar que funciona
+cd proyecto1 && python -c "from src.proyecto1.training import train; train()"
+```
+
+### 23.11.6 🚨 Troubleshooting Monorepo
+
+| Síntoma | Causa | Solución |
+|---------|-------|----------|
+| **"ModuleNotFoundError: common_utils"** | PYTHONPATH no incluye raíz | `pip install -e ../common_utils` o `sys.path.insert` |
+| **CI falla solo en un proyecto** | Dependencias diferentes | Verificar `pyproject.toml` de ese proyecto |
+| **Cambio en common_utils rompe proyecto** | Sin tests de integración | Añadir tests que importen desde common_utils |
 
 ---
 

@@ -957,22 +957,33 @@ pipeline = build_telecom_pipeline()
 **Archivo**: `ML-MLOps-Portfolio/BankChurn-Predictor/src/bankchurn/training.py`
 
 ```python
-# Pipeline CATEGÓRICO
+# Pipeline CATEGÓRICO: maneja variables como Geography, Gender, etc.
 def _build_categorical_pipeline(self) -> Pipeline:
     return Pipeline([
-        ("imputer", SimpleImputer(strategy="constant", fill_value="missing")),
-        ("onehot", OneHotEncoder(drop="first", handle_unknown="ignore")),
+        ("imputer", SimpleImputer(                # Paso 1: Imputar NaN.
+            strategy="constant",                  # Estrategia: valor constante.
+            fill_value="missing"                  # NaN → "missing" (nueva categoría).
+        )),
+        ("onehot", OneHotEncoder(                 # Paso 2: One-hot encoding.
+            drop="first",                         # Evita dummy variable trap.
+            handle_unknown="ignore",              # CRÍTICO: categorías nuevas → ceros.
+        )),
     ])
 
-# Pipeline NUMÉRICO  
+# Pipeline NUMÉRICO: maneja variables como Age, Balance, CreditScore.
 def _build_numerical_pipeline(self) -> Pipeline:
     return Pipeline([
-        ("imputer", SimpleImputer(strategy="median")),
-        ("scaler", StandardScaler()),
+        ("imputer", SimpleImputer(                # Paso 1: Imputar NaN.
+            strategy="median"                     # Mediana: robusta a outliers.
+        )),
+        ("scaler", StandardScaler()),             # Paso 2: Normalizar a media=0, std=1.
     ])
 
-# ColumnTransformer combina ambos
-return ColumnTransformer(transformers=transformers, remainder="drop")
+# ColumnTransformer: aplica pipelines a columnas específicas.
+return ColumnTransformer(
+    transformers=transformers,                    # Lista de (nombre, pipeline, columnas).
+    remainder="drop"                              # IMPORTANTE: ignora columnas no listadas.
+)
 ```
 
 ### 7.6.3 🚨 Troubleshooting

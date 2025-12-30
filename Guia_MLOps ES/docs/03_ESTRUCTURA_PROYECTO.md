@@ -74,6 +74,9 @@ Para que esto cuente como progreso real, fuerza este mapeo:
 - [.gitignore](#gitignore)
 - [🔬 Ingeniería Inversa: Estructura Real](#36-ingenieria-inversa-estructura) ⭐ NUEVO
 - [Errores habituales y cómo depurarlos](#errores-habituales)
+- [📚 Módulos Complementarios](#módulos-complementarios) ⭐ NUEVO
+  - [03A. Refactoring: De Notebook a Producción](03A_REFACTORING_NOTEBOOK_PRODUCCION.md)
+  - [03B. Librerías Compartidas (common_utils)](03B_COMMON_UTILS_LIBRERIAS.md)
 - [Consejos Profesionales](#consejos-profesionales)
 - [Recursos Externos Recomendados](#recursos-externos)
 - [Referencias del Glosario](#referencias-glosario)
@@ -745,6 +748,30 @@ addopts = "-v --cov=mymlproject"
 
 ---
 
+## 📚 Módulos Complementarios
+
+Este módulo tiene dos extensiones importantes que profundizan en aspectos específicos:
+
+### 📓 [03A. Refactoring: De Notebook a Producción](03A_REFACTORING_NOTEBOOK_PRODUCCION.md)
+
+Aprende el proceso paso a paso para transformar código exploratorio de notebooks en módulos Python profesionales:
+
+- **Por qué refactorizar**: Problemas del código en notebooks (estado global, no testeable, no versionable)
+- **Anatomía comparada**: Notebook típico vs módulo de producción
+- **Proceso de refactoring**: Checklist de 7 pasos con ejemplos del portafolio
+- **Patrones de extracción**: Funciones puras, configuración externalizada, logging
+
+### 📦 [03B. Librerías Compartidas (common_utils)](03B_COMMON_UTILS_LIBRERIAS.md)
+
+Aprende a crear y mantener código compartido entre proyectos ML:
+
+- **Por qué librerías compartidas**: DRY a nivel de organización
+- **Estructura de common_utils**: logger.py, seed.py, API pública
+- **Reproducibilidad**: Función `set_seed()` para todas las librerías
+- **Distribución**: Cómo instalar y versionar librerías internas
+
+---
+
 ## 🔗 Glosario del Módulo
 
 | Término | Definición |
@@ -753,6 +780,8 @@ addopts = "-v --cov=mymlproject"
 | **pyproject.toml** | Archivo unificado de configuración de proyecto Python |
 | **Makefile** | Archivo para automatizar comandos comunes del proyecto |
 | **editable install** | `pip install -e .` instala paquete en modo desarrollo |
+| **Refactoring** | Proceso de reestructurar código sin cambiar funcionalidad |
+| **common_utils** | Librería interna compartida entre proyectos |
 
 ---
 
