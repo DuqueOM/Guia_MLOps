@@ -72,11 +72,11 @@ Para que esto cuente como progreso real, fuerza este mapeo:
 - [pyproject.toml completo](#pyproject)
 - [Makefile](#makefile)
 - [.gitignore](#gitignore)
-- [🔬 Ingeniería Inversa: Estructura Real](#36-ingenieria-inversa-estructura) ⭐ NUEVO
+- [🔬 Ingeniería Inversa: Estructura Real](#36-ingenieria-inversa-estructura)
 - [Errores habituales y cómo depurarlos](#errores-habituales)
-- [📚 Módulos Complementarios](#módulos-complementarios) ⭐ NUEVO
-  - [03A. Refactoring: De Notebook a Producción](03A_REFACTORING_NOTEBOOK_PRODUCCION.md)
-  - [03B. Librerías Compartidas (common_utils)](03B_COMMON_UTILS_LIBRERIAS.md)
+- [📓 Refactoring: De Notebook a Producción](#37-refactoring) ⭐ INTEGRADO
+- [📦 Librerías Compartidas (common_utils)](#38-common-utils) ⭐ INTEGRADO
+- [🎓 Sección Pedagógica: Aprende Haciendo](#39-pedagogia) ⭐ NUEVO
 - [Consejos Profesionales](#consejos-profesionales)
 - [Recursos Externos Recomendados](#recursos-externos)
 - [Referencias del Glosario](#referencias-glosario)
@@ -748,31 +748,1219 @@ addopts = "-v --cov=mymlproject"
 
 ---
 
-## 📚 Módulos Complementarios
+<a id="37-refactoring"></a>
 
-Este módulo tiene dos extensiones importantes que profundizan en aspectos específicos:
+## 3.7 📓 Refactoring: De Notebook a Código de Producción
 
-### 📓 [03A. Refactoring: De Notebook a Producción](03A_REFACTORING_NOTEBOOK_PRODUCCION.md)
+> **Objetivo**: Dominar la transición de código exploratorio en notebooks a módulos Python profesionales, mantenibles y testeables.
 
-Aprende el proceso paso a paso para transformar código exploratorio de notebooks en módulos Python profesionales:
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  "El notebook es donde nacen las ideas.                                      ║
+║   El módulo Python es donde esas ideas se convierten en producto."           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
 
-- **Por qué refactorizar**: Problemas del código en notebooks (estado global, no testeable, no versionable)
-- **Anatomía comparada**: Notebook típico vs módulo de producción
-- **Proceso de refactoring**: Checklist de 7 pasos con ejemplos del portafolio
-- **Patrones de extracción**: Funciones puras, configuración externalizada, logging
+### 3.7.1 ¿Por qué Refactorizar Notebooks?
 
-### 📦 [03B. Librerías Compartidas (common_utils)](03B_COMMON_UTILS_LIBRERIAS.md)
+#### Problemas del Código en Notebooks
 
-Aprende a crear y mantener código compartido entre proyectos ML:
+| Problema | Impacto | Solución |
+|----------|---------|----------|
+| **Estado global** | Celdas dependen de orden de ejecución | Funciones puras |
+| **No testeable** | Bugs ocultos hasta producción | Módulos + pytest |
+| **No versionable** | Diffs ilegibles en Git | .py separados |
+| **No reutilizable** | Copy-paste entre proyectos | Paquetes Python |
+| **Sin tipos** | Errores en runtime | Type hints |
 
-- **Por qué librerías compartidas**: DRY a nivel de organización
-- **Estructura de common_utils**: logger.py, seed.py, API pública
-- **Reproducibilidad**: Función `set_seed()` para todas las librerías
-- **Distribución**: Cómo instalar y versionar librerías internas
+#### Cuándo Refactorizar
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    CICLO DE VIDA DEL CÓDIGO ML                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  📓 NOTEBOOK (Exploración)                                                  │
+│  ├── EDA rápida                                                             │
+│  ├── Pruebas de hipótesis                                                   │
+│  ├── Iteración de features                                                  │
+│  └── Prototipos de modelos                                                  │
+│       │                                                                     │
+│       ▼ ¿El código será usado más de una vez?                               │
+│       │                                                                     │
+│  📦 MÓDULO (Producción)                                                    │
+│  ├── Funciones reutilizables                                                │
+│  ├── Clases con estado manejado                                             │
+│  ├── Configuración externalizada                                            │
+│  └── Tests automatizados                                                    │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 3.7.2 Anatomía: Notebook vs Módulo
+
+#### Ejemplo: Celda Típica de Notebook
+
+```python
+# ❌ Código típico de notebook (difícil de mantener)
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+
+# Cargar datos
+df = pd.read_csv("data/churn.csv")
+
+# Preprocesar (hardcoded)
+df = df.dropna()
+df['TenureGroup'] = pd.cut(df['tenure'], bins=[0, 12, 24, 48, 72], labels=['0-1yr', '1-2yr', '2-4yr', '4-6yr'])
+
+# Features y target (hardcoded)
+X = df[['CreditScore', 'Age', 'Balance', 'NumOfProducts']]
+y = df['Exited']
+
+# Split (seed hardcoded)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Entrenar (sin logging)
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Evaluar (print en lugar de return)
+print(f"Accuracy: {model.score(X_test, y_test)}")
+```
+
+#### Equivalente en Módulo Profesional
+
+```python
+# ✅ src/bankchurn/training.py (código de producción)
+"""Módulo de entrenamiento para BankChurn."""
+
+from pathlib import Path                             # Manejo de paths cross-platform.
+from typing import Tuple, Dict, Any                  # Type hints.
+import logging                                       # Logging estructurado.
+
+import pandas as pd                                  # DataFrames.
+import numpy as np                                   # Operaciones numéricas.
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, f1_score
+
+from bankchurn.config import TrainingConfig          # Configuración externalizada.
+
+
+logger = logging.getLogger(__name__)                 # Logger del módulo.
+
+
+def load_data(path: Path) -> pd.DataFrame:
+    """
+    Carga datos desde archivo CSV.
+    
+    Args:
+        path: Path al archivo CSV.
+    
+    Returns:
+        DataFrame con los datos cargados.
+    
+    Raises:
+        FileNotFoundError: Si el archivo no existe.
+        pd.errors.EmptyDataError: Si el archivo está vacío.
+    """
+    logger.info(f"Loading data from {path}")
+    
+    if not path.exists():
+        raise FileNotFoundError(f"Data file not found: {path}")
+    
+    df = pd.read_csv(path)
+    logger.info(f"Loaded {len(df)} rows, {len(df.columns)} columns")
+    
+    return df
+
+
+def preprocess(
+    df: pd.DataFrame,
+    config: TrainingConfig,
+) -> pd.DataFrame:
+    """
+    Preprocesa datos según configuración.
+    
+    Args:
+        df: DataFrame con datos crudos.
+        config: Configuración de preprocesamiento.
+    
+    Returns:
+        DataFrame preprocesado.
+    """
+    logger.info("Preprocessing data")
+    
+    # Eliminar NaN según estrategia en config.
+    if config.drop_na:
+        initial_rows = len(df)
+        df = df.dropna()
+        logger.info(f"Dropped {initial_rows - len(df)} rows with NaN")
+    
+    # Feature engineering configurable.
+    if config.create_tenure_groups:
+        df = df.copy()                               # Evitar SettingWithCopyWarning.
+        df['TenureGroup'] = pd.cut(
+            df['tenure'],
+            bins=config.tenure_bins,
+            labels=config.tenure_labels,
+        )
+    
+    return df
+
+
+def split_data(
+    df: pd.DataFrame,
+    config: TrainingConfig,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+    """
+    Divide datos en train/test.
+    
+    Args:
+        df: DataFrame preprocesado.
+        config: Configuración con features, target y split ratio.
+    
+    Returns:
+        Tuple de (X_train, X_test, y_train, y_test).
+    """
+    X = df[config.feature_columns]
+    y = df[config.target_column]
+    
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y,
+        test_size=config.test_size,
+        random_state=config.seed,
+        stratify=y if config.stratify else None,     # Estratificación opcional.
+    )
+    
+    logger.info(f"Train: {len(X_train)}, Test: {len(X_test)}")
+    
+    return X_train, X_test, y_train, y_test
+
+
+def train_model(
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    config: TrainingConfig,
+) -> RandomForestClassifier:
+    """
+    Entrena modelo con configuración especificada.
+    
+    Args:
+        X_train: Features de entrenamiento.
+        y_train: Target de entrenamiento.
+        config: Configuración de hiperparámetros.
+    
+    Returns:
+        Modelo entrenado.
+    """
+    logger.info(f"Training RandomForest with {config.n_estimators} estimators")
+    
+    model = RandomForestClassifier(
+        n_estimators=config.n_estimators,
+        max_depth=config.max_depth,
+        random_state=config.seed,
+        n_jobs=-1,                                   # Usar todos los cores.
+    )
+    
+    model.fit(X_train, y_train)
+    logger.info("Training completed")
+    
+    return model
+
+
+def evaluate_model(
+    model: RandomForestClassifier,
+    X_test: pd.DataFrame,
+    y_test: pd.Series,
+) -> Dict[str, float]:
+    """
+    Evalúa modelo y retorna métricas.
+    
+    Args:
+        model: Modelo entrenado.
+        X_test: Features de test.
+        y_test: Target de test.
+    
+    Returns:
+        Dict con métricas de evaluación.
+    """
+    y_pred = model.predict(X_test)
+    
+    metrics = {
+        "accuracy": accuracy_score(y_test, y_pred),
+        "f1_score": f1_score(y_test, y_pred),
+    }
+    
+    logger.info(f"Evaluation metrics: {metrics}")
+    
+    return metrics
+
+
+def run_training_pipeline(config: TrainingConfig) -> Dict[str, Any]:
+    """
+    Ejecuta pipeline completo de entrenamiento.
+    
+    Esta es la función principal que orquesta todo el proceso.
+    
+    Args:
+        config: Configuración completa del entrenamiento.
+    
+    Returns:
+        Dict con modelo y métricas.
+    """
+    # 1. Cargar datos.
+    df = load_data(config.data_path)
+    
+    # 2. Preprocesar.
+    df = preprocess(df, config)
+    
+    # 3. Split.
+    X_train, X_test, y_train, y_test = split_data(df, config)
+    
+    # 4. Entrenar.
+    model = train_model(X_train, y_train, config)
+    
+    # 5. Evaluar.
+    metrics = evaluate_model(model, X_test, y_test)
+    
+    return {
+        "model": model,
+        "metrics": metrics,
+        "config": config,
+    }
+```
+
+### 3.7.3 Proceso de Refactoring Paso a Paso
+
+#### Checklist de Refactoring
+
+```python
+# refactoring_checklist.py
+"""Checklist automatizado para refactoring de notebooks."""
+
+from dataclasses import dataclass
+from typing import List
+
+
+@dataclass
+class RefactoringStep:
+    """Paso de refactoring."""
+    name: str
+    description: str
+    completed: bool = False
+
+
+def get_refactoring_checklist() -> List[RefactoringStep]:
+    """Retorna checklist de refactoring."""
+    return [
+        RefactoringStep(
+            "identify_functions",
+            "Identificar bloques de código que hacen UNA cosa"
+        ),
+        RefactoringStep(
+            "extract_config",
+            "Extraer valores hardcoded a configuración"
+        ),
+        RefactoringStep(
+            "add_type_hints",
+            "Añadir type hints a todas las funciones"
+        ),
+        RefactoringStep(
+            "add_docstrings",
+            "Documentar cada función con docstring"
+        ),
+        RefactoringStep(
+            "add_logging",
+            "Reemplazar print() con logging"
+        ),
+        RefactoringStep(
+            "add_error_handling",
+            "Añadir manejo de errores apropiado"
+        ),
+        RefactoringStep(
+            "remove_global_state",
+            "Eliminar variables globales"
+        ),
+        RefactoringStep(
+            "create_tests",
+            "Crear tests unitarios para cada función"
+        ),
+    ]
+```
+
+#### Mapeo: Celdas de Notebook → Módulos
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│              MAPEO: CELDAS DE NOTEBOOK → MÓDULOS                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  Celda de imports           →  (se distribuyen en cada módulo)              │
+│  Celda de carga de datos    →  data.py::load_data()                         │
+│  Celda de limpieza          →  data.py::clean_data()                        │
+│  Celda de feature eng.      →  features.py::create_features()               │
+│  Celda de split             →  training.py::split_data()                    │
+│  Celda de entrenamiento     →  training.py::train_model()                   │
+│  Celda de evaluación        →  evaluation.py::evaluate_model()              │
+│  Celda de predicción        →  prediction.py::predict()                     │
+│  Celda de visualización     →  (queda en notebook o dashboards)             │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 3.7.4 Patrones Comunes de Extracción
+
+#### Configuración Externalizada
+
+```python
+# src/bankchurn/config.py
+"""Configuración centralizada del proyecto."""
+
+from pathlib import Path
+from typing import List, Optional
+from pydantic import BaseModel, Field              # Validación automática.
+import yaml                                        # Lectura de archivos YAML.
+
+
+class TrainingConfig(BaseModel):
+    """Configuración de entrenamiento."""
+    
+    # Paths.
+    data_path: Path = Field(..., description="Path al archivo de datos")
+    model_output_path: Path = Field(default=Path("artifacts/model.joblib"))
+    
+    # Preprocesamiento.
+    drop_na: bool = Field(default=True)
+    create_tenure_groups: bool = Field(default=True)
+    tenure_bins: List[int] = Field(default=[0, 12, 24, 48, 72])
+    tenure_labels: List[str] = Field(default=['0-1yr', '1-2yr', '2-4yr', '4-6yr'])
+    
+    # Features.
+    feature_columns: List[str] = Field(
+        default=['CreditScore', 'Age', 'Balance', 'NumOfProducts']
+    )
+    target_column: str = Field(default='Exited')
+    
+    # Split.
+    test_size: float = Field(default=0.2, ge=0.0, le=1.0)
+    stratify: bool = Field(default=True)
+    
+    # Modelo.
+    n_estimators: int = Field(default=100, ge=1)
+    max_depth: Optional[int] = Field(default=None)
+    
+    # Reproducibilidad.
+    seed: int = Field(default=42)
+    
+    class Config:
+        extra = "forbid"  # Error si hay campos desconocidos.
+
+
+def load_config(path: Path) -> TrainingConfig:
+    """Carga configuración desde YAML."""
+    with open(path) as f:
+        data = yaml.safe_load(f)
+    return TrainingConfig(**data)
+```
+
+```yaml
+# configs/config.yaml
+# Configuración de entrenamiento.
+
+data_path: "data/raw/Churn.csv"
+model_output_path: "artifacts/model.joblib"
+
+# Preprocesamiento.
+drop_na: true
+create_tenure_groups: true
+
+# Features.
+feature_columns:
+  - CreditScore
+  - Age
+  - Balance
+  - NumOfProducts
+  - IsActiveMember
+
+target_column: Exited
+
+# Split.
+test_size: 0.2
+stratify: true
+
+# Modelo.
+n_estimators: 200
+max_depth: 10
+
+# Reproducibilidad.
+seed: 42
+```
+
+#### De Print a Logging
+
+```python
+# ❌ Antes (notebook)
+print(f"Loaded {len(df)} rows")
+print(f"Training with {n_estimators} trees")
+print(f"Accuracy: {accuracy}")
+
+# ✅ Después (módulo)
+import logging
+
+logger = logging.getLogger(__name__)
+
+logger.info(f"Loaded {len(df)} rows")
+logger.info(f"Training with {n_estimators} trees")
+logger.info(f"Accuracy: {accuracy:.4f}")
+
+# Configuración de logging (en __init__.py o main.py)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("training.log"),
+    ]
+)
+```
+
+#### De Variables Globales a Parámetros
+
+```python
+# ❌ Antes (variables globales)
+SEED = 42
+N_ESTIMATORS = 100
+df = None  # Estado global mutable
+
+def train():
+    global df  # Dependencia oculta
+    model = RandomForestClassifier(n_estimators=N_ESTIMATORS, random_state=SEED)
+    model.fit(df[features], df[target])
+    return model
+
+# ✅ Después (parámetros explícitos)
+def train(
+    X: pd.DataFrame,
+    y: pd.Series,
+    n_estimators: int = 100,
+    seed: int = 42,
+) -> RandomForestClassifier:
+    """Todas las dependencias son explícitas."""
+    model = RandomForestClassifier(n_estimators=n_estimators, random_state=seed)
+    model.fit(X, y)
+    return model
+```
 
 ---
 
-## 🔗 Glosario del Módulo
+<a id="38-common-utils"></a>
+
+## 3.8 📦 Librerías Compartidas (common_utils)
+
+> **Objetivo**: Aprender a crear y mantener librerías de utilidades compartidas entre proyectos ML, siguiendo el patrón `common_utils/` del Portfolio.
+
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  "DRY (Don't Repeat Yourself) no es solo para código dentro de un proyecto:  ║
+║   aplica a toda tu organización. common_utils es DRY a nivel de equipo."     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
+
+### 3.8.1 ¿Por qué Librerías Compartidas?
+
+#### Problemas que Resuelve
+
+| Problema | Sin common_utils | Con common_utils |
+|----------|------------------|------------------|
+| **Logging** | Cada proyecto configura diferente | Formato consistente |
+| **Seeds** | Olvidar setear todas las librerías | Una función para todo |
+| **Config** | Duplicación de código | Validación centralizada |
+| **Utils** | Copy-paste entre repos | Import compartido |
+
+#### Análisis del Portfolio
+
+```
+ML-MLOps-Portfolio/
+├── common_utils/              # ← Librería compartida
+│   ├── __init__.py
+│   ├── logger.py              # Logging consistente
+│   └── seed.py                # Reproducibilidad
+│
+├── BankChurn-Predictor/
+│   └── src/bankchurn/
+│       └── training.py        # from common_utils import ...
+│
+├── CarVision-Market-Intelligence/
+│   └── src/carvision/
+│       └── training.py        # from common_utils import ...
+│
+└── TelecomAI-Customer-Intelligence/
+    └── src/telecom/
+        └── training.py        # from common_utils import ...
+```
+
+### 3.8.2 Estructura de common_utils
+
+#### Organización Recomendada
+
+```
+common_utils/
+├── __init__.py           # Exports públicos
+├── logger.py             # Configuración de logging
+├── seed.py               # Reproducibilidad
+├── config.py             # Utilidades de configuración (opcional)
+├── metrics.py            # Métricas compartidas (opcional)
+├── validators.py         # Validadores comunes (opcional)
+└── tests/
+    ├── __init__.py
+    ├── test_logger.py
+    └── test_seed.py
+```
+
+#### __init__.py: API Pública
+
+```python
+# common_utils/__init__.py
+"""
+Utilidades compartidas para proyectos ML.
+
+Este módulo proporciona funcionalidades comunes que se usan
+en múltiples proyectos del portfolio:
+- Configuración de logging consistente.
+- Reproducibilidad con seeds.
+"""
+
+from common_utils.logger import setup_logging
+from common_utils.seed import set_seed, DEFAULT_SEED
+
+__version__ = "1.0.0"
+
+__all__ = [
+    "setup_logging",
+    "set_seed",
+    "DEFAULT_SEED",
+]
+```
+
+### 3.8.3 Módulo de Logging
+
+```python
+# common_utils/logger.py
+"""
+Configuración centralizada de logging para todos los proyectos.
+
+Este módulo proporciona una función para configurar logging de manera
+consistente, evitando que cada proyecto implemente su propia versión.
+"""
+
+import logging                                       # Librería estándar de logging.
+import sys                                           # Para stdout.
+from typing import Optional                          # Type hints.
+
+
+def setup_logging(
+    name: str,                                       # Nombre del logger (usualmente __name__).
+    level: int = logging.INFO,                       # Nivel mínimo de logging.
+    log_format: Optional[str] = None,                # Formato personalizado (opcional).
+) -> logging.Logger:
+    """
+    Configura logging consistente para todos los proyectos.
+    
+    Esta función centraliza la configuración de logging para evitar
+    duplicación y garantizar formato consistente en logs.
+    
+    Args:
+        name: Nombre del logger. Usar __name__ del módulo que llama.
+        level: Nivel de logging (DEBUG, INFO, WARNING, ERROR, CRITICAL).
+        log_format: Formato personalizado. Si None, usa formato estándar.
+    
+    Returns:
+        Logger configurado y listo para usar.
+    
+    Example:
+        >>> from common_utils import setup_logging
+        >>> logger = setup_logging(__name__)
+        >>> logger.info("Training started")
+        2024-01-15 10:30:00 - mymodule - INFO - Training started
+    """
+    # Formato por defecto: timestamp - módulo - nivel - mensaje.
+    if log_format is None:
+        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    
+    # Crear handler para stdout.
+    handler = logging.StreamHandler(sys.stdout)      # Output a stdout (no stderr).
+    formatter = logging.Formatter(log_format)        # Aplicar formato.
+    handler.setFormatter(formatter)
+    
+    # Obtener o crear logger.
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    
+    # Prevenir handlers duplicados si se llama múltiples veces.
+    # Esto es importante en notebooks donde se puede re-ejecutar celdas.
+    if not logger.handlers:
+        logger.addHandler(handler)
+    
+    return logger
+```
+
+### 3.8.4 Módulo de Reproducibilidad (Seed)
+
+```python
+# common_utils/seed.py
+"""
+Helper centralizado para reproducibilidad en experimentos ML.
+
+Este módulo configura seeds para todas las librerías relevantes
+(Python, NumPy, PyTorch, TensorFlow) en una sola llamada.
+"""
+
+from __future__ import annotations                   # Para type hints modernos.
+
+import os                                            # Variables de entorno.
+import random                                        # Random de Python.
+from typing import Final                             # Constantes tipadas.
+
+import numpy as np                                   # NumPy.
+
+
+# Seed por defecto si no se especifica.
+DEFAULT_SEED: Final[int] = 42
+
+
+def set_seed(seed: int | None = None) -> int:
+    """
+    Configura seeds globales para reproducibilidad.
+    
+    Esta función setea el seed para:
+    - Python's random module
+    - NumPy
+    - PyTorch (si está instalado)
+    - TensorFlow (si está instalado)
+    
+    Orden de resolución del seed:
+    1. Argumento `seed` si se proporciona.
+    2. Variable de entorno `SEED` si está definida.
+    3. DEFAULT_SEED (42) como fallback.
+    
+    Args:
+        seed: Seed a usar. Si None, se resuelve según orden descrito.
+    
+    Returns:
+        El seed que fue efectivamente usado.
+    
+    Example:
+        >>> from common_utils import set_seed
+        >>> set_seed(42)
+        42
+        >>> # Ahora todos los experimentos serán reproducibles
+    
+    Note:
+        Para reproducibilidad completa en GPU, también necesitas:
+        - torch.backends.cudnn.deterministic = True
+        - torch.backends.cudnn.benchmark = False
+        Esto se hace automáticamente en esta función.
+    """
+    # Resolver seed según orden de prioridad.
+    if seed is None:
+        env_seed = os.getenv("SEED")                 # Buscar en variable de entorno.
+        seed = int(env_seed) if env_seed is not None else DEFAULT_SEED
+    
+    # ========== Core Python / NumPy ==========
+    os.environ["PYTHONHASHSEED"] = str(seed)         # Hash determinístico.
+    random.seed(seed)                                # Random de Python.
+    np.random.seed(seed)                             # NumPy.
+    
+    # ========== PyTorch (opcional) ==========
+    try:
+        import torch
+        
+        torch.manual_seed(seed)                      # CPU seed.
+        
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)         # GPU seed (todas las GPUs).
+        
+        # Hacer operaciones CUDA determinísticas.
+        if hasattr(torch.backends, "cudnn"):
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = False   # Desactivar autotuning.
+    
+    except ImportError:
+        pass  # PyTorch no instalado, skip.
+    except Exception:
+        pass  # Otros errores (ej: CUDA no disponible).
+    
+    # ========== TensorFlow (opcional) ==========
+    try:
+        import tensorflow as tf
+        
+        tf.random.set_seed(seed)
+    
+    except ImportError:
+        pass  # TensorFlow no instalado, skip.
+    except Exception:
+        pass
+    
+    return seed
+```
+
+### 3.8.5 Patrones de Uso
+
+#### Importación desde Proyecto
+
+```python
+# Opción 1: Import directo (si common_utils está en PYTHONPATH)
+from common_utils import setup_logging, set_seed
+
+# Opción 2: Import relativo (si es submódulo)
+from ..common_utils import setup_logging, set_seed
+
+# Opción 3: Añadir al path en runtime
+import sys
+sys.path.insert(0, "/path/to/ML-MLOps-Portfolio")
+from common_utils import setup_logging, set_seed
+```
+
+#### Configuración en pyproject.toml
+
+```toml
+# pyproject.toml del proyecto que usa common_utils
+
+[project]
+name = "bankchurn"
+dependencies = [
+    # ... otras deps ...
+]
+
+[project.optional-dependencies]
+dev = [
+    # ... deps de desarrollo ...
+]
+
+# Si common_utils es un paquete local
+[tool.setuptools.package-dir]
+"" = "src"
+"common_utils" = "../common_utils"
+```
+
+#### Patrón de Inicialización
+
+```python
+# src/bankchurn/__init__.py
+"""
+BankChurn Predictor.
+
+Este módulo inicializa logging y seed al importar.
+"""
+
+from common_utils import setup_logging, set_seed
+
+# Configurar logging al importar el paquete.
+_logger = setup_logging("bankchurn")
+
+# Exportar para uso en submódulos.
+__all__ = ["setup_logging", "set_seed"]
+```
+
+### 3.8.6 Versionado y Distribución
+
+#### Estructura para Publicación
+
+```
+common_utils/
+├── pyproject.toml        # Metadata del paquete
+├── README.md
+├── LICENSE
+├── src/
+│   └── common_utils/
+│       ├── __init__.py
+│       ├── logger.py
+│       └── seed.py
+└── tests/
+    └── ...
+```
+
+#### pyproject.toml para Distribución
+
+```toml
+# common_utils/pyproject.toml
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mlops-common-utils"
+version = "1.0.0"
+description = "Shared utilities for MLOps projects"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+
+dependencies = [
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+torch = ["torch>=2.0.0"]
+tensorflow = ["tensorflow>=2.13.0"]
+all = ["mlops-common-utils[torch,tensorflow]"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+```
+
+#### Instalación en Proyectos
+
+```bash
+# Desde Git (privado)
+pip install git+https://github.com/tu-org/common-utils.git
+
+# Desde path local (desarrollo)
+pip install -e /path/to/common_utils
+
+# Desde PyPI (si publicas)
+pip install mlops-common-utils
+```
+
+---
+
+<a id="39-pedagogia"></a>
+
+## 3.9 🎓 Sección Pedagógica: Aprende Haciendo
+
+> **Formato**: Constructivismo aplicado a MLOps  
+> **Nivel**: Python básico → Ingeniero MLOps Junior  
+> **Tiempo estimado**: 2-3 horas
+
+### 3.9.1 🎓 Explicación Teórica con Analogías
+
+#### La Estructura de Proyecto como los Planos de una Casa
+
+Imagina que vas a construir una casa. **No empiezas poniendo ladrillos al azar** — primero necesitas:
+
+```
+🏠 CONSTRUCCIÓN DE CASA          📦 PROYECTO ML
+─────────────────────────────    ─────────────────────────────
+Planos arquitectónicos     →     pyproject.toml (metadata)
+Cimientos                  →     src/ layout (base del código)
+Sistema eléctrico          →     configs/ (configuración)
+Sistema de plomería        →     data/ pipelines (flujo de datos)
+Cuartos separados          →     Módulos: training.py, prediction.py
+Inspección de calidad      →     tests/ (verificación)
+Manual de la casa          →     README.md, docs/
+```
+
+**¿Por qué importa en la industria?**
+
+| Sin estructura profesional | Con estructura profesional |
+|---------------------------|---------------------------|
+| "Funciona en mi máquina" 🤷 | Funciona en cualquier máquina ✅ |
+| Onboarding de 2 semanas | Onboarding de 2 días |
+| Bugs difíciles de rastrear | Bugs localizados rápidamente |
+| Imposible de escalar | Listo para equipo de 10+ personas |
+
+> � **Insight de industria**: Los equipos de ML pierden ~40% del tiempo en "plumbing" (configuración, imports rotos, dependencias). Una buena estructura reduce esto a <10%.
+
+### 3.9.2 🧠 Mapa Mental de Conceptos
+
+Antes de tocar código, domina estos términos:
+
+```
+                    ┌─────────────────┐
+                    │ ESTRUCTURA ML   │
+                    │   PROFESIONAL   │
+                    └────────┬────────┘
+                             │
+        ┌────────────────────┼────────────────────┐
+        │                    │                    │
+   ┌────▼────┐         ┌─────▼─────┐        ┌─────▼─────┐
+   │ CÓDIGO  │         │  CONFIG   │        │  CALIDAD  │
+   │  FUENTE │         │   & DATA  │        │           │
+   └────┬────┘         └─────┬─────┘        └─────┬─────┘
+        │                    │                    │
+   ┌────┴────┐         ┌─────┴─────┐        ┌─────┴─────┐
+   │ src/    │         │ configs/  │        │ tests/    │
+   │ layout  │         │ data/     │        │ Makefile  │
+   │ __init__│         │ artifacts/│        │ pre-commit│
+   └─────────┘         └───────────┘        └───────────┘
+```
+
+**Conceptos clave para memorizar:**
+
+| Concepto | Definición de 1 línea |
+|----------|----------------------|
+| **src/ layout** | Código en `src/paquete/` para imports limpios |
+| **pyproject.toml** | UN archivo para toda la config del proyecto |
+| **editable install** | `pip install -e .` = cambios sin reinstalar |
+| **Makefile** | Comandos comunes en un solo lugar |
+| **.gitignore** | Archivos que Git debe ignorar (datos, modelos) |
+| **conftest.py** | Fixtures compartidas para tests |
+
+### 3.9.3 💻 Ejercicio Puente (Scaffolding)
+
+> **Objetivo**: Practicar la estructura ANTES de replicar el portafolio completo.
+
+#### Mini-Proyecto: Calculadora ML
+
+Crea un proyecto mínimo con estructura profesional que haga una operación simple.
+
+```bash
+# PASO 1: Crear estructura
+mkdir -p calculadora-ml/src/calculadora
+mkdir -p calculadora-ml/tests
+mkdir -p calculadora-ml/configs
+
+# PASO 2: Crear archivos base
+touch calculadora-ml/src/calculadora/__init__.py
+touch calculadora-ml/src/calculadora/operations.py
+touch calculadora-ml/tests/__init__.py
+touch calculadora-ml/tests/test_operations.py
+touch calculadora-ml/pyproject.toml
+touch calculadora-ml/Makefile
+```
+
+**Tu tarea**: Completa estos archivos:
+
+```python
+# src/calculadora/operations.py
+"""Operaciones matemáticas simples."""
+
+def add(a: float, b: float) -> float:
+    """Suma dos números."""
+    # TODO: Implementar
+    pass
+
+def multiply(a: float, b: float) -> float:
+    """Multiplica dos números."""
+    # TODO: Implementar
+    pass
+```
+
+```python
+# tests/test_operations.py
+"""Tests para operaciones."""
+import pytest
+from calculadora.operations import add, multiply
+
+def test_add_positive_numbers():
+    """Test suma de positivos."""
+    # TODO: Implementar - debe pasar
+    pass
+
+def test_multiply_by_zero():
+    """Test multiplicar por cero."""
+    # TODO: Implementar - debe retornar 0
+    pass
+```
+
+```toml
+# pyproject.toml
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "calculadora"
+version = "0.1.0"
+# TODO: Completar dependencies y tool configs
+```
+
+**Criterio de éxito**: 
+```bash
+pip install -e .
+pytest  # Debe pasar
+```
+
+### 3.9.4 🛠️ Práctica del Portafolio (Instrucciones de Réplica)
+
+> **Objetivo**: Replicar la estructura de `BankChurn-Predictor` desde cero.
+
+#### Tarea: Crear estructura para tu proyecto
+
+**NO copies el código** — créalo paso a paso siguiendo estas pistas:
+
+##### Paso 1: Estructura de directorios
+
+```bash
+# Pista: Usa el árbol de la sección 3.1 como referencia
+# Crea TODOS los directorios y archivos vacíos primero
+mkdir -p mi-proyecto-ml/{src/miproyecto,tests,configs,data/raw,artifacts,docs}
+```
+
+##### Paso 2: pyproject.toml
+
+```toml
+# Pista: Responde estas preguntas para completarlo
+# 1. ¿Cuál es el nombre de tu paquete?
+# 2. ¿Qué librerías necesitas? (pandas, sklearn, pydantic...)
+# 3. ¿Dónde está el código fuente? (src/)
+
+[project]
+name = "???"
+version = "0.1.0"
+dependencies = [
+    # ??? - lista tus deps
+]
+
+[tool.setuptools.packages.find]
+where = ["???"]
+```
+
+##### Paso 3: __init__.py con exports
+
+```python
+# src/miproyecto/__init__.py
+# Pista: ¿Qué clases/funciones quieres que sean públicas?
+# Mira el __init__.py de bankchurn como referencia
+
+from .??? import ???
+__all__ = ["???"]
+```
+
+##### Paso 4: Makefile mínimo
+
+```makefile
+# Pista: ¿Cuáles son los 4 comandos que más usarás?
+# install, test, lint, ???
+
+.PHONY: install test
+
+install:
+	# ??? - comando para instalar en modo editable
+
+test:
+	# ??? - comando para correr tests con coverage
+```
+
+##### Paso 5: Verificación
+
+```bash
+# Tu proyecto debe pasar estas verificaciones:
+pip install -e ".[dev]"     # ¿Instala sin errores?
+python -c "import miproyecto"  # ¿Importa correctamente?
+pytest                       # ¿Tests pasan?
+make test                    # ¿Makefile funciona?
+```
+
+### 3.9.5 ✅ Checkpoint de Conocimiento
+
+#### Preguntas Teóricas (Opción Múltiple)
+
+**1. ¿Por qué usamos `src/` layout en lugar de poner código en la raíz?**
+
+- A) Es más rápido de ejecutar
+- B) Evita que Python importe accidentalmente código local no instalado
+- C) GitHub lo requiere
+- D) Es solo preferencia estética
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta: B**
+
+Con `src/` layout, Python SIEMPRE importa el paquete instalado, no el código local. Esto previene el clásico "funciona en mi máquina pero no en CI".
+
+</details>
+
+---
+
+**2. ¿Cuál es el propósito de `pip install -e .`?**
+
+- A) Instalar en modo "enterprise"
+- B) Instalar una versión específica
+- C) Instalar en modo editable (cambios se reflejan sin reinstalar)
+- D) Instalar con dependencias extra
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta: C**
+
+El flag `-e` (editable) crea un symlink al código fuente. Cuando modificas tu código, no necesitas reinstalar — los cambios se reflejan inmediatamente.
+
+</details>
+
+---
+
+**3. ¿Qué archivos NUNCA deben estar en Git para un proyecto ML?**
+
+- A) `pyproject.toml` y `Makefile`
+- B) `README.md` y `docs/`
+- C) `data/`, `artifacts/`, `*.joblib`, `mlruns/`
+- D) `tests/` y `configs/`
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta: C**
+
+Datos, modelos entrenados y artifacts de MLflow son demasiado grandes y cambian frecuentemente. Deben estar en `.gitignore` y manejarse con DVC o storage externo.
+
+</details>
+
+---
+
+#### Escenario de Debugging
+
+**Situación**: Tu colega te pide ayuda. Su proyecto tiene esta estructura:
+
+```
+mi-proyecto/
+├── training.py
+├── prediction.py
+├── config.py
+├── test_training.py
+├── requirements.txt
+└── data/churn.csv
+```
+
+Reporta estos problemas:
+1. `pytest` falla con `ModuleNotFoundError: No module named 'training'`
+2. El repo de Git pesa 500MB
+3. En CI, los tests fallan aunque en local funcionan
+
+**Tu diagnóstico**: ¿Cuáles son las 3 causas raíz y cómo las solucionarías?
+
+<details>
+<summary>Ver diagnóstico completo</summary>
+
+**Causa 1**: No hay estructura `src/` ni `pyproject.toml`
+- **Síntoma**: `ModuleNotFoundError`
+- **Solución**: Mover código a `src/miproyecto/`, crear `pyproject.toml`, usar `pip install -e .`
+
+**Causa 2**: `data/` no está en `.gitignore`
+- **Síntoma**: Repo de 500MB
+- **Solución**: Añadir `data/` a `.gitignore`, usar DVC para datos, `git rm --cached data/`
+
+**Causa 3**: Sin instalación editable en CI
+- **Síntoma**: Tests fallan solo en CI
+- **Solución**: Añadir `pip install -e .` al workflow de CI antes de `pytest`
+
+**Estructura corregida**:
+```
+mi-proyecto/
+├── src/miproyecto/
+│   ├── __init__.py
+│   ├── training.py
+│   ├── prediction.py
+│   └── config.py
+├── tests/
+│   └── test_training.py
+├── data/           # En .gitignore
+├── pyproject.toml
+├── Makefile
+└── .gitignore
+```
+
+</details>
+
+---
+
+## �� Glosario del Módulo
 
 | Término | Definición |
 |---------|------------|
@@ -782,6 +1970,8 @@ Aprende a crear y mantener código compartido entre proyectos ML:
 | **editable install** | `pip install -e .` instala paquete en modo desarrollo |
 | **Refactoring** | Proceso de reestructurar código sin cambiar funcionalidad |
 | **common_utils** | Librería interna compartida entre proyectos |
+| **Scaffolding** | Ejercicio puente que prepara para tareas complejas |
+| **Constructivismo** | Aprender haciendo, no solo leyendo |
 
 ---
 
