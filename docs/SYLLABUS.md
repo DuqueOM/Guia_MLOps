@@ -67,7 +67,7 @@ Al completar este programa serás capaz de:
  | 08 | Infraestructura y Nube | Operar como engineer: IaC, redes y cloud basics | 17_DESPLIEGUE, 18_INFRAESTRUCTURA, infra/terraform/*, k8s/* |
  | 09 | Escalado y Sistemas Distribuidos | Pensar en batch/streaming y K8s para ML a gran escala | 18_INFRAESTRUCTURA, partes avanzadas de 17_DESPLIEGUE, tests/load/* |
  | 10 | Seguridad, Gobernanza y Cumplimiento | Tratar el portafolio como un sistema empresarial | 19_DOCUMENTACION, 12_CI_CD (gitleaks, security), .gitleaks.toml, RUNBOOK.md |
- | 11 | Arquitectura MLOps Senior/Staff | Ver el sistema completo: multi-model, observabilidad y gobierno | 20_PROYECTO_INTEGRADOR, 21_GLOSARIO, 23_RECURSOS, DECISIONES_TECH, RUNBOOK.md |
+ | 11 | Arquitectura MLOps Senior/Staff | Ver el sistema completo: multi-model, observabilidad y gobierno | 23_PROYECTO_INTEGRADOR, apoyo/GLOSARIO, apoyo/RECURSOS, DECISIONES_TECH, RUNBOOK.md |
 
  **Guion resumido por macro-módulo**
 
@@ -129,7 +129,7 @@ Al completar este programa serás capaz de:
  **MÓDULO 11 — Arquitectura MLOps Senior/Staff**  
  Objetivo: tener visión completa de sistemas reales (multi-model, gobierno, observabilidad a gran escala).  
  Incluye: arquitecturas event-driven, multi-model governance, patrones de observabilidad.  
- Práctica en este repo: usar `20_PROYECTO_INTEGRADOR.md`, `DECISIONES_TECH.md` y `RUNBOOK.md` para diseñar y documentar una arquitectura MLOps completa que integre los 3 proyectos.
+ Práctica en este repo: usar `23_PROYECTO_INTEGRADOR.md`, `DECISIONES_TECH.md` y `RUNBOOK.md` para diseñar y documentar una arquitectura MLOps completa que integre los 3 proyectos.
 
  Puedes usar:
 
@@ -166,7 +166,6 @@ Al completar este programa serás capaz de:
 
 **Validar**: `make check-01`
 
-**Preparación**: [Ejercicios Puente Mes 1](ejercicios/EJERCICIOS_PUENTE_MES1.md) — De Python básico a SOLID
 
 ---
 
@@ -198,9 +197,6 @@ Al completar este programa serás capaz de:
 
 **Validar**: `make check-03`
 
-**Submódulos adicionales**:
-- [03A: Refactoring Notebook → Producción](03A_REFACTORING_NOTEBOOK_PRODUCCION.md)
-- [03B: Common Utils y Librerías Compartidas](03B_COMMON_UTILS_LIBRERIAS.md)
 
 ---
 
@@ -341,7 +337,7 @@ Estos módulos cubren temas avanzados para nivel Senior/Staff:
 
 **Documento**: [20_OBSERVABILIDAD_AVANZADA_DRIFT.md](20_OBSERVABILIDAD_AVANZADA_DRIFT.md)
 
-**Examen relacionado**: [EXAM_05_PRODUCTION](examenes/EXAM_05_PRODUCTION.md)
+**Examen relacionado**: [EXAM_05_PRODUCTION](../exams/EXAM_05_PRODUCTION.md)
 
 ---
 
@@ -375,7 +371,7 @@ Estos módulos cubren temas avanzados para nivel Senior/Staff:
 
 **Documento**: [22_IAC_EMPRESARIAL.md](22_IAC_EMPRESARIAL.md)
 
-**Examen Final**: [EXAM_06_INTEGRATION](examenes/EXAM_06_INTEGRATION.md)
+**Examen Final**: [EXAM_06_INTEGRATION](../exams/EXAM_06_INTEGRATION.md)
 
 ---
 
@@ -425,18 +421,15 @@ La guía incluye simulacros de entrevista adaptados a cada nivel de experiencia:
 
 | Nivel | Simulacro | Preguntas | Cuándo Usar |
 |:-----:|-----------|:---------:|-------------|
-| 🟢 Junior | [Simulacro Junior](simulacros/SIMULACRO_ENTREVISTA_JUNIOR.md) | 50 | Semanas 1-4 |
-| 🟡 Mid | [Simulacro Mid](simulacros/SIMULACRO_ENTREVISTA_MID.md) | 60 | Semanas 5-6 |
-| 🔴 Senior | [Simulacro Senior P1](simulacros/SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md) + [P2](simulacros/SIMULACRO_ENTREVISTA_SENIOR_PARTE2.md) | 115 | Semanas 7-8 |
+| 🟢 Junior | [Simulacro Junior](SIMULACRO_ENTREVISTA_JUNIOR.md) | 50 | Semanas 1-4 |
+| 🟡 Mid | [Simulacro Mid](SIMULACRO_ENTREVISTA_MID.md) | 60 | Semanas 5-6 |
+| 🔴 Senior | [Simulacro Senior P1](SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md) + [P2](SIMULACRO_ENTREVISTA_SENIOR_PARTE2.md) | 115 | Semanas 7-8 |
 
 **Progresión recomendada**:
 1. **Junior**: Python básico, ML fundamentos, Git, estructura de proyecto
 2. **Mid**: Pipelines, testing, CI/CD, Docker, APIs
 3. **Senior**: System design, arquitectura, liderazgo, trade-offs
 
-**Material complementario**:
-- [Speech de Portafolio](entrevistas/APENDICE_A_SPEECH_PORTAFOLIO.md) — Guión de 5-7 min
-- [Talking Points](entrevistas/APENDICE_B_TALKING_POINTS.md) — Puntos clave concisos
 
 ---
 

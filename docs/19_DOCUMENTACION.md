@@ -603,7 +603,7 @@ README:
 
 Para crear demos profesionales (GIFs, screenshots, videos) de tu documentación y portafolio, consulta:
 
-**[→ Guía Audiovisual Completa](GUIA_AUDIOVISUAL.md)**
+**[→ Guía Audiovisual Completa](apoyo/GUIA_AUDIOVISUAL.md)**
 
 Incluye:
 - Cómo grabar GIFs demostrativos de APIs y dashboards
@@ -646,7 +646,7 @@ Incluye:
 
 ## 📺 Recursos Externos Recomendados
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> Ver [RECURSOS.md](apoyo/RECURSOS.md) para la lista completa.
 
 ## 📺 Recursos Externos del Módulo
 

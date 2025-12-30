@@ -39,7 +39,7 @@
 
 > **Sistema recomendado**: aplica **[Protocolo E](study_tools/PROTOCOLO_E.md)**, registra bloqueos en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y cierra cada semana con **[Cierre Semanal](study_tools/CIERRE_SEMANAL.md)**.
 >
-> **Material de Apoyo**: [Glosario](apoyo/GLOSARIO.md) | [Recursos por Módulo](apoyo/RECURSOS_POR_MODULO.md)
+> **Material de Apoyo**: [Glosario](apoyo/GLOSARIO.md) | [Recursos](apoyo/RECURSOS.md)
 
 ---
 
@@ -187,9 +187,9 @@ Entrenar modelo con métricas en MLflow UI.
 | Día | Actividad | Tiempo | Entregable |
 |:---:|:----------|:------:|:-----------|
 | 1 | Leer [19_DOCUMENTACION](19_DOCUMENTACION.md) | 2h | Model Card |
-| 2-3 | [20_PROYECTO_INTEGRADOR](20_PROYECTO_INTEGRADOR.md) | 6h | Self-assessment |
+| 2-3 | [23_PROYECTO_INTEGRADOR](23_PROYECTO_INTEGRADOR.md) | 6h | Self-assessment |
 | 4 | Revisar [Glosario](apoyo/GLOSARIO.md) | 2h | Términos dominados |
-| 5 | [Simulacros de entrevista](simulacros/index.md) | 3h | Preparación lista |
+| 5 | [Simulacro Senior](SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md) | 3h | Preparación lista |
 
 ---
 

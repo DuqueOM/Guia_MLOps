@@ -113,8 +113,6 @@ nav:
     - "01 — Python Moderno": docs/01_PYTHON_MODERNO.md
     - "02 — Diseño de Sistemas": docs/02_DISENO_SISTEMAS.md
     - "03 — Estructura de Proyecto": docs/03_ESTRUCTURA_PROYECTO.md
-    - "03A — Refactoring Notebook": docs/03A_REFACTORING_NOTEBOOK_PRODUCCION.md
-    - "03B — Common Utils": docs/03B_COMMON_UTILS_LIBRERIAS.md
     - "04 — Entornos": docs/04_ENTORNOS.md
     - "05 — Git Profesional": docs/05_GIT_PROFESIONAL.md
     - "06 — Versionado de Datos": docs/06_VERSIONADO_DATOS.md
@@ -149,6 +147,23 @@ nav:
     - "Guía Audiovisual": docs/apoyo/GUIA_AUDIOVISUAL.md
     - "Guía de Mantenimiento": docs/apoyo/MAINTENANCE_GUIDE.md
     - "Scripts Operacionales": docs/apoyo/GUIA_SCRIPTS_OPERACIONALES.md
+  - Herramientas de Estudio:
+    - "Índice": docs/study_tools/index.md
+    - "Protocolo E": docs/study_tools/PROTOCOLO_E.md
+    - "Diario de Errores": docs/study_tools/DIARIO_ERRORES.md
+    - "Cierre Semanal": docs/study_tools/CIERRE_SEMANAL.md
+  - Exámenes:
+    - "Exam 01 — Setup": exams/EXAM_01_SETUP.md
+    - "Exam 02 — Pipeline": exams/EXAM_02_PIPELINE.md
+    - "Exam 03 — Testing": exams/EXAM_03_TESTING.md
+    - "Exam 04 — Deployment": exams/EXAM_04_DEPLOYMENT.md
+    - "Exam 05 — Production": exams/EXAM_05_PRODUCTION.md
+    - "Exam 06 — Integration": exams/EXAM_06_INTEGRATION.md
+  - Simulacros de Entrevista:
+    - "Junior": docs/SIMULACRO_ENTREVISTA_JUNIOR.md
+    - "Mid": docs/SIMULACRO_ENTREVISTA_MID.md
+    - "Senior Parte 1": docs/SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md
+    - "Senior Parte 2": docs/SIMULACRO_ENTREVISTA_SENIOR_PARTE2.md
   - Laboratorios:
     - "LAB 01 — Docker Debug": notebooks/labs/LAB_01_DOCKER_DEBUG.md
     - "LAB 02 — Pandas Performance": notebooks/labs/LAB_02_PANDAS_PERFORMANCE.md

@@ -1645,7 +1645,7 @@ def train_model(
 
 ---
 
-[Ver simulacro completo →](simulacros/SIMULACRO_ENTREVISTA_JUNIOR.md)
+[Ver simulacro completo →](SIMULACRO_ENTREVISTA_JUNIOR.md)
 
 ---
 

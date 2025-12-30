@@ -790,6 +790,6 @@ curl -X POST http://localhost:8002/predict \
 
 **¡Tu portafolio tiene 5 servicios listos para demostrar!** 🚀
 
-[← Volver al Índice](00_INDICE.md)
+[← Volver al Índice](../00_INDICE.md)
 
 </div>

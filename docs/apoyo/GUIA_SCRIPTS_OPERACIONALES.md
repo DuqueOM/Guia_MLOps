@@ -1174,15 +1174,15 @@ Modifica `health_check.py` para:
 
 ## 📚 Referencias
 
-- **[MAPA_PORTAFOLIO_1TO1.md](MAPA_PORTAFOLIO_1TO1.md)** — Mapeo de scripts a módulos
-- **[12_CI_CD.md](12_CI_CD.md)** — Cómo se usan estos scripts en CI
-- **[13_DOCKER.md](13_DOCKER.md)** — Docker Compose y orquestación
-- **[16_OBSERVABILIDAD.md](16_OBSERVABILIDAD.md)** — Health checks y monitoreo
+- **[MAPA_PORTAFOLIO_1TO1.md](../MAPA_PORTAFOLIO_1TO1.md)** — Mapeo de scripts a módulos
+- **[12_CI_CD.md](../12_CI_CD.md)** — Cómo se usan estos scripts en CI
+- **[13_DOCKER.md](../13_DOCKER.md)** — Docker Compose y orquestación
+- **[16_OBSERVABILIDAD.md](../16_OBSERVABILIDAD.md)** — Health checks y monitoreo
 
 ---
 
 <div align="center">
 
-[← Volver al Índice](00_INDICE.md)
+[← Volver al Índice](../00_INDICE.md)
 
 </div>

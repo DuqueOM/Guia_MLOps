@@ -34,7 +34,7 @@
 ## 0.1 🧠 Protocolo E: Cómo estudiar este módulo
 
 - Cuando un término te bloquee, evita “seguir por intuición”: detente, define, busca un ejemplo y valida.
-- Si te tomó **>15 min**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
+- Si te tomó **>15 min**, regístralo en el **[Diario de Errores](../study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](../study_tools/PROTOCOLO_E.md)**.
 
 ---
 
@@ -1514,7 +1514,7 @@ Recall = TP / (TP + FN) → Maximizar TP, minimizar FN
 - Comandos de diagnóstico y recuperación
 - Escalamiento y contactos
 
-**En el portafolio:** Ver [17_DESPLIEGUE.md](17_DESPLIEGUE.md).
+**En el portafolio:** Ver [17_DESPLIEGUE.md](../17_DESPLIEGUE.md).
 
 **Relacionados:** SLO, SLA, Incident Response, On-call
 
@@ -2070,7 +2070,7 @@ model:
 - Confundir términos cercanos (por ejemplo: *latency* vs *throughput*, *drift* vs *data leakage*) y “seguir” sin aclararlo.
 - No aterrizar el término a un ejemplo del repo (config, pipeline, CI, serving, observabilidad).
 - Memorizar definiciones sin poder dar un ejemplo y un anti-ejemplo.
-- Si un término te tomó **>15 min**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de rescate de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
+- Si un término te tomó **>15 min**, regístralo en el **[Diario de Errores](../study_tools/DIARIO_ERRORES.md)** y aplica el flujo de rescate de **[Protocolo E](../study_tools/PROTOCOLO_E.md)**.
 
 ---
 
@@ -2099,7 +2099,7 @@ model:
 
 | ◀️ Anterior | 📑 Índice | ▶️ Siguiente |
 |:-----------|:---------:|:------------|
-| [20_PROYECTO_INTEGRADOR.md](20_PROYECTO_INTEGRADOR.md) | [Índice](00_INDICE.md) | [22_CHECKLIST.md](22_CHECKLIST.md) |
+| [20_OBSERVABILIDAD_AVANZADA_DRIFT.md](../20_OBSERVABILIDAD_AVANZADA_DRIFT.md) | [Índice](../00_INDICE.md) | [22_IAC_EMPRESARIAL.md](../22_IAC_EMPRESARIAL.md) |
 
 ---
 

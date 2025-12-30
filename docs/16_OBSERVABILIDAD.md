@@ -1566,7 +1566,7 @@ def test_predictions_type(trained_model, sample_data):
 
 ---
 
-[Ver simulacro completo →](simulacros/SIMULACRO_ENTREVISTA_MID.md)
+[Ver simulacro completo →](SIMULACRO_ENTREVISTA_MID.md)
 
 ---
 

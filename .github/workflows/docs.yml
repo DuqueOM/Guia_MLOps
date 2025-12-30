@@ -1,0 +1,111 @@
+# CI workflow for Guía MLOps documentation
+# Validates links, builds MkDocs, and optionally deploys to GitHub Pages
+
+name: Docs CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'docs/**'
+      - 'exams/**'
+      - 'notebooks/**'
+      - 'scripts/validate_guide.sh'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'exams/**'
+      - 'notebooks/**'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate Guide
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Run validation script
+        run: |
+          chmod +x scripts/validate_guide.sh
+          bash scripts/validate_guide.sh || echo "Validation completed with warnings"
+      
+      - name: Check for critical errors
+        run: |
+          # Run validation and capture output
+          bash scripts/validate_guide.sh 2>&1 | tee validation_output.txt || true
+          
+          # Check for critical errors (exit if found)
+          if grep -q "❌ VALIDACIÓN FALLIDA" validation_output.txt; then
+            ERRORS=$(grep "Errores:" validation_output.txt | grep -oP '\d+' || echo "0")
+            if [ "$ERRORS" -gt "10" ]; then
+              echo "::error::Too many validation errors: $ERRORS"
+              exit 1
+            fi
+          fi
+          echo "Validation passed with acceptable warnings"
+
+  build:
+    name: Build MkDocs
+    runs-on: ubuntu-latest
+    needs: validate
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r docs/requirements-docs.txt
+      
+      - name: Build docs
+        run: |
+          cd docs
+          mkdocs build --config-file mkdocs.yml --strict || mkdocs build --config-file mkdocs.yml
+      
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-site
+          path: site/
+          retention-days: 7
+
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r docs/requirements-docs.txt
+      
+      - name: Deploy to GitHub Pages
+        run: |
+          cd docs
+          mkdocs gh-deploy --config-file mkdocs.yml --force

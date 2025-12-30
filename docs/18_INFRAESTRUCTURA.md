@@ -745,7 +745,7 @@ Monitoring: Prometheus + Grafana
 
 ## 📺 Recursos Externos Recomendados
 
-> Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para la lista completa.
+> Ver [RECURSOS_POR_MODULO.md](apoyo/RECURSOS.md) para la lista completa.
 
 | 🏷️ | Recurso | Tipo | Duración |
 |:--:|:--------|:-----|:--------:|

@@ -234,12 +234,12 @@ Completa esta tabla honestamente para identificar tus gaps:
 | Kubernetes | _ | | Módulo 18 |
 ```
 
-> 📺 Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para videos y cursos según tus gaps
+> 📺 Ver [RECURSOS.md](RECURSOS.md) para videos y cursos según tus gaps
 
 ---
 
 <div align="center">
 
-[← Volver al Índice](00_INDICE.md) | [Ejercicios](EJERCICIOS.md) | [Recursos Externos](RECURSOS_POR_MODULO.md)
+[← Volver al Índice](../00_INDICE.md) | [Apoyo](index.md) | [Recursos Externos](RECURSOS.md)
 
 </div>

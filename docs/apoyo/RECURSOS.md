@@ -24,7 +24,7 @@
 
 Esta lista contiene los recursos más valiosos para profundizar en cada área de MLOps.
 
-> 📺 **¿Buscas recursos específicos por módulo?** Ver [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) para videos, cursos y documentación curados para cada módulo con sistema de clasificación 🔴🟡🟢.
+> 📺 **¿Buscas recursos específicos por módulo?** Ver [RECURSOS.md](RECURSOS.md) para videos, cursos y documentación curados para cada módulo con sistema de clasificación 🔴🟡🟢.
 
 > Además de estos recursos externos, revisa también los recursos internos de esta guía:
 > [PLANTILLAS.md](PLANTILLAS.md), [GUIA_AUDIOVISUAL.md](GUIA_AUDIOVISUAL.md) y los scripts
@@ -331,14 +331,14 @@ Cuentas recomendadas:
 
 | Recurso | Descripción |
 |---------|-------------|
-| 📺 [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) | Videos y cursos específicos para cada módulo |
+| 📺 [RECURSOS.md](RECURSOS.md) | Videos y cursos específicos para cada módulo |
 | 📋 [PLANTILLAS.md](PLANTILLAS.md) | Templates reutilizables |
 
 ### Navegación
 
 | ◀️ Anterior                        | 📑 Índice               | 🎯 Final             |
 |:-----------------------------------|:----------------------:|:--------------------|
-| [22_CHECKLIST.md](22_CHECKLIST.md) | [Índice](00_INDICE.md) | 🎉 ¡Guía Completada! |
+| [CHECKLIST.md](CHECKLIST.md) | [Índice](../00_INDICE.md) | 🎉 ¡Guía Completada! |
 
 ---
 

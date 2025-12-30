@@ -952,7 +952,7 @@ curl -X POST https://bankchurn-xxx.run.app/api/v1/predict \
 
 ## ✅ Ejercicios
 
-Ver [EJERCICIOS.md](EJERCICIOS.md) - Módulo 17:
+Ejercicios del Módulo 17:
 - **17.1**: Dockerfile multi-stage
 - **17.2**: Docker Compose para stack ML
 

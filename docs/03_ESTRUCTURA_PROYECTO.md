@@ -374,7 +374,7 @@ Para aprovechar este módulo al máximo en el repositorio real:
   `make train`, `make serve`) tienen su equivalente funcional en los Makefiles de
   cada proyecto.
 - **Usa** esta plantilla como referencia si creas un **cuarto proyecto** durante el
-  [20_PROYECTO_INTEGRADOR](20_PROYECTO_INTEGRADOR.md).
+  [23_PROYECTO_INTEGRADOR](23_PROYECTO_INTEGRADOR.md).
 
 ---
 

@@ -122,11 +122,100 @@
 
 ---
 
-## 10) Checklist de verificación “portafolio reproducido”
+## 10) Documentación del Portafolio (docs/)
 
+| Artefacto (Portfolio) | Rol | Guía (módulos) | Tarea mínima | Evidencia |
+|---|---|---|---|---|
+| `docs/ARCHITECTURE_PORTFOLIO.md` | Arquitectura sistema | `02_DISENO_SISTEMAS`, `19_DOCUMENTACION` | Crear diagrama Mermaid + explicar flujo request | Diagrama + doc |
+| `docs/OPERATIONS_PORTFOLIO.md` | Guías operacionales | `16_OBSERVABILIDAD`, `17_DESPLIEGUE` | Documentar setup, workflows, troubleshooting | Runbook operativo |
+| `docs/RELEASE.md` | Release process | `12_CI_CD`, `19_DOCUMENTACION` | Proceso de release + checklist | Proceso documentado |
+| `docs/API/` | API reference (OpenAPI) | `14_FASTAPI`, `19_DOCUMENTACION` | Documentar endpoints, schemas, ejemplos | OpenAPI spec |
+| `mkdocs.yml` (portfolio) | Docs site config | `19_DOCUMENTACION` | Configurar MkDocs Material + nav | `mkdocs serve` funciona |
+
+---
+
+## 11) Definition of Done: "Portafolio 100% Replicado"
+
+### Nivel 1: Mínimo Viable (Junior)
+- [ ] Estructura de proyecto siguiendo el template
+- [ ] Al menos 1 proyecto con API funcionando
+- [ ] Tests unitarios con >70% coverage
+- [ ] Dockerfile funcional
+- [ ] README con Quick Start
+
+### Nivel 2: Competente (Mid)
+- [ ] Los 3 proyectos con APIs funcionando
 - [ ] `make docker-demo` levanta stack completo
-- [ ] `pytest tests/integration -q` pasa
-- [ ] MLflow UI muestra experimentos y runs
-- [ ] `/metrics` expone métricas y Prometheus scrapea
-- [ ] Drift report genera HTML/JSON
-- [ ] Runbook tiene troubleshooting y rollback
+- [ ] CI/CD básico (tests + lint)
+- [ ] MLflow tracking configurado
+- [ ] Tests de integración pasando
+
+### Nivel 3: Profesional (Senior)
+- [ ] CI/CD con matriz, coverage gates, security
+- [ ] `/metrics` expone métricas, Prometheus scrapea
+- [ ] Drift detection configurado
+- [ ] Documentación completa (MkDocs + Model Cards)
+- [ ] Runbook con troubleshooting
+
+### Nivel 4: Experto (Staff)
+- [ ] IaC con Terraform (al menos plan funcional)
+- [ ] Kubernetes manifests production-ready
+- [ ] Alerting rules configuradas
+- [ ] Load testing con SLOs definidos
+- [ ] Proceso de release documentado
+
+---
+
+## 12) Comandos de Verificación
+
+```bash
+# Verificar stack demo
+make docker-demo
+curl http://localhost:8001/health
+curl http://localhost:8002/health
+curl http://localhost:8003/health
+
+# Verificar tests
+pytest tests/ -v --cov
+
+# Verificar CI local
+pre-commit run --all-files
+
+# Verificar MLflow
+curl http://localhost:5000/health
+
+# Verificar métricas
+curl http://localhost:8001/metrics
+
+# Verificar drift
+python scripts/drift_detection.py --output reports/
+
+# Verificar docs
+cd docs && mkdocs serve
+```
+
+---
+
+## 13) Recursos de Referencia Cruzada
+
+| Necesitas... | Ve a... |
+|--------------|---------|
+| Entender la arquitectura | [02_DISENO_SISTEMAS](02_DISENO_SISTEMAS.md) |
+| Configurar entorno | [04_ENTORNOS](04_ENTORNOS.md) |
+| Crear pipelines ML | [07_SKLEARN_PIPELINES](07_SKLEARN_PIPELINES.md) |
+| Configurar MLflow | [10_EXPERIMENT_TRACKING](10_EXPERIMENT_TRACKING.md) |
+| Escribir tests | [11_TESTING_ML](11_TESTING_ML.md) |
+| Configurar CI/CD | [12_CI_CD](12_CI_CD.md) |
+| Dockerizar | [13_DOCKER](13_DOCKER.md) |
+| Crear API | [14_FASTAPI](14_FASTAPI.md) |
+| Monitorear | [16_OBSERVABILIDAD](16_OBSERVABILIDAD.md) |
+| Desplegar | [17_DESPLIEGUE](17_DESPLIEGUE.md) |
+| Documentar | [19_DOCUMENTACION](19_DOCUMENTACION.md) |
+
+---
+
+## 🔗 Navegación
+
+- [← Volver al Índice](00_INDICE.md)
+- [→ Plan de Estudios](PLAN_ESTUDIOS.md)
+- [→ Syllabus](SYLLABUS.md)

@@ -158,7 +158,7 @@ Al completar esta guía serás capaz de:
 
 **📦 Aplicación en el Portafolio**: Todo el código de `common_utils/`, `pyproject.toml` y `.pre-commit-config.yaml`.
 
-> 🎤 **Checkpoint Junior**: Al completar esta fase, practica con [Simulacro Junior](../exams/SIMULACRO_ENTREVISTA_JUNIOR.md)
+> 🎤 **Checkpoint Junior**: Al completar esta fase, practica con [Simulacro Junior](SIMULACRO_ENTREVISTA_JUNIOR.md)
 >
 > 📋 **Examen de Hito**: [EXAM_01_SETUP](../exams/EXAM_01_SETUP.md)
 
@@ -201,7 +201,7 @@ Al completar esta guía serás capaz de:
 - `app/fastapi_app.py` → API de predicción
 - `app/streamlit_app.py` → Dashboard interactivo
 
-> 🎤 **Checkpoint Mid**: Al completar esta fase, practica con [Simulacro Mid](../exams/SIMULACRO_ENTREVISTA_MID.md)
+> 🎤 **Checkpoint Mid**: Al completar esta fase, practica con [Simulacro Mid](SIMULACRO_ENTREVISTA_MID.md)
 >
 > 📋 **Exámenes de Hito**: [EXAM_03_TESTING](../exams/EXAM_03_TESTING.md) | [EXAM_04_DEPLOYMENT](../exams/EXAM_04_DEPLOYMENT.md)
 

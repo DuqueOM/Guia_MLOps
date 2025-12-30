@@ -341,7 +341,7 @@ Antes de cada push importante:
 
 | ◀️ Anterior                      | 📑 Índice             | ▶️ Siguiente                    |
 |:---------------------------------|:----------------------:|:---------------------------------|
-| [21_GLOSARIO.md](21_GLOSARIO.md) | [Índice](00_INDICE.md) | [23_RECURSOS.md](23_RECURSOS.md) |
+| [GLOSARIO.md](GLOSARIO.md) | [Índice](../00_INDICE.md) | [RECURSOS.md](RECURSOS.md) |
 
 ---
 

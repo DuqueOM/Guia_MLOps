@@ -120,6 +120,6 @@ Las secciones marcadas con `<!-- OPCIONAL -->` pueden eliminarse si no aplican.
 
 <div align="center">
 
-[← Índice Principal](../00_INDICE.md) | [PLANTILLAS.md](../PLANTILLAS.md)
+[← Índice Principal](../00_INDICE.md) | [PLANTILLAS.md](../apoyo/PLANTILLAS.md)
 
 </div>

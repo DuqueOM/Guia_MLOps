@@ -3,8 +3,8 @@
 > **Meta-documento**: Esta guía describe cómo mantener **la guía MLOps en sí misma** actualizada y funcional.
 > 
 > ⚠️ **¿Buscas contenido sobre operaciones de sistemas ML en producción?** Ver:
-> - [17_DESPLIEGUE.md](17_DESPLIEGUE.md)
-> - [16_OBSERVABILIDAD.md](16_OBSERVABILIDAD.md) — Monitoreo y alertas
+> - [17_DESPLIEGUE.md](../17_DESPLIEGUE.md)
+> - [16_OBSERVABILIDAD.md](../16_OBSERVABILIDAD.md) — Monitoreo y alertas
 > - [Runbook del Portafolio](https://github.com/DuqueOM/ML-MLOps-Portfolio/blob/main/docs/OPERATIONS_PORTFOLIO.md) — Operaciones end-to-end del portafolio
 
 *Última actualización: Diciembre 2025*
@@ -29,21 +29,21 @@
 - [ ] Verificar que todos los links funcionan (`./scripts/validate_guide.sh`)
 - [ ] Actualizar versiones de dependencias en `requirements.txt`
 - [ ] Ejecutar tests de todos los módulos
-- [ ] Verificar que videos de RECURSOS_POR_MODULO.md siguen disponibles
+- [ ] Verificar que videos de RECURSOS.md siguen disponibles
 
 ### Trimestral
 - [ ] Revisar y actualizar ejemplos de código con mejores prácticas
 - [ ] Regenerar `requirements.txt` con versiones actuales
 - [ ] Verificar compatibilidad con Python más reciente (actualmente 3.11+)
 - [ ] Actualizar templates con mejores prácticas
-- [ ] Revisar y actualizar RECURSOS_POR_MODULO.md con nuevos videos/cursos
+- [ ] Revisar y actualizar RECURSOS.md con nuevos videos/cursos
 
 ### Semestral
 - [ ] Revisar estructura completa de la guía (23 módulos)
 - [ ] Actualizar referencias y recursos externos
 - [ ] Incorporar feedback de usuarios
 - [ ] Evaluar nuevas herramientas del ecosistema MLOps
-- [ ] Actualizar DECISIONES_TECH.md con nuevas herramientas
+- [ ] Actualizar PLANTILLAS.md con nuevas herramientas
 - [ ] Revisar que el glosario cubre todos los términos usados en módulos
 
 ---
@@ -223,9 +223,9 @@ docs/guia_mlops/
 ├── EJERCICIOS.md             # 42 ejercicios prácticos
 ├── EJERCICIOS_SOLUCIONES.md  # Soluciones detalladas
 ├── RUBRICA_EVALUACION.md     # Sistema de evaluación (100 puntos)
-├── RECURSOS_POR_MODULO.md    # 📺 Videos y cursos externos
-├── DECISIONES_TECH.md        # 14 ADRs de herramientas
-├── 21_GLOSARIO.md            # 100+ términos con ejemplos
+├── RECURSOS.md    # 📺 Videos y cursos externos
+├── PLANTILLAS.md        # 14 ADRs de herramientas
+├── apoyo/GLOSARIO.md            # 100+ términos con ejemplos
 ├── SIMULACRO_*.md            # Entrevistas técnicas
 ├── APENDICE_A_SPEECH.md      # Speech de portafolio
 ├── APENDICE_B_TALKING.md     # Puntos clave
@@ -243,9 +243,9 @@ docs/guia_mlops/
 
 | Archivo | Propósito | Actualización |
 |---------|-----------|:-------------:|
-| [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) | Videos y cursos externos | Trimestral |
-| [DECISIONES_TECH.md](DECISIONES_TECH.md) | ADRs de herramientas | Semestral |
-| [21_GLOSARIO.md](../21_GLOSARIO.md) | Definiciones de términos | Mensual |
+| [RECURSOS.md](RECURSOS.md) | Videos y cursos externos | Trimestral |
+| [PLANTILLAS.md](PLANTILLAS.md) | ADRs de herramientas | Semestral |
+| [GLOSARIO.md](GLOSARIO.md) | Definiciones de términos | Mensual |
 | [RUBRICA_EVALUACION.md](RUBRICA_EVALUACION.md) | Sistema de puntuación | Semestral |
 
 ### Recursos Externos
@@ -265,6 +265,6 @@ docs/guia_mlops/
 
 <div align="center">
 
-[← Volver al Índice](00_INDICE.md)
+[← Volver al Índice](../00_INDICE.md)
 
 </div>

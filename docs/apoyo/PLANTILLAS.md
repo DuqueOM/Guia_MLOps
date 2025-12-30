@@ -2,7 +2,7 @@
 
 > **Templates listos para usar en tus proyectos ML**
 
-> 📁 **Ver también**: [templates/](templates/index.md) contiene las plantillas como archivos individuales descargables.
+> 📁 **Ver también**: [templates/](../templates/index.md) contiene las plantillas como archivos individuales descargables.
 
 ---
 
@@ -308,6 +308,6 @@ rm -rf __pycache__ .pytest_cache .coverage htmlcov
 
 <div align="center">
 
-[← Volver al Índice](00_INDICE.md) | [templates/](templates/index.md)
+[← Volver al Índice](../00_INDICE.md) | [templates/](../templates/index.md)
 
 </div>

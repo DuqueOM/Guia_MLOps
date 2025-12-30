@@ -935,8 +935,8 @@ cd proyecto1 && python -c "from src.proyecto1.training import train; train()"
 
 ---
 
-[Ver simulacro completo Parte 1 →](simulacros/SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md)
-[Ver simulacro completo Parte 2 →](simulacros/SIMULACRO_ENTREVISTA_SENIOR_PARTE2.md)
+[Ver simulacro completo Parte 1 →](SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md)
+[Ver simulacro completo Parte 2 →](SIMULACRO_ENTREVISTA_SENIOR_PARTE2.md)
 
 ---
 
@@ -980,8 +980,8 @@ cd proyecto1 && python -c "from src.proyecto1.training import train; train()"
 
 ---
 
-[Ver Speech completo →](entrevistas/APENDICE_A_SPEECH_PORTAFOLIO.md)
-[Ver Talking Points →](entrevistas/APENDICE_B_TALKING_POINTS.md)
+
+
 
 ---
 
@@ -1014,6 +1014,6 @@ Ahora tienes las habilidades de un **Senior/Staff MLOps Engineer**
 
 **¡Éxito en tu proyecto! 🚀**
 
-[← Documentación](19_DOCUMENTACION.md) | [Siguiente: Glosario →](21_GLOSARIO.md)
+[← Documentación](19_DOCUMENTACION.md) | [Glosario →](apoyo/GLOSARIO.md)
 
 </div>
