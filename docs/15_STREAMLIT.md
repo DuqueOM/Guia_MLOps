@@ -184,7 +184,7 @@ st.set_page_config(                      # Configura metadata de la página.
 @st.cache_data                           # Decorator: cachea resultado de la función.
 def load_data():                         # Se ejecuta UNA vez; luego retorna del cache.
     """Carga dataset - cached para performance."""
-    path = Path("data/raw/vehicles_us.csv")
+    path = Path("data/raw/vehicles_us.csv")  # Ruta al archivo de datos.
     if path.exists():
         return pd.read_csv(path)         # CSV → DataFrame.
     return None                          # None si no existe (manejo graceful).
@@ -193,7 +193,7 @@ def load_data():                         # Se ejecuta UNA vez; luego retorna del
 @st.cache_resource                       # cache_resource: para objetos no serializables.
 def load_model():                        # Modelos, conexiones DB, etc.
     """Carga modelo - cached para no recargar en cada interacción."""
-    path = Path("artifacts/model.joblib")
+    path = Path("artifacts/model.joblib")  # Ruta al modelo serializado.
     if path.exists():
         return joblib.load(path)         # Deserializa el pipeline completo.
     return None

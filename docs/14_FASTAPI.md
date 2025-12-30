@@ -117,16 +117,16 @@ Construir APIs de ML robustas, documentadas y production-ready como las del port
 ```python
 from fastapi import FastAPI
 
-app = FastAPI()
+app = FastAPI()  # Crea la aplicación FastAPI.
 
-@app.get("/health")
+@app.get("/health")  # Endpoint GET para health check.
 def health():
-    return {"status": "healthy"}
+    return {"status": "healthy"}  # Respuesta JSON indicando que el servicio está activo.
 
-@app.post("/predict")
+@app.post("/predict")  # Endpoint POST para predicciones.
 def predict(data: dict):
     # TU TAREA: Cargar modelo y predecir
-    return {"prediction": 0.85}
+    return {"prediction": 0.85}  # Respuesta con la predicción del modelo.
 ```
 
 **Ejecutar:** `uvicorn app:app --reload`
@@ -871,7 +871,7 @@ async def predict_batch(batch_data: BatchCustomerData):
    
    PREDICTIONS = Counter("predictions_total", "Total predictions", ["result"])
    
-   @app.post("/predict")
+   @app.post("/predict")  # Endpoint POST para predicciones.
    async def predict(request: CustomerRequest):
        # ... predicción ...
        PREDICTIONS.labels(result="churn" if pred == 1 else "no_churn").inc()
@@ -1018,7 +1018,7 @@ class PredictionResponse(BaseModel):
     probability: float
     risk_level: str
 
-@app.get("/health")
+@app.get("/health")  # Endpoint GET para health check.
 async def health():
     return {"status": "healthy", "model_loaded": model is not None}
 
@@ -1247,9 +1247,9 @@ def load_model():
     except FileNotFoundError:
         raise RuntimeError("Model not found")
 
-@app.get("/health")
+@app.get("/health")  # Endpoint GET para health check.
 async def health():
-    return {"status": "healthy"}
+    return {"status": "healthy"}  # Respuesta JSON indicando que el servicio está activo.
 
 @app.post("/predict", response_model=PredictResponse)
 async def predict(request: PredictRequest):

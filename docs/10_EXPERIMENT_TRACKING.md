@@ -164,7 +164,7 @@ MLflow Server
 import mlflow
 
 mlflow.set_tracking_uri("file:./mlruns")  # Guarda en carpeta local
-mlflow.set_experiment("my-experiment")
+mlflow.set_experiment("my-experiment")  # Crea o selecciona un experimento existente.
 ```
 
 ### Opción 2: Servidor MLflow (Producción)
@@ -190,7 +190,7 @@ services:
 # Conectar al servidor
 import mlflow
 
-mlflow.set_tracking_uri("http://localhost:5000")
+mlflow.set_tracking_uri("http://localhost:5000")  # URL del servidor MLflow (local o remoto).
 mlflow.set_experiment("BankChurn")
 ```
 
@@ -208,7 +208,7 @@ mlflow:
 # src/bankchurn/config.py
 class MLflowConfig(BaseModel):
     """MLflow tracking configuration."""
-    tracking_uri: str = "file:./mlruns"
+    tracking_uri: str = "file:./mlruns"  # URI donde se guardan los experimentos (archivo local).
     experiment_name: str = "bankchurn"
     enabled: bool = True
 ```
@@ -798,7 +798,7 @@ if promote and passed:
 3. **Conecta desde Python**:
    ```python
    import mlflow
-   mlflow.set_tracking_uri("http://localhost:5000")
+   mlflow.set_tracking_uri("http://localhost:5000")  # URL del servidor MLflow (local o remoto).
    mlflow.set_experiment("mi-primer-experimento")
    
    with mlflow.start_run():
@@ -986,7 +986,7 @@ MLflow está integrado en los 3 proyectos del portafolio:
 # BankChurn-Predictor/src/bankchurn/config.py
 class MLflowConfig(BaseModel):
     """MLflow tracking configuration."""
-    tracking_uri: str = "file:./mlruns"  # Local por defecto
+    tracking_uri: str = "file:./mlruns"  # URI donde se guardan los experimentos (archivo local).  # Local por defecto
     experiment_name: str = "bankchurn"
     enabled: bool = True
 ```
