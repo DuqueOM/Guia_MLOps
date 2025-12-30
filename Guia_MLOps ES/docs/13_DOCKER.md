@@ -72,6 +72,16 @@
 - **13.3** [Mejores Prácticas](#133-mejores-practicas)
 - **13.4** [Dockerfile Real del Portafolio](#134-dockerfile-real-del-portafolio)
 - **13.5** [Docker Compose para ML](#135-docker-compose-para-ml)
+- **13.6** [Docker Compose Avanzado para MLOps](#136-docker-compose-avanzado)
+- **13.7** [🔬 Ingeniería Inversa Pedagógica: Dockerfile del Portafolio](#137-ingenieria-inversa-pedagogica) ⭐ NUEVO
+  - **13.7.1** [El "Por Qué" Arquitectónico](#1371-el-por-que-arquitectonico)
+  - **13.7.2** [Anatomía Línea por Línea](#1372-anatomia-linea-por-linea)
+  - **13.7.3** [Laboratorio de Replicación](#1373-laboratorio-de-replicacion)
+  - **13.7.4** [Troubleshooting Preventivo](#1374-troubleshooting-preventivo)
+  - **13.7.5** [Checklist de Replicación](#1375-checklist-de-replicacion)
+  - **13.7.6** [Anatomía del .dockerignore](#1376-anatomia-del-dockerignore)
+  - **13.7.7** [Conexión Docker → Kubernetes](#1377-conexion-docker-kubernetes)
+  - **13.7.8** [Métricas de Éxito](#1378-metricas-de-exito)
 - [Errores habituales](#errores-habituales)
 - [✅ Checkpoint](#checkpoint)
 - [✅ Ejercicio](#ejercicio)
@@ -792,6 +802,993 @@ docker compose up -d
 docker compose ps
 docker compose logs -f api
 ```
+
+---
+
+<a id="137-ingenieria-inversa-pedagogica"></a>
+
+## 13.7 🔬 Ingeniería Inversa Pedagógica: Dockerfile del Portafolio
+
+> **Objetivo**: Entender EXACTAMENTE por qué cada línea existe en el Dockerfile real de `BankChurn-Predictor/Dockerfile` del portafolio.
+
+Esta sección aplica el método de "Shadow Coder Senior": no solo vemos la herramienta, sino las **decisiones arquitectónicas** tomadas en producción.
+
+---
+
+### 13.7.1 🎯 El "Por Qué" Arquitectónico
+
+Antes de escribir una sola línea de Docker, pregúntate: **¿qué problema estoy resolviendo?**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                     │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  PROBLEMA 1: Imágenes de 1.5GB que tardan 10min en desplegar                    │
+│  ─────────────────────────────────────────────────────────────                  │
+│  DECISIÓN: Multi-stage build con python:3.11-slim                               │
+│  RESULTADO: Imagen final de ~350MB (77% más pequeña)                            │
+│  REFERENCIA: BankChurn-Predictor/Dockerfile líneas 1-40                         │
+│                                                                                 │
+│  PROBLEMA 2: Contenedores comprometidos = acceso root al host                   │
+│  ─────────────────────────────────────────────────────────────                  │
+│  DECISIÓN: Usuario non-root con UID 1000 (appuser)                              │
+│  RESULTADO: Atacante limitado a permisos de usuario sin privilegios             │
+│  REFERENCIA: BankChurn-Predictor/Dockerfile líneas 55-74                        │
+│                                                                                 │
+│  PROBLEMA 3: Orquestadores no saben si la API está lista                        │
+│  ─────────────────────────────────────────────────────────────                  │
+│  DECISIÓN: HEALTHCHECK que valida /health cada 30s                              │
+│  RESULTADO: K8s/Docker Compose esperan a que el modelo cargue                   │
+│  REFERENCIA: BankChurn-Predictor/Dockerfile líneas 79-81                        │
+│                                                                                 │
+│  PROBLEMA 4: Cache de Docker invalidado en cada cambio de código                │
+│  ─────────────────────────────────────────────────────────────                  │
+│  DECISIÓN: COPY requirements.txt ANTES de COPY código fuente                    │
+│  RESULTADO: pip install cacheado si solo cambias código                         │
+│  REFERENCIA: BankChurn-Predictor/Dockerfile líneas 25-37                        │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+**🤔 Pregunta para reflexionar**: ¿Por qué NO usamos `python:3.11-alpine` en el portafolio?
+
+<details>
+<summary>💡 Ver respuesta</summary>
+
+Alpine usa `musl` en lugar de `glibc`. Muchas librerías de ML (NumPy, pandas, scikit-learn) tienen binarios precompilados para `glibc` pero NO para `musl`. Esto significa:
+- Compilación desde source → builds de 20+ minutos
+- Posibles errores de compatibilidad con extensiones C
+- `slim` es solo ~50MB más grande pero 100% compatible
+
+**Decisión del portafolio**: Preferimos `slim` por compatibilidad garantizada.
+</details>
+
+---
+
+### 13.7.2 🔍 Anatomía Línea por Línea: `BankChurn-Predictor/Dockerfile`
+
+A continuación, el Dockerfile REAL del portafolio con explicación de CADA línea crítica y qué pasa si la omites.
+
+```dockerfile
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 1: BUILDER - Compila dependencias en entorno temporal
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Línea 1-3: Imagen base para compilación
+# ────────────────────────────────────────
+# FROM python:3.11-slim AS builder
+#   ├─ python:3.11-slim  → Imagen Debian mínima (~150MB vs ~1GB de python:3.11)
+#   ├─ AS builder        → Nombra este stage para referenciarlo después
+#   └─ ¿Qué pasa sin AS? → No podrías hacer COPY --from=builder más adelante
+FROM python:3.11-slim AS builder
+
+# Líneas 5-8: Metadatos de la imagen (LABEL)
+# ──────────────────────────────────────────
+# LABEL maintainer="..."
+#   ├─ Documenta quién mantiene la imagen
+#   ├─ Visible con: docker inspect <imagen>
+#   └─ ¿Qué pasa sin esto? → Funciona, pero pierdes trazabilidad en producción
+LABEL maintainer="Daniel Duque <daniel.duque@example.com>"
+LABEL version="1.0.0"
+LABEL description="BankChurn Predictor - Sistema de predicción de abandono bancario"
+
+# Líneas 10-14: Variables de entorno de build
+# ───────────────────────────────────────────
+# ENV PYTHONUNBUFFERED=1
+#   ├─ PYTHONUNBUFFERED=1  → Logs se muestran inmediatamente (sin buffering)
+#   ├─ PYTHONDONTWRITEBYTECODE=1 → No genera __pycache__/*.pyc (imagen más limpia)
+#   ├─ PIP_NO_CACHE_DIR=1  → pip no guarda cache (reduce tamaño de imagen)
+#   └─ PIP_DISABLE_PIP_VERSION_CHECK=1 → No verifica actualizaciones (build más rápido)
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Línea 16: Directorio de trabajo para compilación
+# ─────────────────────────────────────────────────
+# WORKDIR /build
+#   ├─ Crea /build si no existe y lo establece como CWD
+#   ├─ Separado de /app para claridad (build vs runtime)
+#   └─ ¿Qué pasa sin esto? → Archivos van a / (raíz), muy desordenado
+WORKDIR /build
+
+# Líneas 18-23: Instalar dependencias de compilación (TEMPORALES)
+# ────────────────────────────────────────────────────────────────
+# RUN apt-get update && apt-get install -y ...
+#   ├─ gcc, g++, build-essential → Compiladores para paquetes con código C/C++
+#   ├─ --no-install-recommends   → Solo deps esenciales (reduce 200MB+)
+#   ├─ rm -rf /var/lib/apt/lists/* → Elimina cache de apt (reduce ~30MB)
+#   └─ ¿Qué pasa sin gcc? → Paquetes como numpy, pandas fallan al instalar
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Líneas 25-26: Copiar requirements (ANTES del código)
+# ─────────────────────────────────────────────────────
+# COPY requirements.txt requirements.in* ./
+#   ├─ requirements.txt  → Archivo principal de dependencias
+#   ├─ requirements.in*  → Asterisco = copia si existe, no falla si no
+#   ├─ Orden crítico: requirements ANTES de código fuente
+#   └─ ¿Por qué? → Si solo cambias código, esta capa está cacheada → build 10x más rápido
+COPY requirements.txt requirements.in* ./
+
+# Líneas 28-37: Crear virtualenv e instalar dependencias
+# ───────────────────────────────────────────────────────
+# RUN python -m venv /opt/venv && ...
+#   ├─ /opt/venv → Virtualenv aislado en ubicación estándar
+#   ├─ . /opt/venv/bin/activate → Activa el venv para pip install
+#   ├─ sed ... requirements_clean.txt → Limpia hashes y líneas vacías
+#   ├─ pip install --no-cache-dir → Instala sin guardar cache
+#   └─ ¿Por qué virtualenv? → Fácil de copiar a runtime stage con COPY --from
+RUN python -m venv /opt/venv && \
+    . /opt/venv/bin/activate && \
+    pip install --upgrade pip setuptools wheel && \
+    if [ -f requirements.in ]; then \
+        sed -e '/--hash=/d' -e 's/ \\$//' -e '/^[[:space:]]*#/d' -e '/^[[:space:]]*$/d' requirements.in > requirements_clean.txt; \
+    else \
+        sed -e '/--hash=/d' -e 's/ \\$//' -e '/^[[:space:]]*#/d' -e '/^[[:space:]]*$/d' requirements.txt > requirements_clean.txt; \
+    fi && \
+    pip install --no-cache-dir -r requirements_clean.txt
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 2: RUNTIME - Imagen final ligera sin compiladores
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Línea 40: Nueva imagen limpia para runtime
+# ──────────────────────────────────────────
+# FROM python:3.11-slim AS runtime
+#   ├─ Nueva imagen desde cero (SIN gcc, g++, build-essential)
+#   ├─ Solo contiene lo que explícitamente copiamos
+#   └─ ¿Qué pasa sin multi-stage? → Imagen final de 1.2GB con compiladores innecesarios
+FROM python:3.11-slim AS runtime
+
+# Líneas 42-46: Variables de entorno de runtime
+# ─────────────────────────────────────────────
+# ENV PYTHONPATH=/app
+#   ├─ PYTHONPATH=/app → Python puede importar desde /app (import src.bankchurn)
+#   ├─ PATH="/opt/venv/bin:$PATH" → Comandos del venv disponibles sin activar
+#   └─ ¿Qué pasa sin PYTHONPATH? → ImportError: No module named 'src'
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONPATH=/app
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Líneas 48-53: Dependencias mínimas de runtime
+# ─────────────────────────────────────────────
+# RUN apt-get update && apt-get install -y --no-install-recommends curl ...
+#   ├─ curl → Necesario para HEALTHCHECK (CMD curl -f http://...)
+#   ├─ ca-certificates → Para conexiones HTTPS (MLflow, APIs externas)
+#   ├─ apt-get clean → Limpia cache adicional
+#   └─ ¿Qué pasa sin curl? → HEALTHCHECK falla → contenedor marcado "unhealthy"
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Líneas 55-57: SEGURIDAD - Crear usuario non-root
+# ─────────────────────────────────────────────────
+# RUN groupadd -r appuser --gid=1000 && useradd ...
+#   ├─ groupadd -r → Crea grupo "system" (sin home dir por defecto)
+#   ├─ --gid=1000 → GID específico para consistencia con volúmenes del host
+#   ├─ useradd -r -g appuser → Usuario del grupo appuser
+#   ├─ --uid=1000 → UID específico (match típico con usuario host)
+#   ├─ --home-dir=/app → Home directory del usuario
+#   └─ ¿Qué pasa sin esto? → Contenedor corre como root → vulnerabilidad crítica
+RUN groupadd -r appuser --gid=1000 && \
+    useradd -r -g appuser --uid=1000 --home-dir=/app appuser
+
+# Línea 59: Directorio de trabajo de la aplicación
+# ─────────────────────────────────────────────────
+WORKDIR /app
+
+# Línea 62: COPIAR virtualenv desde builder
+# ─────────────────────────────────────────
+# COPY --from=builder --chown=appuser:appuser /opt/venv /opt/venv
+#   ├─ --from=builder → Copia desde el stage anterior (no de contexto local)
+#   ├─ --chown=appuser:appuser → Asigna propiedad al usuario non-root
+#   ├─ /opt/venv → Todo el virtualenv con paquetes instalados
+#   └─ ¿Qué pasa sin --chown? → appuser no puede leer paquetes → PermissionError
+COPY --from=builder --chown=appuser:appuser /opt/venv /opt/venv
+
+# Línea 64: Instalar uvicorn (servidor ASGI)
+# ──────────────────────────────────────────
+# RUN . /opt/venv/bin/activate && pip install "uvicorn>=0.18.0"
+#   ├─ uvicorn → Servidor ASGI de alta performance para FastAPI
+#   ├─ >=0.18.0 → Versión mínima con features necesarios
+#   └─ ¿Por qué aquí y no en requirements? → Separar deps de app vs runtime
+RUN . /opt/venv/bin/activate && pip install --no-cache-dir "uvicorn>=0.18.0"
+
+# Línea 67: Copiar código fuente completo
+# ───────────────────────────────────────
+# COPY --chown=appuser:appuser . .
+#   ├─ Copia TODO el contexto (respetando .dockerignore)
+#   ├─ --chown → appuser es dueño de todos los archivos
+#   ├─ Esta línea va AL FINAL → cambios de código no invalidan cache de pip
+#   └─ ¿Qué pasa sin .dockerignore? → Copia .git, tests, data (imagen 2x más grande)
+COPY --chown=appuser:appuser . .
+
+# Líneas 69-71: Crear directorios con permisos correctos
+# ───────────────────────────────────────────────────────
+# RUN mkdir -p logs data/raw data/processed models results ...
+#   ├─ mkdir -p → Crea directorios y padres si no existen
+#   ├─ logs, data/*, models, results → Directorios que la app espera
+#   ├─ chown -R → Asegura que appuser pueda escribir en ellos
+#   └─ ¿Qué pasa sin esto? → FileNotFoundError al escribir logs o guardar modelos
+RUN mkdir -p logs data/raw data/processed models results && \
+    chown -R appuser:appuser /app
+
+# Línea 74: CAMBIAR a usuario non-root (CRÍTICO)
+# ───────────────────────────────────────────────
+# USER appuser
+#   ├─ A partir de aquí, TODO corre como appuser (no root)
+#   ├─ CMD, ENTRYPOINT, docker exec → todos como appuser
+#   ├─ IMPORTANTE: Esta línea DESPUÉS de mkdir/chown
+#   └─ ¿Qué pasa sin esto? → Contenedor corre como root → CIS Benchmark falla
+USER appuser
+
+# Línea 77: Exponer puerto (documentación)
+# ────────────────────────────────────────
+# EXPOSE 8000
+#   ├─ Documenta que la app escucha en puerto 8000
+#   ├─ NO publica el puerto (eso es -p en docker run)
+#   ├─ Útil para: docker inspect, docker-compose, K8s
+#   └─ ¿Qué pasa sin esto? → Funciona, pero pierdes documentación
+EXPOSE 8000
+
+# Líneas 79-81: HEALTHCHECK para orquestadores
+# ─────────────────────────────────────────────
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 ...
+#   ├─ --interval=30s → Cada 30s ejecuta el check
+#   ├─ --timeout=10s → Si no responde en 10s, falla
+#   ├─ --start-period=15s → Espera 15s antes del primer check (carga de modelo)
+#   ├─ --retries=3 → 3 fallos consecutivos → "unhealthy"
+#   ├─ CMD curl -f http://localhost:8000/health → Verifica endpoint /health
+#   ├─ -f → curl falla con exit 22 si HTTP != 2xx/3xx
+#   └─ ¿Qué pasa sin HEALTHCHECK? → K8s/Compose no saben si la API está lista
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Líneas 83-84: Comando por defecto (API)
+# ───────────────────────────────────────
+# CMD ["uvicorn", "app.fastapi_app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+#   ├─ uvicorn → Servidor ASGI
+#   ├─ app.fastapi_app:app → Ruta al objeto FastAPI (app/fastapi_app.py)
+#   ├─ --host 0.0.0.0 → Escucha en todas las interfaces (necesario en contenedor)
+#   ├─ --port 8000 → Puerto que matchea con EXPOSE
+#   ├─ --workers 1 → Un solo worker (escalar con réplicas, no workers)
+#   └─ ¿Qué pasa con --host 127.0.0.1? → Solo accesible desde dentro del contenedor
+CMD ["uvicorn", "app.fastapi_app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+```
+
+---
+
+### 13.7.3 🧪 Laboratorio de Replicación: Escribe el Dockerfile Tú Mismo
+
+> **Instrucciones**: NO copies y pegues. Escribe cada sección a mano para interiorizar los conceptos.
+
+#### Paso 1: Estructura Base del Builder Stage
+
+Abre tu editor y crea un archivo `Dockerfile`:
+
+```bash
+# Paso 1.1: Crear el archivo vacío
+touch BankChurn-Predictor/Dockerfile
+
+# Paso 1.2: Abrirlo en tu editor preferido
+code BankChurn-Predictor/Dockerfile  # o vim, nano, etc.
+```
+
+**Escribe el Stage 1 (Builder)**:
+
+```dockerfile
+# Paso 1.3: Escribe el encabezado y la imagen base
+# ─────────────────────────────────────────────────
+# Pregunta: ¿Por qué usamos python:3.11-slim y no python:3.11?
+# Respuesta: ______________________ (escríbela antes de continuar)
+
+FROM python:3.11-slim AS builder
+# ↑ AS builder: nombra este stage para poder hacer COPY --from=builder después
+```
+
+#### Paso 2: Variables de Entorno y Dependencias de Build
+
+```dockerfile
+# Paso 2.1: Añade las variables de entorno
+# ─────────────────────────────────────────
+# Pregunta: ¿Qué hace PYTHONUNBUFFERED=1?
+# Respuesta: ______________________ (logs sin buffering = visibles inmediatamente)
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PIP_NO_CACHE_DIR=1
+
+# Paso 2.2: Establece el directorio de trabajo
+WORKDIR /build
+
+# Paso 2.3: Instala compiladores (SOLO para build)
+# Pregunta: ¿Por qué hacemos rm -rf /var/lib/apt/lists/*?
+# Respuesta: ______________________ (elimina cache de apt = imagen más pequeña)
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+```
+
+#### Paso 3: Copiar e Instalar Dependencias
+
+```dockerfile
+# Paso 3.1: Copia SOLO requirements (aprovecha cache de Docker)
+# ─────────────────────────────────────────────────────────────
+# Pregunta: ¿Por qué copiamos requirements.txt ANTES del código fuente?
+# Respuesta: ______________________ (si solo cambias código, pip install está cacheado)
+
+COPY requirements.txt .
+
+# Paso 3.2: Crea virtualenv e instala dependencias
+RUN python -m venv /opt/venv && \
+    . /opt/venv/bin/activate && \
+    pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+```
+
+#### Paso 4: Stage 2 - Runtime
+
+```dockerfile
+# Paso 4.1: Inicia una imagen NUEVA y limpia
+# ──────────────────────────────────────────
+# Nota: Esta imagen NO tiene gcc, build-essential, ni nada del stage anterior
+
+FROM python:3.11-slim AS runtime
+
+# Paso 4.2: Variables de entorno de runtime
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+ENV PATH="/opt/venv/bin:$PATH"
+# ↑ PATH: permite usar python, pip, uvicorn del venv sin activarlo explícitamente
+
+# Paso 4.3: Dependencias mínimas de runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+# ↑ curl: necesario para HEALTHCHECK
+```
+
+#### Paso 5: Seguridad - Usuario Non-Root
+
+```dockerfile
+# Paso 5.1: Crear usuario y grupo sin privilegios
+# ────────────────────────────────────────────────
+# Pregunta: ¿Por qué usamos UID 1000?
+# Respuesta: ______________________ (match típico con usuarios del host = menos problemas de permisos)
+
+RUN groupadd -r appuser --gid=1000 && \
+    useradd -r -g appuser --uid=1000 --home-dir=/app appuser
+
+WORKDIR /app
+
+# Paso 5.2: Copiar virtualenv DESDE el builder
+# ─────────────────────────────────────────────
+# Nota: --chown asigna propiedad a appuser (sin esto, root es el dueño)
+
+COPY --from=builder --chown=appuser:appuser /opt/venv /opt/venv
+```
+
+#### Paso 6: Código Fuente y Directorios
+
+```dockerfile
+# Paso 6.1: Copiar código fuente
+# ───────────────────────────────
+# Nota: Esta línea va AL FINAL para maximizar cache
+
+COPY --chown=appuser:appuser . .
+
+# Paso 6.2: Crear directorios que la aplicación necesita
+RUN mkdir -p logs models data && \
+    chown -R appuser:appuser /app
+
+# Paso 6.3: CAMBIAR a usuario non-root (CRÍTICO)
+# ───────────────────────────────────────────────
+# Pregunta: ¿Por qué USER va DESPUÉS de mkdir/chown?
+# Respuesta: ______________________ (appuser no tiene permisos para crear dirs)
+
+USER appuser
+```
+
+#### Paso 7: Healthcheck y Comando
+
+```dockerfile
+# Paso 7.1: Documentar puerto
+EXPOSE 8000
+
+# Paso 7.2: Configurar healthcheck
+# ─────────────────────────────────
+# Pregunta: ¿Qué hace --start-period?
+# Respuesta: ______________________ (tiempo de gracia para que cargue el modelo)
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Paso 7.3: Comando de inicio
+CMD ["uvicorn", "app.fastapi_app:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+#### Verificación del Laboratorio
+
+```bash
+# Construir la imagen
+docker build -t bankchurn:lab .
+
+# Verificar tamaño (objetivo: < 500MB)
+docker images bankchurn:lab
+
+# Ejecutar y probar
+docker run -d -p 8000:8000 --name bankchurn-test bankchurn:lab
+
+# Esperar 20 segundos y verificar health
+sleep 20
+docker inspect --format='{{.State.Health.Status}}' bankchurn-test
+# Esperado: healthy
+
+# Verificar que corre como non-root
+docker exec bankchurn-test whoami
+# Esperado: appuser
+
+# Cleanup
+docker stop bankchurn-test && docker rm bankchurn-test
+```
+
+---
+
+### 13.7.4 🚨 Troubleshooting Preventivo: Los 5 Errores Más Comunes
+
+Estos son los errores que encontrarás al intentar replicar el Dockerfile del portafolio. **Léelos ANTES de empezar** para ahorrar horas de debugging.
+
+#### Error 1: `ModuleNotFoundError: No module named 'src'`
+
+**Cuándo ocurre**: Al ejecutar `docker run` o `uvicorn`.
+
+**Causa raíz**: Falta `ENV PYTHONPATH=/app` o el código no está en `/app`.
+
+**Diagnóstico**:
+```bash
+# Verificar estructura dentro del contenedor
+docker exec -it <container> ls -la /app
+# ¿Existe /app/src/? ¿/app/app/?
+
+# Verificar PYTHONPATH
+docker exec -it <container> printenv PYTHONPATH
+# Esperado: /app
+```
+
+**Solución**:
+```dockerfile
+# Añadir en el runtime stage
+ENV PYTHONPATH=/app
+
+# O cambiar el CMD para especificar la ruta
+CMD ["python", "-m", "uvicorn", "app.fastapi_app:app", "--host", "0.0.0.0"]
+```
+
+---
+
+#### Error 2: `PermissionError: [Errno 13] Permission denied: '/app/logs/app.log'`
+
+**Cuándo ocurre**: La API intenta escribir logs pero falla.
+
+**Causa raíz**: El directorio `/app/logs` pertenece a `root`, pero el proceso corre como `appuser`.
+
+**Diagnóstico**:
+```bash
+# Verificar permisos
+docker exec -it <container> ls -la /app
+# ¿El owner es appuser o root?
+
+# Verificar usuario actual
+docker exec -it <container> whoami
+# Esperado: appuser
+```
+
+**Solución**:
+```dockerfile
+# ANTES de USER appuser, crear directorios y asignar permisos
+RUN mkdir -p logs data models && \
+    chown -R appuser:appuser /app
+
+USER appuser  # ← DESPUÉS de chown
+```
+
+---
+
+#### Error 3: Container `unhealthy` pero la API funciona
+
+**Cuándo ocurre**: `docker ps` muestra "(unhealthy)" pero `curl localhost:8000/health` funciona.
+
+**Causa raíz**: El HEALTHCHECK usa `curl` pero `curl` no está instalado en la imagen.
+
+**Diagnóstico**:
+```bash
+# Verificar si curl existe
+docker exec -it <container> which curl
+# Si no hay output, curl no está instalado
+
+# Verificar logs del healthcheck
+docker inspect <container> --format='{{json .State.Health}}'
+```
+
+**Solución**:
+```dockerfile
+# Instalar curl en el runtime stage
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+```
+
+---
+
+#### Error 4: Build tarda 15+ minutos (cache no funciona)
+
+**Cuándo ocurre**: Cada cambio de código dispara reinstalación de pip.
+
+**Causa raíz**: `COPY . .` está ANTES de `pip install`.
+
+**Diagnóstico**:
+```bash
+# Observar output del build
+docker build -t test .
+# ¿Ves "CACHED" en el step de pip install?
+# Si no, el cache está roto
+```
+
+**Solución**:
+```dockerfile
+# ❌ MALO: Cualquier cambio invalida todo
+COPY . .
+RUN pip install -r requirements.txt
+
+# ✅ BUENO: requirements primero, código después
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .  # ← Cambios aquí NO invalidan pip
+```
+
+---
+
+#### Error 5: Imagen de 1.5GB después del multi-stage
+
+**Cuándo ocurre**: Usaste multi-stage pero la imagen sigue enorme.
+
+**Causa raíz**: El `.dockerignore` no excluye datos, notebooks, o `.git`.
+
+**Diagnóstico**:
+```bash
+# Ver historial de layers
+docker history bankchurn:latest --format "{{.Size}}\t{{.CreatedBy}}" | head -20
+# ¿Hay layers de 500MB+? ¿Qué comando las creó?
+
+# Verificar qué está copiando
+docker build -t test . 2>&1 | grep "COPY"
+```
+
+**Solución**: Crear/actualizar `.dockerignore`:
+```dockerignore
+# .dockerignore - CRÍTICO para imágenes pequeñas
+.git
+.gitignore
+data/
+notebooks/
+tests/
+*.md
+*.ipynb
+__pycache__
+.venv/
+mlruns/
+.dvc/
+```
+
+---
+
+### 13.7.5 📋 Checklist de Replicación Completa
+
+Usa esta lista para verificar que tu Dockerfile replica correctamente el del portafolio:
+
+```markdown
+# Checklist: Dockerfile BankChurn-Predictor
+
+## Arquitectura
+- [ ] Multi-stage build (builder + runtime)
+- [ ] Base image: python:3.11-slim (NO alpine, NO full)
+- [ ] Builder: instala gcc, build-essential
+- [ ] Runtime: NO tiene compiladores
+
+## Optimización
+- [ ] .dockerignore excluye: .git, data/, tests/, notebooks/, __pycache__
+- [ ] COPY requirements.txt ANTES de COPY código
+- [ ] pip install --no-cache-dir
+- [ ] rm -rf /var/lib/apt/lists/* después de apt-get
+- [ ] Imagen final < 500MB (verificar con docker images)
+
+## Seguridad
+- [ ] Usuario non-root creado (appuser con UID 1000)
+- [ ] USER appuser DESPUÉS de crear directorios
+- [ ] --chown=appuser:appuser en COPY
+- [ ] Directorios logs/, data/, models/ con permisos correctos
+
+## Observabilidad
+- [ ] HEALTHCHECK configurado (interval, timeout, start-period, retries)
+- [ ] curl instalado en runtime (para HEALTHCHECK)
+- [ ] EXPOSE 8000 documentado
+
+## Verificación Final
+- [ ] docker build completa sin errores
+- [ ] docker run levanta el contenedor
+- [ ] curl localhost:8000/health retorna 200
+- [ ] docker exec <container> whoami retorna "appuser"
+- [ ] container aparece como "healthy" en docker ps
+```
+
+---
+
+### 13.7.6 📁 Anatomía del `.dockerignore` Real del Portafolio
+
+El archivo `.dockerignore` es TAN importante como el `Dockerfile`. Sin él, tu imagen puede pasar de 350MB a 2GB.
+
+**Archivo**: `BankChurn-Predictor/.dockerignore`
+
+```dockerignore
+# ══════════════════════════════════════════════════════════════════════════════
+# .dockerignore del Portafolio - Comentado línea por línea
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Sección 1: Control de Versiones
+# ────────────────────────────────
+# .git
+#   ├─ Excluye el directorio .git completo (~50-500MB en proyectos grandes)
+#   ├─ El historial de commits NO es necesario en el contenedor
+#   └─ ¿Qué pasa sin esto? → Imagen 500MB más grande sin beneficio
+.git
+.gitignore
+.dvc
+.dvcignore
+# ↑ DVC también tiene su propio directorio pesado con cache de datos
+
+# Sección 2: Python - Archivos Generados
+# ───────────────────────────────────────
+# __pycache__
+#   ├─ Bytecode compilado de Python (*.pyc)
+#   ├─ Se regenera automáticamente cuando Python importa el módulo
+#   └─ ¿Qué pasa sin esto? → Archivos innecesarios + posibles conflictos de versión
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Sección 3: Entornos Virtuales
+# ─────────────────────────────
+# env/, venv/, .venv/
+#   ├─ El virtualenv del HOST no debe ir al contenedor
+#   ├─ El contenedor tiene su PROPIO venv en /opt/venv
+#   ├─ Tamaño típico: 200MB-1GB dependiendo de las dependencias
+#   └─ ¿Qué pasa sin esto? → Conflictos de rutas + imagen enorme
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Sección 4: Testing y Calidad de Código
+# ───────────────────────────────────────
+# tests/
+#   ├─ Los tests NO se ejecutan en producción
+#   ├─ pytest, coverage, etc. solo para desarrollo/CI
+#   └─ ¿Qué pasa sin esto? → Código innecesario en producción (attack surface mayor)
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.pytest_cache/
+.mypy_cache/
+.flake8
+tests/
+# ↑ IMPORTANTE: Excluir tests/ reduce imagen Y attack surface
+
+# Sección 5: Datos y Artefactos Pesados
+# ─────────────────────────────────────
+# data/, models/, results/, mlruns/
+#   ├─ Datos se montan como VOLÚMENES, no se copian a la imagen
+#   ├─ models/ se monta en runtime: -v ./models:/app/models:ro
+#   ├─ mlruns/ es el directorio de MLflow (puede ser GB de experimentos)
+#   └─ ¿Qué pasa sin esto? → Imagen de 5GB+ con datos de entrenamiento
+data/
+models/
+results/
+mlruns/
+
+# Sección 6: Notebooks y Documentación
+# ────────────────────────────────────
+# notebooks/, *.ipynb
+#   ├─ Notebooks son para exploración, no para producción
+#   ├─ Pueden contener outputs pesados (imágenes, tablas)
+#   └─ ¿Qué pasa sin esto? → Notebooks de 50MB+ innecesarios en imagen
+notebooks/
+docs/
+*.md
+# ↑ Excluimos .md EXCEPTO README.md si lo necesitas (ver patrón negativo abajo)
+# Para incluir README.md: añadir línea "!README.md" DESPUÉS de "*.md"
+```
+
+**Patrones Avanzados de `.dockerignore`**:
+
+```dockerignore
+# Patrón 1: Excluir TODO excepto algo específico
+*.md
+!README.md
+# ↑ Excluye todos los .md EXCEPTO README.md
+
+# Patrón 2: Excluir subdirectorios pero no el directorio mismo
+data/*
+!data/.gitkeep
+# ↑ Excluye contenido de data/ pero mantiene el directorio
+
+# Patrón 3: Excluir por profundidad
+**/__pycache__
+# ↑ Excluye __pycache__ en CUALQUIER nivel de profundidad
+
+# Patrón 4: Excluir archivos temporales
+*.tmp
+*.temp
+*~
+.DS_Store
+# ↑ Archivos del sistema operativo que no deben ir al contenedor
+```
+
+---
+
+### 13.7.7 🔗 Conexión Docker → Kubernetes: De Imagen a Producción
+
+El Dockerfile que construyes es solo el primer paso. En producción, esa imagen se despliega en Kubernetes. Veamos cómo se conectan:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    FLUJO: DOCKERFILE → KUBERNETES                                │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  1. BUILD                          2. PUSH                        3. DEPLOY     │
+│  ─────────                         ─────                          ───────       │
+│  ┌──────────────┐                 ┌──────────────┐              ┌────────────┐ │
+│  │ Dockerfile   │  docker build   │ Image        │  docker push │ K8s        │ │
+│  │              │ ───────────────►│ bankchurn    │ ────────────►│ Deployment │ │
+│  │ Multi-stage  │                 │ :v2.0.0      │              │            │ │
+│  │ ~350MB       │                 │              │              │ 3 replicas │ │
+│  └──────────────┘                 └──────────────┘              └────────────┘ │
+│                                           │                            │        │
+│  BankChurn-Predictor/                     │                            │        │
+│  Dockerfile                        Registry                   k8s/bankchurn-   │
+│                                   (DockerHub/                 deployment.yaml  │
+│                                    GitHub)                                      │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Extracto de `k8s/bankchurn-deployment.yaml` del Portafolio**:
+
+```yaml
+# k8s/bankchurn-deployment.yaml - Cómo Kubernetes usa tu imagen Docker
+# ═══════════════════════════════════════════════════════════════════
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bankchurn-predictor
+  namespace: ml-portfolio
+  # ↑ namespace: aísla recursos del resto del cluster
+spec:
+  replicas: 3
+  # ↑ replicas: 3 instancias del contenedor para alta disponibilidad
+  #   ¿Por qué 3? → Tolerancia a fallos: si 1 cae, quedan 2
+  
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1       # ← Máximo 1 pod extra durante update
+      maxUnavailable: 1 # ← Máximo 1 pod no disponible durante update
+    # ↑ RollingUpdate: depliegue sin downtime (pods se actualizan uno a uno)
+  
+  template:
+    spec:
+      containers:
+      - name: bankchurn-api
+        image: duqueom/bankchurn-predictor:v2.0.0
+        # ↑ ESTA es la imagen que construiste con tu Dockerfile
+        #   El tag :v2.0.0 permite rollback a versiones anteriores
+        
+        imagePullPolicy: Always
+        # ↑ Always: siempre descarga la imagen (útil para latest o CI/CD)
+        #   IfNotPresent: solo si no existe localmente (más rápido)
+        
+        ports:
+        - containerPort: 8000
+          # ↑ Mismo puerto que EXPOSE 8000 en Dockerfile
+        
+        env:
+        - name: MODEL_PATH
+          value: "/app/models/model.pkl"
+          # ↑ Variables de entorno inyectadas en runtime (no hardcodeadas en imagen)
+        
+        resources:
+          requests:
+            memory: "512Mi"  # ← Mínimo garantizado de RAM
+            cpu: "250m"      # ← Mínimo garantizado de CPU (250 millicores = 0.25 cores)
+          limits:
+            memory: "1Gi"    # ← Máximo permitido de RAM
+            cpu: "1000m"     # ← Máximo permitido de CPU (1 core)
+          # ↑ resources: K8s usa esto para scheduling y evitar que un pod "mate" al nodo
+        
+        livenessProbe:
+          httpGet:
+            path: /health    # ← Mismo endpoint que HEALTHCHECK en Dockerfile
+            port: 8000
+          initialDelaySeconds: 30  # ← Espera 30s antes del primer check
+          periodSeconds: 10        # ← Cada 10s
+          failureThreshold: 3      # ← 3 fallos = reinicia el pod
+          # ↑ livenessProbe: K8s reinicia el pod si /health no responde
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10  # ← Menos tiempo que liveness
+          periodSeconds: 5
+          # ↑ readinessProbe: K8s no envía tráfico hasta que el pod esté ready
+        
+        volumeMounts:
+        - name: model-storage
+          mountPath: /app/models  # ← Misma ruta que MODEL_PATH
+          readOnly: true          # ← Solo lectura (seguridad)
+          # ↑ volumeMounts: modelos NO van en la imagen, se montan en runtime
+      
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: ml-models-pvc
+          # ↑ PVC: almacenamiento persistente para modelos (sobrevive a reinicios)
+```
+
+**Conexiones clave Dockerfile ↔ K8s**:
+
+| Dockerfile | Kubernetes Deployment |
+|------------|----------------------|
+| `EXPOSE 8000` | `containerPort: 8000` |
+| `HEALTHCHECK` | `livenessProbe` + `readinessProbe` |
+| `USER appuser` | `securityContext.runAsUser: 1000` |
+| `ENV MODEL_PATH` | `env: - name: MODEL_PATH` |
+| `CMD ["uvicorn"...]` | (hereda del Dockerfile) |
+| `mkdir -p models` | `volumeMounts.mountPath: /app/models` |
+
+---
+
+### 13.7.8 📊 Métricas de Éxito: ¿Cómo Saber que lo Hiciste Bien?
+
+Después de completar el laboratorio, verifica estas métricas:
+
+```bash
+# ══════════════════════════════════════════════════════════════════════════════
+# Script de verificación: check_docker_quality.sh
+# Ejecuta después de construir tu imagen
+# ══════════════════════════════════════════════════════════════════════════════
+
+#!/bin/bash
+# Script para verificar la calidad de tu imagen Docker
+# Uso: bash check_docker_quality.sh bankchurn:latest
+
+IMAGE_NAME=${1:-"bankchurn:latest"}
+
+echo "🔍 Verificando imagen: $IMAGE_NAME"
+echo "═══════════════════════════════════════════════════════════════"
+
+# 1. Verificar tamaño de imagen
+# ─────────────────────────────
+SIZE=$(docker images $IMAGE_NAME --format "{{.Size}}")
+echo "📦 Tamaño de imagen: $SIZE"
+# Objetivo: < 500MB para imágenes de ML
+
+# 2. Verificar que NO tiene compiladores
+# ──────────────────────────────────────
+echo ""
+echo "🔧 Verificando ausencia de compiladores..."
+docker run --rm $IMAGE_NAME which gcc 2>/dev/null
+if [ $? -eq 0 ]; then
+    echo "   ❌ PROBLEMA: gcc encontrado en imagen runtime"
+else
+    echo "   ✅ OK: gcc no presente (multi-stage funcionó)"
+fi
+
+# 3. Verificar usuario non-root
+# ─────────────────────────────
+echo ""
+echo "👤 Verificando usuario..."
+USER=$(docker run --rm $IMAGE_NAME whoami)
+echo "   Usuario actual: $USER"
+if [ "$USER" == "appuser" ]; then
+    echo "   ✅ OK: Corre como non-root"
+else
+    echo "   ❌ PROBLEMA: Corre como $USER (debería ser appuser)"
+fi
+
+# 4. Verificar PYTHONPATH
+# ───────────────────────
+echo ""
+echo "🐍 Verificando PYTHONPATH..."
+PYPATH=$(docker run --rm $IMAGE_NAME printenv PYTHONPATH)
+echo "   PYTHONPATH: $PYPATH"
+if [ "$PYPATH" == "/app" ]; then
+    echo "   ✅ OK: PYTHONPATH configurado"
+else
+    echo "   ❌ PROBLEMA: PYTHONPATH incorrecto o no configurado"
+fi
+
+# 5. Verificar estructura de directorios
+# ──────────────────────────────────────
+echo ""
+echo "📁 Verificando estructura..."
+docker run --rm $IMAGE_NAME ls -la /app | head -10
+
+# 6. Verificar healthcheck
+# ────────────────────────
+echo ""
+echo "💓 Verificando HEALTHCHECK configurado..."
+HEALTH=$(docker inspect $IMAGE_NAME --format='{{.Config.Healthcheck}}')
+if [ "$HEALTH" != "<nil>" ]; then
+    echo "   ✅ OK: HEALTHCHECK presente"
+    echo "   Configuración: $HEALTH"
+else
+    echo "   ❌ PROBLEMA: Sin HEALTHCHECK configurado"
+fi
+
+echo ""
+echo "═══════════════════════════════════════════════════════════════"
+echo "✅ Verificación completada"
+```
+
+**Tabla de Métricas Objetivo**:
+
+| Métrica | ❌ Malo | ⚠️ Aceptable | ✅ Excelente |
+|---------|--------|--------------|-------------|
+| **Tamaño de imagen** | > 1GB | 500MB-1GB | < 500MB |
+| **Tiempo de build (con cache)** | > 5min | 1-5min | < 1min |
+| **Tiempo de build (sin cache)** | > 15min | 5-15min | < 5min |
+| **Usuario en runtime** | root | - | appuser (non-root) |
+| **HEALTHCHECK** | ausente | presente sin start-period | completo |
+| **Layers de imagen** | > 20 | 10-20 | < 10 |
 
 ---
 

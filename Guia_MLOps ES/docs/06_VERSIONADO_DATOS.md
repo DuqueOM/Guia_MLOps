@@ -78,7 +78,7 @@ Para que esto cuente como progreso real, fuerza este mapeo:
 - [6.3 Versionado Básico](#63-versionado-basico)
 - [6.4 Pipelines con dvc.yaml](#64-pipelines)
 - [6.5 Métricas y Experimentos](#65-metricas)
-- [6.6 Patrones Avanzados](#66-patrones-avanzados)
+- [6.6 🔬 Ingeniería Inversa: DVC Pipeline Real](#66-ingenieria-inversa-dvc) ⭐ NUEVO
 - [Errores habituales](#errores-habituales)
 - [6.7 Ejercicio Integrador](#67-ejercicio)
 - [6.8 Autoevaluación](#68-autoevaluacion)
@@ -685,6 +685,70 @@ def train():
         # Log modelo
         mlflow.sklearn.log_model(model, "model")
 ```
+
+---
+
+<a id="66-ingenieria-inversa-dvc"></a>
+
+## 6.6 🔬 Ingeniería Inversa Pedagógica: DVC Pipeline Real
+
+> **Objetivo**: Entender CADA decisión detrás del `dvc.yaml` del portafolio.
+
+### 6.6.1 🎯 El "Por Qué" Arquitectónico
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                     │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│  PROBLEMA 1: ¿Cómo garantizo que preprocesamiento se re-ejecuta si cambia algo? │
+│  DECISIÓN: deps: [data/raw/Churn.csv, configs/config.yaml, script.py]           │
+│  RESULTADO: DVC detecta cambios y re-ejecuta solo lo necesario                  │
+│                                                                                 │
+│  PROBLEMA 2: ¿Cómo evito re-entrenar si nada cambió?                            │
+│  DECISIÓN: outs: [models/best_model.pkl] + DAG de dependencias                  │
+│  RESULTADO: `dvc repro` es idempotente - solo ejecuta stages afectados          │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 6.6.2 🔍 Anatomía de `dvc.yaml`
+
+**Archivo**: `ML-MLOps-Portfolio/BankChurn-Predictor/dvc.yaml`
+
+```yaml
+stages:
+  preprocess:
+    cmd: python data/preprocess.py --input data/raw/Churn.csv --output data/processed/churn_processed.csv
+    deps:                           # Si CUALQUIERA cambia → re-ejecutar.
+      - data/raw/Churn.csv          # Datos crudos.
+      - configs/config.yaml         # Parámetros.
+      - data/preprocess.py          # El script mismo.
+    outs:
+      - data/processed/churn_processed.csv
+
+  train:
+    cmd: python main.py --mode train --seed 42
+    deps:
+      - data/processed/churn_processed.csv  # Output del stage anterior (DAG).
+      - main.py
+    outs:
+      - models/best_model.pkl
+      - artifacts/training_results.json
+
+  evaluate:
+    cmd: python main.py --mode evaluate --model models/best_model.pkl
+    deps:
+      - models/best_model.pkl       # Depende del modelo entrenado.
+    outs:
+      - artifacts/metrics
+```
+
+### 6.6.3 🚨 Troubleshooting Preventivo
+
+| Síntoma | Causa | Solución |
+|---------|-------|----------|
+| **Stage no se re-ejecuta** | Script no en `deps` | Añade el .py a deps. |
+| **`dvc repro` ejecuta TODO** | Cache corrupto | `dvc gc -w` y re-ejecutar. |
+
 ---
  
 <a id="errores-habituales"></a>

@@ -78,6 +78,7 @@ Para que esto cuente como progreso real, fuerza este mapeo:
 3. [Custom Transformers](#73-custom-transformers-tu-superpoder)
 4. [Pipeline Completo: Código Real](#74-pipeline-completo-codigo-real)
 5. [Ejercicios Prácticos](#75-ejercicios-practicos)
+6. [🔬 Ingeniería Inversa: ColumnTransformer](#76-ingenieria-inversa-pipelines) ⭐ NUEVO
 - [Errores habituales](#errores-habituales)
 - [✅ Checkpoint](#checkpoint)
 
@@ -927,6 +928,59 @@ pipeline = build_telecom_pipeline()
 ```
 
 </details>
+
+---
+
+<a id="76-ingenieria-inversa-pipelines"></a>
+
+## 7.6 🔬 Ingeniería Inversa Pedagógica: ColumnTransformer Real
+
+> **Objetivo**: Entender las decisiones del preprocesamiento del portafolio.
+
+### 7.6.1 🎯 El "Por Qué" Arquitectónico
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│  PROBLEMA 1: ¿Cómo manejo NaN en categóricas vs numéricas?                      │
+│  DECISIÓN: Pipeline separado: median para num, "missing" para cat               │
+│                                                                                 │
+│  PROBLEMA 2: ¿Qué pasa si llega una categoría nueva en producción?              │
+│  DECISIÓN: OneHotEncoder(handle_unknown="ignore") → ceros                       │
+│                                                                                 │
+│  PROBLEMA 3: ¿Cómo guardo preprocesador + modelo juntos?                        │
+│  DECISIÓN: Pipeline(preprocessor + classifier) como unidad atómica              │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 7.6.2 🔍 Anatomía del ColumnTransformer
+
+**Archivo**: `ML-MLOps-Portfolio/BankChurn-Predictor/src/bankchurn/training.py`
+
+```python
+# Pipeline CATEGÓRICO
+def _build_categorical_pipeline(self) -> Pipeline:
+    return Pipeline([
+        ("imputer", SimpleImputer(strategy="constant", fill_value="missing")),
+        ("onehot", OneHotEncoder(drop="first", handle_unknown="ignore")),
+    ])
+
+# Pipeline NUMÉRICO  
+def _build_numerical_pipeline(self) -> Pipeline:
+    return Pipeline([
+        ("imputer", SimpleImputer(strategy="median")),
+        ("scaler", StandardScaler()),
+    ])
+
+# ColumnTransformer combina ambos
+return ColumnTransformer(transformers=transformers, remainder="drop")
+```
+
+### 7.6.3 🚨 Troubleshooting
+
+| Síntoma | Solución |
+|---------|----------|
+| **"X has N features, expecting M"** | `remainder="drop"` + orden fijo |
+| **"unknown categories"** | `handle_unknown="ignore"` |
 
 ---
 

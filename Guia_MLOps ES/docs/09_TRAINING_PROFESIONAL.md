@@ -85,6 +85,7 @@ Para que esto cuente como progreso real, fuerza este mapeo:
  3. [Cross-Validation Profesional](#93-cross-validation-profesional)
  4. [Gestión de Artefactos](#94-gestion-de-artefactos)
  5. [Logging y Métricas](#95-logging-y-metricas)
+ 6. [🔬 Ingeniería Inversa: ChurnTrainer Real](#96-ingenieria-inversa-training) ⭐ NUEVO
  - [Errores habituales](#errores-habituales)
  - [✅ Ejercicio: Implementar tu Trainer](#ejercicio)
 
@@ -542,6 +543,169 @@ def _log_to_mlflow(self) -> None:
         
         logger.info(f"MLflow run logged: {mlflow.active_run().info.run_id}")
 ```
+
+---
+
+<a id="96-ingenieria-inversa-training"></a>
+
+## 9.6 🔬 Ingeniería Inversa Pedagógica: ChurnTrainer Real
+
+> **Objetivo**: Entender CADA decisión detrás del `ChurnTrainer` del portafolio.
+
+### 9.6.1 🎯 El "Por Qué" Arquitectónico
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                    │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  PROBLEMA 1: ¿Cómo hago que el training sea reproducible entre ejecuciones?     │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: "Funciona en mi máquina" pero métricas diferentes en CI                │
+│  DECISIÓN: random_state explícito en constructor + config externa               │
+│  RESULTADO: Misma semilla → mismas métricas (±0.01%)                            │
+│  REFERENCIA: training.py líneas 57-63                                           │
+│                                                                                 │
+│  PROBLEMA 2: ¿Cómo detecto automáticamente tipos de features?                   │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: Hardcodear columnas → falla si el schema cambia                        │
+│  DECISIÓN: Auto-detección con fallback a config explícita                       │
+│  RESULTADO: Funciona con nuevos datasets, pero permite override                 │
+│  REFERENCIA: training.py::_detect_feature_types (líneas 136-158)                │
+│                                                                                 │
+│  PROBLEMA 3: ¿Cómo integro MLflow sin acoplar el código?                        │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: MLflow falla → training crashea                                        │
+│  DECISIÓN: config.mlflow.enabled + try/except en setup                          │
+│  RESULTADO: Training funciona sin MLflow, pero lo usa si está disponible        │
+│  REFERENCIA: training.py líneas 65-71                                           │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 9.6.2 🔍 Anatomía de `ChurnTrainer`
+
+**Archivo**: `ML-MLOps-Portfolio/BankChurn-Predictor/src/bankchurn/training.py`
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 1: Constructor con Configuración Externalizada
+# ═══════════════════════════════════════════════════════════════════════════════
+class ChurnTrainer:
+    def __init__(self, config: BankChurnConfig, random_state: int | None = None):
+        self.config = config                           # Config Pydantic validada.
+        self.random_state = random_state or config.model.random_state
+        # ¿Por qué `or`?
+        # - Permite override desde código (útil para tests).
+        # - Si no se pasa, usa el valor de config (para reproducibilidad).
+        
+        self.model_: Pipeline | None = None            # Modelo entrenado (None hasta fit).
+        self.preprocessor_: ColumnTransformer | None = None
+        
+        # Configurar MLflow si está habilitado
+        if self.config.mlflow.enabled:
+            try:
+                mlflow.set_tracking_uri(self.config.mlflow.tracking_uri)
+                mlflow.set_experiment(self.config.mlflow.experiment_name)
+            except Exception as e:
+                logger.warning(f"Failed to configure MLflow: {e}")
+                # NO crashea. Training continúa sin tracking.
+# ¿Por qué try/except para MLflow?
+# - MLflow puede no estar disponible (server down, sin permisos, etc.).
+# - El training es más importante que el tracking.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 2: Carga de Datos con Validación
+# ═══════════════════════════════════════════════════════════════════════════════
+    def load_data(self, input_path: str | Path) -> pd.DataFrame:
+        input_path = Path(input_path)
+        
+        if not input_path.exists():
+            raise FileNotFoundError(f"Input file not found: {input_path}")
+        
+        data = pd.read_csv(input_path)
+        logger.info(f"Loaded data: {data.shape[0]} rows, {data.shape[1]} columns")
+        
+        # Validar columnas requeridas
+        required = [self.config.data.target_column]
+        missing = set(required) - set(data.columns)
+        if missing:
+            raise ValueError(f"Missing required columns: {missing}")
+        
+        return data
+# ¿Por qué validar columnas antes de entrenar?
+# - Fail fast: detectar errores de datos ANTES de gastar compute.
+# - Mensajes claros: "Missing column X" vs "KeyError" críptico.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 3: Detección Automática de Tipos
+# ═══════════════════════════════════════════════════════════════════════════════
+    def _detect_feature_types(self, X: pd.DataFrame) -> tuple[list[str], list[str]]:
+        cat_config = self.config.data.categorical_features
+        num_config = self.config.data.numerical_features
+        
+        # Usa config si está presente, sino auto-detecta
+        if cat_config:
+            cat_features = [c for c in cat_config if c in X.columns]
+        else:
+            cat_features = X.select_dtypes(include=["object", "category"]).columns.tolist()
+        
+        if num_config:
+            num_features = [c for c in num_config if c in X.columns]
+        else:
+            num_features = X.select_dtypes(include=[np.number]).columns.tolist()
+        
+        return cat_features, num_features
+# ¿Por qué este patrón "config or auto-detect"?
+# - Flexibilidad: funciona sin config (desarrollo rápido).
+# - Control: config explícita para producción (evita sorpresas).
+```
+
+### 9.6.3 🧪 Laboratorio de Replicación
+
+**Tu misión**: Crear tu propio Trainer siguiendo el patrón del portafolio.
+
+```python
+# src/mi_proyecto/training.py
+from dataclasses import dataclass
+from pathlib import Path
+import pandas as pd
+import joblib
+from sklearn.pipeline import Pipeline
+
+@dataclass
+class TrainerConfig:
+    target_column: str
+    random_state: int = 42
+    test_size: float = 0.2
+
+class MiTrainer:
+    def __init__(self, config: TrainerConfig):
+        self.config = config
+        self.model_: Pipeline | None = None
+    
+    def load_data(self, path: Path) -> pd.DataFrame:
+        if not path.exists():
+            raise FileNotFoundError(f"No existe: {path}")
+        return pd.read_csv(path)
+    
+    def train(self, data: pd.DataFrame) -> dict:
+        # Tu lógica de training aquí
+        ...
+        return {"f1": 0.85, "auc": 0.90}
+    
+    def save(self, path: Path) -> None:
+        joblib.dump(self.model_, path)
+```
+
+### 9.6.4 🚨 Troubleshooting Preventivo
+
+| Síntoma | Causa Probable | Solución |
+|---------|----------------|----------|
+| **Métricas diferentes entre ejecuciones** | random_state no fijado en todos los lugares | Pasa random_state a train_test_split, modelo, y CV. |
+| **KeyError en columna target** | Config no actualizada con nombre correcto | Valida `config.data.target_column` contra `df.columns`. |
+| **MLflow "experiment not found"** | set_experiment antes de set_tracking_uri | Llama siempre `set_tracking_uri` primero. |
+| **Pipeline no serializable** | Custom transformer sin `__getstate__` | Usa solo transformers de sklearn o implementa serialización. |
 
 ---
 

@@ -994,6 +994,180 @@ EOF
 
 ---
 
+<a id="128-ingenieria-inversa-cicd"></a>
+
+## 12.8 🔬 Ingeniería Inversa Pedagógica: El Pipeline CI/CD Real
+
+> **Objetivo**: Entender CADA decisión técnica detrás del workflow `.github/workflows/ci-mlops.yml` del portafolio.
+
+Esta sección aplica el método de "Shadow Coder Senior": diseccionamos el pipeline real que orquesta los 3 proyectos del portafolio.
+
+### 12.8.1 🎯 El "Por Qué" Arquitectónico
+
+¿Por qué el portafolio usa un workflow tan complejo (500+ líneas) en lugar de un simple `pytest`?
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                     │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  PROBLEMA 1: Tenemos 3 proyectos (BankChurn, CarVision, Telecom) en un repo     │
+│  ─────────────────────────────────────────────────────────────                  │
+│  DECISIÓN: Matrix Strategy con variable `project`                               │
+│  RESULTADO: Un solo workflow gestiona 3 proyectos en paralelo                   │
+│  REFERENCIA: ci-mlops.yml líneas 34-38                                          │
+│                                                                                 │
+│  PROBLEMA 2: Incompatibilidad de versiones de Python entre dev y prod           │
+│  ─────────────────────────────────────────────────────────────                  │
+│  DECISIÓN: Matrix de `python-version: ['3.11', '3.12']`                         │
+│  RESULTADO: Validamos compatibilidad futura automáticamente                     │
+│  REFERENCIA: ci-mlops.yml línea 34                                              │
+│                                                                                 │
+│  PROBLEMA 3: Instalar dependencias toma 2 minutos por job (x6 jobs = 12 min)    │
+│  ─────────────────────────────────────────────────────────────                  │
+│  DECISIÓN: `cache: 'pip'` en setup-python                                       │
+│  RESULTADO: Builds bajan de 15 min a 3 min                                      │
+│  REFERENCIA: ci-mlops.yml línea 65                                              │
+│                                                                                 │
+│  PROBLEMA 4: Tests de integración requieren base de datos real (MLflow)         │
+│  ─────────────────────────────────────────────────────────────                  │
+│  DECISIÓN: Service containers (Postgres) en el runner                           │
+│  RESULTADO: Tests reales sin mocks para la DB                                   │
+│  REFERENCIA: ci-mlops.yml líneas 40-53                                          │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 12.8.2 🔍 Anatomía Línea por Línea: `ci-mlops.yml`
+
+Analicemos los bloques críticos que distinguen a un Senior MLOps Engineer.
+
+```yaml
+# .github/workflows/ci-mlops.yml
+
+# BLOQUE 1: Disparadores Inteligentes
+# ───────────────────────────────────
+on:
+  push:
+    branches: [ main, develop ]   # Corre en ramas principales
+  pull_request:
+    branches: [ main ]            # Corre en PRs hacia main
+  workflow_dispatch:              # Permite ejecución manual desde UI
+    inputs:
+      run_integration:
+        description: 'Run full integration tests'
+        required: false
+        default: 'true'
+        type: boolean
+# ¿Por qué? workflow_dispatch es vital para debuggear CI sin hacer commits vacíos.
+
+# BLOQUE 2: Matrix Strategy (El corazón del monorepo)
+# ───────────────────────────────────────────────────
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false            # CRÍTICO: Si falla BankChurn, NO canceles CarVision
+      matrix:
+        python-version: ['3.11', '3.12']
+        project:
+          - BankChurn-Predictor
+          - CarVision-Market-Intelligence
+          - TelecomAI-Customer-Intelligence
+# ¿Por qué? Esto genera 6 jobs (2 versiones * 3 proyectos).
+# fail-fast: false nos permite ver TODOS los errores de una vez.
+
+# BLOQUE 3: Servicios para Tests de Integración
+# ─────────────────────────────────────────────
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_DB: mlflow
+          POSTGRES_USER: mlflow
+          POSTGRES_PASSWORD: mlflow_test
+        options: >-
+          --health-cmd "pg_isready -U mlflow"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+# ¿Por qué? MLflow necesita backend. Usar mocks oculta errores de integración real.
+# El health-cmd asegura que Postgres esté LISTO antes de iniciar los tests.
+
+# BLOQUE 4: Instalación Inteligente de Dependencias
+# ─────────────────────────────────────────────────
+      - name: Install dependencies
+        working-directory: ${{ matrix.project }}  # cd al directorio del proyecto actual
+        run: |
+          # Manejo híbrido de requirements.txt vs .in
+          if [ -f requirements.in ]; then
+            pip install -r requirements.in
+          elif [ -f requirements.txt ]; then
+            # Hack para limpiar hashes si causan conflictos en CI
+            grep -v '^[[:space:]]*--hash=' requirements.txt ... > requirements_no_hash.txt
+            pip install -r requirements_no_hash.txt
+          fi
+# ¿Por qué? En un monorepo, cada proyecto tiene sus propias deps.
+# El `working-directory` es clave aquí.
+
+# BLOQUE 5: Thresholds de Coverage Dinámicos
+# ──────────────────────────────────────────
+      - name: Run tests with coverage
+        working-directory: ${{ matrix.project }}
+        run: |
+          # Lógica condicional en Bash dentro del YAML
+          if [ "${{ matrix.project }}" = "BankChurn-Predictor" ]; then
+            THRESHOLD=79
+          else
+            THRESHOLD=80
+          fi
+          
+          pytest ... --cov-fail-under=$THRESHOLD
+# ¿Por qué? No todos los proyectos maduran igual. BankChurn puede ser legacy (79%)
+# mientras CarVision es nuevo (80%). No bajes la vara del nuevo por culpa del viejo.
+```
+
+### 12.8.3 🧪 Laboratorio de Replicación
+
+**Tu misión**: Crear un mini-pipeline matrix que pruebe 2 carpetas ficticias.
+
+1. **Crea la estructura**:
+   ```bash
+   mkdir -p labs/ci-matrix/{api-a,api-b}
+   touch labs/ci-matrix/api-a/test_a.py
+   touch labs/ci-matrix/api-b/test_b.py
+   ```
+
+2. **Crea el workflow `.github/workflows/lab-matrix.yml`**:
+   ```yaml
+   name: Lab Matrix
+   on: workflow_dispatch
+   jobs:
+     test:
+       runs-on: ubuntu-latest
+       strategy:
+         matrix:
+           service: [api-a, api-b]
+       steps:
+         - uses: actions/checkout@v4
+         - name: Test ${{ matrix.service }}
+           working-directory: labs/ci-matrix/${{ matrix.service }}
+           run: echo "Running tests for ${{ matrix.service }}"
+   ```
+
+3. **Ejecútalo manualmente** y observa cómo se crean 2 jobs paralelos.
+
+### 12.8.4 🚨 Troubleshooting Preventivo
+
+| Síntoma | Causa Probable | Solución |
+|---------|----------------|----------|
+| **"Process completed with exit code 1" en `pip install`** | Conflicto de hashes en `requirements.txt` entre OS (Linux CI vs Mac Local) | Usar el script `sed` para limpiar hashes o usar `pip-compile` multiplataforma. |
+| **Tests pasan pero Coverage falla** | El threshold es muy alto para el estado actual | Ajustar `THRESHOLD` en el bloque condicional bash. |
+| **Postgres connection refused** | El servicio no estaba listo cuando pytest arrancó | Verificar `options: --health-cmd` en la definición del servicio. |
+| **"ModuleNotFoundError" en CI** | `working-directory` incorrecto | Asegurar que `working-directory: ${{ matrix.project }}` esté en CADA paso que use archivos del proyecto. |
+
+---
+
 <a id="errores-habituales"></a>
 
 ## 🧨 Errores habituales y cómo depurarlos en CI/CD

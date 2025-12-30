@@ -32,8 +32,9 @@
 - [5.3 Estrategias de Branching](#53-branching)
 - [5.4 Comandos Avanzados](#54-comandos-avanzados)
 - [5.5 .gitignore profesional](#55-gitignore)
-- [5.6 Ejercicio integrador](#56-ejercicio)
-- [Errores habituales](#-errores-habituales-y-cómo-depurarlos-en-git)
+- [5.6 🔬 Ingeniería Inversa: Git Profesional](#56-ingenieria-inversa-git) ⭐ NUEVO
+- [5.7 Ejercicio integrador](#57-ejercicio)
+- [Errores habituales](#errores-habituales)
 - [5.7 Autoevaluación](#57-autoevaluación)
 
 ---
@@ -839,12 +840,63 @@ PRE-COMMIT:
  ```
 
 ---
+<a id="56-ingenieria-inversa-git"></a>
 
+## 5.6 🔬 Ingeniería Inversa Pedagógica: Git en el Portafolio
+
+> **Objetivo**: Entender las decisiones de Git profesional en el portafolio real.
+
+### 5.6.1 🎯 El "Por Qué" Arquitectónico
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                     │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│  PROBLEMA 1: ¿Cómo evito commits que rompen CI antes de hacer push?             │
+│  DECISIÓN: Pre-commit hooks con linting (flake8, black, isort)                  │
+│  RESULTADO: Errores de estilo detectados localmente, no en CI                   │
+│                                                                                 │
+│  PROBLEMA 2: ¿Cómo mantengo historial legible para code review?                 │
+│  DECISIÓN: Conventional Commits (feat:, fix:, docs:, refactor:)                 │
+│  RESULTADO: CHANGELOG auto-generado, PRs fáciles de revisar                     │
+│                                                                                 │
+│  PROBLEMA 3: ¿Cómo evito subir secrets o archivos grandes por accidente?        │
+│  DECISIÓN: .gitignore exhaustivo + gitleaks en CI                               │
+│  RESULTADO: Secrets bloqueados antes de llegar al repo remoto                   │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 5.6.2 🔍 Patrón de Commits del Portafolio
+
+```bash
+# Ejemplos REALES de commits del portafolio:
+feat(bankchurn): add ensemble voting classifier
+fix(api): handle missing features gracefully  
+docs(readme): update installation instructions
+refactor(training): extract preprocessing to separate method
+test(integration): add leakage prevention test
+ci(workflows): add drift detection schedule
+
+# Estructura: <type>(<scope>): <description>
+# - type: feat|fix|docs|refactor|test|ci|chore
+# - scope: proyecto o componente afectado
+# - description: imperativo, minúsculas, sin punto final
+```
+
+### 5.6.3 🚨 Troubleshooting Preventivo
+
+| Síntoma | Causa | Solución |
+|---------|-------|----------|
+| **Pre-commit falla en black** | Formato incorrecto | `black .` antes de commit |
+| **gitleaks bloquea push** | API key en código | Mover a .env, añadir a .gitignore |
+| **Merge conflict en CI files** | Ediciones paralelas | Rebase frecuente desde main |
+
+---
 <a id="errores-habituales"></a>
 
 ## 🧨 Errores habituales y cómo depurarlos en Git
 
- Git aquí no es solo “guardar versiones”, sino soportar **flujos de trabajo profesionales** con branches, hooks y CI. Estos son los errores más frecuentes en el portafolio y cómo atacarlos.
+ Git aquí no es solo "guardar versiones", sino soportar **flujos de trabajo profesionales** con branches, hooks y CI. Estos son los errores más frecuentes en el portafolio y cómo atacarlos.
  
  Si alguno de estos errores te tomó **>15 minutos**, regístralo en el **[Diario de Errores](study_tools/DIARIO_ERRORES.md)** y aplica el flujo de **rescate cognitivo** de **[Protocolo E](study_tools/PROTOCOLO_E.md)**.
 

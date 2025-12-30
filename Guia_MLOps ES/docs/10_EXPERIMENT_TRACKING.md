@@ -84,6 +84,7 @@
 3. [Logging de Experimentos](#103-logging-de-experimentos)
 4. [Model Registry](#104-model-registry)
 5. [Código Real del Portafolio](#105-codigo-real-del-portafolio)
+6. [🔬 Ingeniería Inversa Pedagógica: MLflow Producción](#106-ingenieria-inversa-mlflow) ⭐ NUEVO
 - [Errores habituales](#errores-habituales)
 - [✅ Ejercicio](#ejercicio)
 - [✅ Checkpoint](#checkpoint)
@@ -479,6 +480,333 @@ mlflow-ui:
 @echo "Starting MLflow UI at http://localhost:5000"
 mlflow ui --host 0.0.0.0 --port 5000
 ```
+
+---
+
+<a id="106-ingenieria-inversa-mlflow"></a>
+
+## 10.6 🔬 Ingeniería Inversa Pedagógica: MLflow en Producción Real
+
+> **Objetivo**: Entender CADA decisión arquitectónica detrás del setup de MLflow del portafolio.
+
+Esta sección aplica el método de "Shadow Coder Senior": diseccionamos la infraestructura MLflow real que soporta los 3 proyectos del portafolio.
+
+### 10.6.1 🎯 El "Por Qué" Arquitectónico
+
+¿Por qué el portafolio usa un `docker-compose.mlflow.yml` separado en lugar de un simple `mlflow ui`?
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                    │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  PROBLEMA 1: `mlflow ui` guarda todo en archivos locales (SQLite + filesystem)  │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: Pérdida de datos, no escalable, no colaborativo                        │
+│  DECISIÓN: PostgreSQL como backend store                                        │
+│  RESULTADO: Persistencia robusta, queries SQL, backups fáciles                  │
+│  REFERENCIA: docker-compose.mlflow.yml líneas 8-24                              │
+│                                                                                 │
+│  PROBLEMA 2: Artifacts grandes (modelos) saturan el disco del servidor          │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: Sin espacio, artifacts perdidos, no replicable a la nube               │
+│  DECISIÓN: MinIO (S3-compatible) como artifact store                            │
+│  RESULTADO: Storage ilimitado, compatible con AWS S3, UI para navegar           │
+│  REFERENCIA: docker-compose.mlflow.yml líneas 27-46                             │
+│                                                                                 │
+│  PROBLEMA 3: Equipos necesitan compartir experimentos y modelos                 │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: "Funciona en mi máquina", modelos duplicados, sin trazabilidad         │
+│  DECISIÓN: Servidor MLflow centralizado con Model Registry                      │
+│  RESULTADO: Un solo punto de verdad, promoción Staging→Production               │
+│  REFERENCIA: docker-compose.mlflow.yml líneas 66-97                             │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 10.6.2 🔍 Anatomía de `docker-compose.mlflow.yml`
+
+**Archivo**: `ML-MLOps-Portfolio/docker-compose.mlflow.yml`
+
+```yaml
+version: '3.8'
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SERVICIO 1: PostgreSQL (Backend Store)
+# ═══════════════════════════════════════════════════════════════════════════════
+services:
+  postgres:
+    image: postgres:13-alpine                    # Alpine = imagen ligera (~50MB vs 300MB).
+    container_name: mlflow-postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-mlflow}   # ${VAR:-default}: usa variable de entorno o default.
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-mlflow_password}
+      - POSTGRES_DB=${POSTGRES_DB:-mlflow}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Volumen nombrado: persiste datos entre reinicios.
+    healthcheck:                                 # Docker verifica que Postgres esté LISTO.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mlflow}"]
+      interval: 10s                              # Chequea cada 10 segundos.
+      timeout: 5s                                # Falla si no responde en 5s.
+      retries: 5                                 # 5 intentos antes de declarar "unhealthy".
+    networks:
+      - mlflow-network                           # Red interna: aísla servicios del host.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SERVICIO 2: MinIO (Artifact Store S3-Compatible)
+# ═══════════════════════════════════════════════════════════════════════════════
+  minio:
+    image: minio/minio:latest
+    container_name: mlflow-minio
+    ports:
+      - "9000:9000"                              # API: donde MLflow sube/descarga artifacts.
+      - "9001:9001"                              # Console: UI web para navegar buckets.
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/data                         # Artifacts persisten aquí.
+    command: server /data --console-address ":9001"  # Inicia servidor con UI en 9001.
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+# ¿Por qué curl y no un comando interno? MinIO expone health checks HTTP nativamente.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SERVICIO 3: Bucket Creator (Init Container)
+# ═══════════════════════════════════════════════════════════════════════════════
+  minio-create-bucket:
+    image: minio/mc:latest                       # mc = MinIO Client (CLI).
+    container_name: mlflow-minio-setup
+    depends_on:
+      - minio                                    # Espera a que MinIO arranque.
+    entrypoint: >                                # Script inline (patrón común en docker-compose).
+      /bin/sh -c "
+      sleep 10;                                  # Espera adicional (MinIO puede tardar).
+      /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb myminio/mlflow-artifacts --ignore-existing;  # Crea bucket si no existe.
+      /usr/bin/mc anonymous set download myminio/mlflow-artifacts;  # Permite descargas.
+      exit 0;
+      "
+# ¿Por qué un contenedor separado? Patrón "init container": ejecuta una vez y termina.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SERVICIO 4: MLflow Server
+# ═══════════════════════════════════════════════════════════════════════════════
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: mlflow-server
+    ports:
+      - "5000:5000"                              # UI y API en el mismo puerto.
+    environment:
+      # Backend store: dónde guardar metadata (runs, params, metrics).
+      - MLFLOW_BACKEND_STORE_URI=postgresql://mlflow:mlflow_password@postgres:5432/mlflow
+      # Artifact store: dónde guardar archivos grandes (modelos, plots).
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=s3://mlflow-artifacts/
+      # Credenciales para MinIO (simula AWS S3).
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000  # CRÍTICO: apunta a MinIO, no a AWS.
+    depends_on:
+      postgres:
+        condition: service_healthy               # Espera a que Postgres esté healthy.
+      minio:
+        condition: service_healthy
+      minio-create-bucket:
+        condition: service_completed_successfully  # Espera a que el bucket exista.
+    command: >
+      mlflow server
+      --backend-store-uri postgresql://mlflow:mlflow_password@postgres:5432/mlflow
+      --default-artifact-root s3://mlflow-artifacts/
+      --host 0.0.0.0                             # Escucha en todas las interfaces.
+      --port 5000
+```
+
+### 10.6.3 🔍 Anatomía de `scripts/run_mlflow.py`
+
+**Archivo**: `ML-MLOps-Portfolio/BankChurn-Predictor/scripts/run_mlflow.py`
+
+Este script es el **puente** entre el entrenamiento local y el servidor MLflow centralizado.
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 1: Configuración Flexible vía Variables de Entorno
+# ═══════════════════════════════════════════════════════════════════════════════
+def main() -> None:
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "file:./mlruns")
+    # ¿Por qué os.getenv con default?
+    # - En desarrollo: usa "file:./mlruns" (local, sin servidor).
+    # - En CI/CD: setea MLFLOW_TRACKING_URI=http://mlflow:5000.
+    # - En producción: apunta al servidor real.
+    
+    experiment = os.getenv("MLFLOW_EXPERIMENT_NAME") or "BankChurn"
+    # Patrón "or": si la variable está vacía (""), usa el default.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 2: Carga y Transformación de Métricas
+# ═══════════════════════════════════════════════════════════════════════════════
+    results_path = Path("artifacts/training_results.json")
+    if results_path.exists():
+        data = json.loads(results_path.read_text())
+        
+        # Extraer métricas de CV (cross-validation)
+        cv = data.get("cv_results", {})
+        for k, v in cv.items():
+            if isinstance(v, (int, float)):      # Solo loguea valores numéricos.
+                metrics[f"cv_{k}"] = float(v)    # Prefijo "cv_" para distinguir.
+        
+        # Extraer métricas de test
+        test_metrics = data.get("test_results", {}).get("metrics", {})
+        for k, v in test_metrics.items():
+            metrics[f"test_{k}"] = float(v)      # Prefijo "test_" para distinguir.
+# ¿Por qué prefijos? En MLflow UI puedes filtrar por "cv_*" vs "test_*".
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 3: Métricas de Negocio (Lo que distingue a un Senior)
+# ═══════════════════════════════════════════════════════════════════════════════
+        cm = test_results.get("confusion_matrix")  # [[TN, FP], [FN, TP]]
+        if cm:
+            tn, fp = cm[0]
+            fn, tp = cm[1]
+            
+            clv = float(os.getenv("BC_CLV_USD", "2300"))  # Customer Lifetime Value.
+            retention_rate = float(os.getenv("BC_RETENTION_RATE", "0.3"))
+            
+            saved_customers = float(tp) * retention_rate
+            saved_revenue = saved_customers * clv
+            
+            business_metrics = {
+                "biz_saved_customers_proxy": saved_customers,
+                "biz_saved_revenue_proxy_usd": saved_revenue,
+            }
+# ¿Por qué métricas de negocio?
+# - "F1=0.85" no significa nada para el negocio.
+# - "$690,000 en revenue salvado" sí justifica el proyecto.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 4: Logging con Manejo Robusto de Errores
+# ═══════════════════════════════════════════════════════════════════════════════
+    with mlflow.start_run(run_name="demo-logging"):
+        mlflow.log_params({"run_type": "demo"})
+        mlflow.log_metrics(metrics)
+        mlflow.log_metrics(business_metrics)
+        
+        # Artifacts: best-effort (puede fallar si el store no es accesible)
+        for p in [Path("artifacts/training_results.json"), Path("configs/config.yaml")]:
+            if p.exists():
+                try:
+                    mlflow.log_artifact(str(p))
+                except PermissionError:
+                    print(f"Skipping artifact {p}: permission denied")
+                    # NO crashea el script, solo advierte.
+# ¿Por qué try/except en artifacts?
+# - En CI/CD, el artifact store puede no ser accesible desde el runner.
+# - Mejor loguear métricas (crítico) que fallar por artifacts (nice-to-have).
+```
+
+### 10.6.4 🔍 Anatomía de `scripts/promote_model.py`
+
+**Archivo**: `ML-MLOps-Portfolio/scripts/promote_model.py`
+
+Este script implementa el **flujo CD** para modelos: validación → registro → promoción.
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 1: Configuración Multi-Proyecto
+# ═══════════════════════════════════════════════════════════════════════════════
+PROJECT_CONFIGS = {
+    "bankchurn": {
+        "dir": "BankChurn-Predictor",
+        "model_name": "BankChurn-Classifier",
+        "model_path": "models/best_model.pkl",
+        "metrics_path": "artifacts/metrics.json",
+        "default_thresholds": {"f1": 0.50, "auc": 0.75},  # Umbrales mínimos.
+    },
+    "carvision": {...},
+    "telecom": {...},
+}
+# ¿Por qué un dict de configs?
+# - Un solo script maneja los 3 proyectos del portafolio.
+# - Cada proyecto tiene sus propios umbrales (clasificación vs regresión).
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 2: Validación de Métricas (Quality Gate)
+# ═══════════════════════════════════════════════════════════════════════════════
+def validate_metrics(metrics: dict, thresholds: dict) -> tuple[bool, list[str]]:
+    failures = []
+    for threshold_name, threshold_value in thresholds.items():
+        actual_value = metrics.get(threshold_name)
+        if actual_value is not None:
+            # RMSE: menor es mejor. Otros: mayor es mejor.
+            if threshold_name == "rmse":
+                if actual_value > threshold_value:
+                    failures.append(f"{threshold_name}: {actual_value:.4f} > {threshold_value}")
+            else:
+                if actual_value < threshold_value:
+                    failures.append(f"{threshold_name}: {actual_value:.4f} < {threshold_value}")
+    return len(failures) == 0, failures
+# ¿Por qué validar antes de promover?
+# - Evita poner en producción un modelo que empeoró.
+# - Es el "quality gate" del flujo CD para ML.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 3: Promoción Condicional
+# ═══════════════════════════════════════════════════════════════════════════════
+if promote and passed:
+    client = MlflowClient()
+    versions = client.search_model_versions(f"name='{model_name}'")
+    if versions:
+        latest_version = max(versions, key=lambda v: int(v.version))
+        client.transition_model_version_stage(
+            name=model_name,
+            version=latest_version.version,
+            stage="Production",
+            archive_existing_versions=True,  # Archiva la versión anterior.
+        )
+# ¿Por qué archive_existing_versions=True?
+# - Solo una versión puede estar en "Production" a la vez.
+# - Las versiones anteriores se mueven a "Archived" (no se borran).
+```
+
+### 10.6.5 🧪 Laboratorio de Replicación
+
+**Tu misión**: Levantar el stack MLflow completo y registrar tu primer modelo.
+
+1. **Levanta la infraestructura**:
+   ```bash
+   cd /ruta/a/ML-MLOps-Portfolio
+   docker-compose -f docker-compose.mlflow.yml up -d
+   
+   # Verifica que todo esté healthy
+   docker-compose -f docker-compose.mlflow.yml ps
+   ```
+
+2. **Accede a las UIs**:
+   - MLflow: http://localhost:5000
+   - MinIO Console: http://localhost:9001 (user: minioadmin, pass: minioadmin)
+
+3. **Conecta desde Python**:
+   ```python
+   import mlflow
+   mlflow.set_tracking_uri("http://localhost:5000")
+   mlflow.set_experiment("mi-primer-experimento")
+   
+   with mlflow.start_run():
+       mlflow.log_param("test", "valor")
+       mlflow.log_metric("accuracy", 0.95)
+       print(f"Run ID: {mlflow.active_run().info.run_id}")
+   ```
+
+4. **Verifica en la UI** que el run aparece con params y métricas.
+
+### 10.6.6 🚨 Troubleshooting Preventivo
+
+| Síntoma | Causa Probable | Solución |
+|---------|----------------|----------|
+| **"Connection refused" al conectar a MLflow** | Servidor no arrancó o puerto bloqueado | `docker-compose logs mlflow` para ver errores. Verifica que puerto 5000 esté libre. |
+| **"Unable to upload artifact"** | MinIO no accesible o credenciales incorrectas | Verifica `MLFLOW_S3_ENDPOINT_URL` apunta a MinIO. Revisa user/pass. |
+| **Artifacts visibles en UI pero no descargables** | Bucket sin permisos de lectura | Ejecuta `mc anonymous set download myminio/mlflow-artifacts`. |
+| **Runs no aparecen en el experimento correcto** | `set_experiment()` no llamado antes de `start_run()` | Siempre llama `mlflow.set_experiment("nombre")` antes. |
+| **"Model registry is not available"** | Backend store es file-based | El registry requiere una DB real (PostgreSQL/MySQL). No funciona con `file:./mlruns`. |
 
 ---
 

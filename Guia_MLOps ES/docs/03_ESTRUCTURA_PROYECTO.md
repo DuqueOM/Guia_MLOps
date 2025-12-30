@@ -72,6 +72,7 @@ Para que esto cuente como progreso real, fuerza este mapeo:
 - [pyproject.toml completo](#pyproject)
 - [Makefile](#makefile)
 - [.gitignore](#gitignore)
+- [🔬 Ingeniería Inversa: Estructura Real](#36-ingenieria-inversa-estructura) ⭐ NUEVO
 - [Errores habituales y cómo depurarlos](#errores-habituales)
 - [Consejos Profesionales](#consejos-profesionales)
 - [Recursos Externos Recomendados](#recursos-externos)
@@ -376,6 +377,54 @@ htmlcov/
 .env
 .env.local
 ```
+
+---
+
+<a id="36-ingenieria-inversa-estructura"></a>
+
+## 3.6 🔬 Ingeniería Inversa Pedagógica: Estructura Real del Portafolio
+
+> **Objetivo**: Entender CADA decisión detrás de la estructura `src/` del portafolio.
+
+### 3.6.1 🎯 El "Por Qué" Arquitectónico
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                    │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│  PROBLEMA 1: ¿Cómo organizo código importable desde cualquier lugar?            │
+│  RIESGO: Sin src/, los imports dependen del directorio actual                   │
+│  DECISIÓN: src/<paquete>/ con __init__.py que exporta clases públicas           │
+│  RESULTADO: `from bankchurn import ChurnTrainer` funciona siempre               │
+│                                                                                 │
+│  PROBLEMA 2: ¿Cómo separo responsabilidades sin crear 50 archivos?              │
+│  DECISIÓN: Un archivo por dominio: training, prediction, evaluation, config     │
+│  RESULTADO: 8 archivos manejables con responsabilidad clara                     │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 3.6.2 🔍 Anatomía de `__init__.py`
+
+**Archivo**: `ML-MLOps-Portfolio/BankChurn-Predictor/src/bankchurn/__init__.py`
+
+```python
+"""Core BankChurn prediction modules."""
+from __future__ import annotations
+
+from .evaluation import ModelEvaluator
+from .prediction import ChurnPredictor
+from .training import ChurnTrainer
+
+__all__ = ["ChurnPredictor", "ChurnTrainer", "ModelEvaluator"]
+# __all__ documenta la API pública y controla "import *"
+```
+
+### 3.6.3 🚨 Troubleshooting Preventivo
+
+| Síntoma | Causa | Solución |
+|---------|-------|----------|
+| **ModuleNotFoundError en tests** | pythonpath no configurado | `pythonpath = ["src"]` en pyproject.toml |
+| **Import local OK, CI falla** | pip install -e . faltante | Añadir al workflow de CI |
 
 ---
 

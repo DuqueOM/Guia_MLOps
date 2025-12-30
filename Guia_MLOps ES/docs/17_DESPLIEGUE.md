@@ -32,6 +32,7 @@
 - **17.4** [Opción 3: Kubernetes](#174-opcion-3-kubernetes)
 - **17.5** [Análisis de Costos (FinOps)](#175-analisis-de-costos-finops)
 - **17.6** [Decisión para BankChurn](#176-decision-para-bankchurn)
+- **17.7** [🔬 Ingeniería Inversa: K8s Ingress Real](#177-ingenieria-inversa-k8s) ⭐ NUEVO
 - [Errores habituales](#errores-habituales)
 - [✅ Ejercicio](#ejercicio)
 - [✅ Checkpoint](#checkpoint)
@@ -482,6 +483,234 @@ spec:
 ║                                                                               ║
 ╚═══════════════════════════════════════════════════════════════════════════════╝
 ```
+
+---
+
+<a id="177-ingenieria-inversa-k8s"></a>
+
+## 17.7 🔬 Ingeniería Inversa Pedagógica: Kubernetes Ingress Real
+
+> **Objetivo**: Entender CADA decisión detrás del Ingress del portafolio que expone los 3 proyectos ML.
+
+### 17.7.1 🎯 El "Por Qué" Arquitectónico
+
+¿Por qué el portafolio usa Ingress con subdominios en lugar de un solo LoadBalancer por servicio?
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                    │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  PROBLEMA 1: ¿Cómo expongo 3 APIs ML al internet sin 3 LoadBalancers?           │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: $15-20/mes por LoadBalancer × 3 = $45-60/mes solo en networking        │
+│  DECISIÓN: Un solo Ingress con routing por host/path                            │
+│  RESULTADO: Un LoadBalancer, 3 servicios accesibles, ~$15/mes                   │
+│  REFERENCIA: ingress.yaml spec.rules (líneas 24-78)                             │
+│                                                                                 │
+│  PROBLEMA 2: ¿Cómo protejo las APIs con HTTPS sin gestionar certificados?       │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: HTTP en producción = credenciales expuestas, penalización SEO          │
+│  DECISIÓN: cert-manager + Let's Encrypt (renovación automática)                 │
+│  RESULTADO: TLS gratis, automático, sin intervención manual                     │
+│  REFERENCIA: ingress.yaml annotations cert-manager.io (línea 8)                 │
+│                                                                                 │
+│  PROBLEMA 3: ¿Cómo evito que un atacante sature las APIs con requests?          │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: DDoS, costos inflados, degradación para usuarios legítimos             │
+│  DECISIÓN: Rate limiting vía annotations nginx (100 req/s, 10 rps por IP)       │
+│  RESULTADO: Protección básica sin WAF externo                                   │
+│  REFERENCIA: ingress.yaml annotations rate-limit (líneas 10-11)                 │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 17.7.2 🔍 Anatomía de `ingress.yaml`
+
+**Archivo**: `ML-MLOps-Portfolio/k8s/ingress.yaml`
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ml-portfolio-ingress
+  namespace: ml-portfolio               # Todos los recursos en un namespace.
+  annotations:
+    # ═══════════════════════════════════════════════════════════════════════════
+    # BLOQUE 1: Configuración del Ingress Controller
+    # ═══════════════════════════════════════════════════════════════════════════
+    kubernetes.io/ingress.class: nginx  # Usa NGINX Ingress Controller.
+    # ¿Por qué nginx? Es el estándar, bien documentado, muchas features.
+    
+    # ═══════════════════════════════════════════════════════════════════════════
+    # BLOQUE 2: TLS Automático con Let's Encrypt
+    # ═══════════════════════════════════════════════════════════════════════════
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # ¿Cómo funciona?
+    # 1. cert-manager detecta esta annotation.
+    # 2. Solicita certificado a Let's Encrypt vía ACME challenge.
+    # 3. Almacena el certificado en el Secret indicado en spec.tls.
+    # 4. Renueva automáticamente antes de expirar (cada 90 días).
+    
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Fuerza HTTPS: cualquier request HTTP → 301 a HTTPS.
+    
+    # ═══════════════════════════════════════════════════════════════════════════
+    # BLOQUE 3: Rate Limiting (Protección DDoS básica)
+    # ═══════════════════════════════════════════════════════════════════════════
+    nginx.ingress.kubernetes.io/rate-limit: "100"       # 100 req/s globales.
+    nginx.ingress.kubernetes.io/limit-rps: "10"         # 10 req/s por IP.
+    # ¿Por qué 10 rps por IP?
+    # - Un usuario legítimo no hace 10 predicciones por segundo.
+    # - Un scraper/bot sí, y esto lo bloquea.
+    
+    # ═══════════════════════════════════════════════════════════════════════════
+    # BLOQUE 4: Timeouts para ML (inferencia puede ser lenta)
+    # ═══════════════════════════════════════════════════════════════════════════
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"  # Max body 10MB (imágenes).
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    # ¿Por qué 60s?
+    # - Inferencia de modelos grandes (CarVision con imágenes) puede tardar.
+    # - Default de NGINX es 60s, pero lo hacemos explícito.
+
+spec:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # BLOQUE 5: Certificados TLS
+  # ═══════════════════════════════════════════════════════════════════════════
+  tls:
+  - hosts:
+    - ml.duqueom.com                    # Dominio principal.
+    - bankchurn.ml.duqueom.com          # Subdominio por proyecto.
+    - telecom.ml.duqueom.com
+    - carvision.ml.duqueom.com
+    secretName: ml-portfolio-tls        # Donde cert-manager guarda el cert.
+  # ¿Por qué un solo Secret para 4 dominios?
+  # - Let's Encrypt soporta certificados multi-dominio (SAN).
+  # - Un cert = menos gestión que 4 certs separados.
+  
+  # ═══════════════════════════════════════════════════════════════════════════
+  # BLOQUE 6: Routing por Subdominio (Patrón preferido)
+  # ═══════════════════════════════════════════════════════════════════════════
+  rules:
+  - host: bankchurn.ml.duqueom.com      # Subdominio dedicado.
+    http:
+      paths:
+      - path: /                          # Todo el tráfico va al servicio.
+        pathType: Prefix
+        backend:
+          service:
+            name: bankchurn-service
+            port:
+              number: 80
+  # ¿Por qué subdominios vs paths?
+  # - Aislamiento: cada proyecto tiene su propio "namespace" de URLs.
+  # - Cookies: no se mezclan entre servicios.
+  # - Escalado: puedes mover un subdominio a otro cluster sin afectar otros.
+  
+  # ═══════════════════════════════════════════════════════════════════════════
+  # BLOQUE 7: Routing por Path (Alternativa para API Gateway)
+  # ═══════════════════════════════════════════════════════════════════════════
+  - host: ml.duqueom.com
+    http:
+      paths:
+      - path: /bankchurn                 # /bankchurn/* → bankchurn-service
+        pathType: Prefix
+        backend:
+          service:
+            name: bankchurn-service
+            port:
+              number: 80
+      - path: /telecom                   # /telecom/* → telecom-service
+        pathType: Prefix
+        backend:
+          service:
+            name: telecom-service
+            port:
+              number: 80
+  # ¿Cuándo usar paths?
+  # - Cuando necesitas un "API Gateway" con un solo dominio.
+  # - Para frontends que consumen múltiples APIs.
+```
+
+### 17.7.3 🧪 Laboratorio de Replicación
+
+**Tu misión**: Crear un Ingress para tu proyecto BankChurn.
+
+1. **Instala NGINX Ingress Controller** (si no lo tienes):
+   ```bash
+   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/cloud/deploy.yaml
+   ```
+
+2. **Instala cert-manager** para TLS automático:
+   ```bash
+   kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.2/cert-manager.yaml
+   ```
+
+3. **Crea tu ClusterIssuer**:
+   ```yaml
+   # clusterissuer.yaml
+   apiVersion: cert-manager.io/v1
+   kind: ClusterIssuer
+   metadata:
+     name: letsencrypt-prod
+   spec:
+     acme:
+       server: https://acme-v02.api.letsencrypt.org/directory
+       email: tu-email@example.com
+       privateKeySecretRef:
+         name: letsencrypt-prod
+       solvers:
+       - http01:
+           ingress:
+             class: nginx
+   ```
+
+4. **Crea tu Ingress básico**:
+   ```yaml
+   # mi-ingress.yaml
+   apiVersion: networking.k8s.io/v1
+   kind: Ingress
+   metadata:
+     name: bankchurn-ingress
+     annotations:
+       cert-manager.io/cluster-issuer: letsencrypt-prod
+       nginx.ingress.kubernetes.io/ssl-redirect: "true"
+   spec:
+     tls:
+     - hosts:
+       - tu-dominio.com
+       secretName: bankchurn-tls
+     rules:
+     - host: tu-dominio.com
+       http:
+         paths:
+         - path: /
+           pathType: Prefix
+           backend:
+             service:
+               name: bankchurn-service
+               port:
+                 number: 80
+   ```
+
+5. **Verifica**:
+   ```bash
+   kubectl apply -f mi-ingress.yaml
+   kubectl get certificate  # Espera a que esté "Ready"
+   curl https://tu-dominio.com/health
+   ```
+
+### 17.7.4 🚨 Troubleshooting Preventivo
+
+| Síntoma | Causa Probable | Solución |
+|---------|----------------|----------|
+| **404 en el Ingress** | Servicio no existe o puerto incorrecto | `kubectl get svc` y verifica nombre/puerto. |
+| **502 Bad Gateway** | Pods no están ready o healthcheck falla | `kubectl get pods` y revisa logs del pod. |
+| **Certificate no se genera** | DNS no apunta al Ingress IP o ClusterIssuer mal | `kubectl describe certificate` para ver eventos. |
+| **HTTP funciona pero HTTPS no** | Secret TLS no existe o está vacío | `kubectl get secret bankchurn-tls -o yaml`. |
+| **Rate limit bloquea usuarios legítimos** | Umbral muy bajo | Incrementa `limit-rps` o usa whitelist por IP. |
 
 ---
 

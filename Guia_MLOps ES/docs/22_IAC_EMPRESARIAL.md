@@ -17,6 +17,10 @@ Dominar IaC para entornos ML multi-ambiente (Dev/Staging/Prod), gestión de esta
 
 1. [Fundamentos de IaC Enterprise](#1-fundamentos)
 2. [Gestión de Estado Terraform](#2-estado)
+   - [2.1 State Locking con S3 + DynamoDB](#21-state-locking-con-s3--dynamodb)
+   - [2.2 Creación del Backend (Bootstrap)](#22-creacion-del-backend-bootstrap)
+   - [2.3 State Management Best Practices](#23-state-management-best-practices)
+   - [2.4 🔬 Ingeniería Inversa Pedagógica: State Locking](#2x-ingenieria-inversa-iac) ⭐ NUEVO
 3. [Arquitectura Multi-Ambiente](#3-multiambiente)
 4. [Módulos Terraform Reutilizables](#4-modulos)
 5. [CI/CD para Infraestructura](#5-cicd)
@@ -402,6 +406,62 @@ if __name__ == "__main__":
     changes = manager.plan()                        # Plan sin aplicar.
     print(f"\nPlan: +{changes['add']} ~{changes['change']} -{changes['destroy']}")
 ```
+
+---
+
+<a id="2x-ingenieria-inversa-iac"></a>
+
+### 2.4 🔬 Ingeniería Inversa Pedagógica: State Locking Real
+
+> **Objetivo**: Entender por qué usamos DynamoDB y S3 para el estado de Terraform en lugar de un archivo local.
+
+**Archivo**: `environments/prod/backend.tf`
+
+#### El "Por Qué" Arquitectónico
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       PROBLEMA DE CONCURRENCIA EN IAC                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  Escenario: Dev A y Dev B ejecutan 'terraform apply' al mismo tiempo.       │
+│                                                                             │
+│  SIN LOCKING (Local state):                                                 │
+│  • Ambos leen el estado local (o git pull).                                 │
+│  • A aplica cambios. B aplica cambios sobre versión vieja.                  │
+│  • RESULTADO: Estado corrupto, recursos eliminados por error.               │
+│                                                                             │
+│  CON LOCKING (S3 + DynamoDB):                                               │
+│  • A inicia apply → Terraform escribe un "lock" en DynamoDB.                │
+│  • B inicia apply → Ve el lock y ESPERA (o falla).                          │
+│  • A termina → Libera el lock.                                              │
+│  • RESULTADO: Integridad garantizada.                                       │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Anatomía del Código
+
+```hcl
+terraform {
+  backend "s3" {
+    bucket         = "mlops-portfolio-tfstate"  # Dónde se guarda el JSON del estado
+    key            = "prod/terraform.tfstate"   # Ruta única dentro del bucket
+    region         = "us-east-1"
+    
+    # EL SECRETO DEL LOCKING
+    dynamodb_table = "mlops-portfolio-tflock"   # Tabla para coordinar locks
+    encrypt        = true                       # Encriptar datos sensibles en reposo
+  }
+}
+```
+
+#### Laboratorio de Replicación
+
+1.  Crea la tabla DynamoDB manualmente (o con script bootstrap) con clave primaria `LockID`.
+2.  Configura el backend en tu `main.tf`.
+3.  Ejecuta `terraform init`.
+4.  **Prueba de Fuego**: Abre dos terminales. En una ejecuta `terraform apply` y déjalo esperando confirmación ("Enter a value:"). En la otra intenta `terraform apply`. La segunda debe fallar con "Error acquiring the state lock".
 
 ---
 

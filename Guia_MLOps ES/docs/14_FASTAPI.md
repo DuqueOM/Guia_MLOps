@@ -73,6 +73,7 @@ Construir APIs de ML robustas, documentadas y production-ready como las del port
 - **14.3** [Endpoints de Predicción](#143-endpoints-de-prediccion)
 - **14.4** [Error Handling](#144-error-handling)
 - **14.5** [Código Real del Portafolio](#145-codigo-real-del-portafolio)
+- **14.6** [🔬 Ingeniería Inversa: API Producción Real](#146-ingenieria-inversa-fastapi) ⭐ NUEVO
 - [Errores habituales](#errores-habituales)
 - [✅ Checkpoint](#checkpoint)
 - [✅ Ejercicio](#ejercicio)
@@ -553,6 +554,250 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
+
+---
+
+<a id="146-ingenieria-inversa-fastapi"></a>
+
+## 14.6 🔬 Ingeniería Inversa Pedagógica: API de Producción Real
+
+> **Objetivo**: Entender CADA decisión detrás de la API FastAPI del portafolio.
+
+Esta sección disecciona `app/fastapi_app.py` de BankChurn-Predictor, una API ML de producción real.
+
+### 14.6.1 🎯 El "Por Qué" Arquitectónico
+
+¿Por qué la API del portafolio está diseñada así?
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                     │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  PROBLEMA 1: ¿Cómo cargo el modelo una sola vez sin bloquearlo en cada request? │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: Cargar modelo (~500MB) en cada request = 2-5s de latencia              │
+│  DECISIÓN: Cargar en `lifespan` (startup), guardar en variable global           │
+│  RESULTADO: Primera carga ~3s, requests subsecuentes ~50ms                      │
+│  REFERENCIA: fastapi_app.py líneas 100-107                                      │
+│                                                                                 │
+│  PROBLEMA 2: ¿Cómo valido inputs complejos (10+ features) sin código manual?    │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: Validación manual = bugs, inconsistencias, código repetido             │
+│  DECISIÓN: Pydantic con Field validators para cada feature                      │
+│  RESULTADO: Validación automática, errores descriptivos, docs auto-generadas    │
+│  REFERENCIA: fastapi_app.py líneas 128-155 (CustomerData)                       │
+│                                                                                 │
+│  PROBLEMA 3: ¿Cómo expongo métricas para Prometheus sin acoplar el código?      │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: Sin métricas = volar ciego en producción                               │
+│  DECISIÓN: prometheus_client con try/except (graceful degradation)              │
+│  RESULTADO: Métricas si está disponible, fallback a JSON si no                  │
+│  REFERENCIA: fastapi_app.py líneas 25-46, 284-297                               │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 14.6.2 🔍 Anatomía de `app/fastapi_app.py`
+
+**Archivo**: `ML-MLOps-Portfolio/BankChurn-Predictor/app/fastapi_app.py`
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 1: Importaciones con Graceful Degradation
+# ═══════════════════════════════════════════════════════════════════════════════
+try:
+    from prometheus_client import Counter, Histogram, generate_latest
+    PROMETHEUS_AVAILABLE = True
+    
+    REQUEST_COUNT = Counter(
+        "bankchurn_requests_total",        # Nombre de la métrica.
+        "Total HTTP requests",             # Descripción.
+        ["method", "endpoint", "status"],  # Labels para filtrar.
+    )
+    REQUEST_LATENCY = Histogram(
+        "bankchurn_request_duration_seconds",
+        "Request latency in seconds",
+        ["endpoint"],
+        buckets=[0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0],  # Buckets para percentiles.
+    )
+except ImportError:
+    PROMETHEUS_AVAILABLE = False
+# ¿Por qué try/except para métricas?
+# - prometheus_client es opcional (puede no estar instalado en dev).
+# - La API sigue funcionando sin métricas, pero las tiene si están disponibles.
+# - Patrón "graceful degradation": funcionalidad reducida pero sin crash.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 2: Lifecycle Management (Carga de Modelo)
+# ═══════════════════════════════════════════════════════════════════════════════
+predictor: Optional[ChurnPredictor] = None   # Variable global para el modelo.
+
+@contextlib.asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage application lifecycle."""
+    global predictor
+    success = load_model_logic()            # Carga modelo al iniciar.
+    if not success:
+        logger.warning("Application started without model loaded.")
+        # NO crashea la app. Endpoint /predict devolverá 503.
+    yield                                    # App corriendo.
+    # Cleanup al cerrar (opcional).
+# ¿Por qué lifespan y no @app.on_event("startup")?
+# - on_event está deprecated en FastAPI >= 0.93.
+# - lifespan es el patrón moderno recomendado.
+# - Permite cleanup al cerrar (conexiones DB, etc.).
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 3: Schemas Pydantic con Validación Estricta
+# ═══════════════════════════════════════════════════════════════════════════════
+class CustomerData(BaseModel):
+    """Schema para datos de cliente."""
+    
+    CreditScore: int = Field(..., ge=300, le=850)  # ...: required. ge/le: rangos.
+    Geography: str = Field(...)
+    Gender: str = Field(...)
+    Age: int = Field(..., ge=18, le=100)
+    Balance: float = Field(..., ge=0)
+    # ... más campos ...
+    
+    @validator("Geography")
+    def validate_geography(cls, v):
+        valid = ["France", "Spain", "Germany"]
+        if v not in valid:
+            raise ValueError(f"Geography must be one of: {valid}")
+        return v
+# ¿Por qué validators personalizados?
+# - Field solo valida tipos y rangos numéricos.
+# - @validator permite validación de dominio (países válidos, formatos, etc.).
+# - Error messages claros para el consumidor de la API.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 4: Endpoint /health (Liveness + Readiness)
+# ═══════════════════════════════════════════════════════════════════════════════
+@app.get("/health", response_model=HealthResponse)
+async def health_check():
+    uptime = time.time() - start_time
+    return HealthResponse(
+        status="healthy" if predictor is not None else "degraded",
+        model_loaded=predictor is not None,  # Kubernetes readiness check usa esto.
+        uptime_seconds=uptime,
+        version="1.0.0",
+    )
+# ¿Por qué "degraded" en lugar de "unhealthy"?
+# - "unhealthy" haría que K8s mate el pod (liveness fail).
+# - "degraded" indica que funciona pero con capacidad reducida.
+# - El pod sigue vivo, el equipo puede investigar.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 5: Endpoint /predict con Métricas
+# ═══════════════════════════════════════════════════════════════════════════════
+@app.post("/predict", response_model=PredictionResponse)
+async def predict_churn(customer: CustomerData):
+    if predictor is None:
+        if PROMETHEUS_AVAILABLE:
+            REQUEST_COUNT.labels(method="POST", endpoint="/predict", status="503").inc()
+        raise HTTPException(status_code=503, detail="Model not available")
+    
+    start_pred = time.time()
+    try:
+        customer_dict = customer.dict()      # Pydantic model → dict.
+        df = pd.DataFrame([customer_dict])   # dict → DataFrame (1 fila).
+        
+        results = predictor.predict(df, include_proba=True)
+        
+        prob = float(results.iloc[0]["probability"])  # float() evita numpy.float64.
+        pred = int(results.iloc[0]["prediction"])     # int() evita numpy.int64.
+        
+        pred_time = time.time() - start_pred
+        
+        # Track metrics
+        if PROMETHEUS_AVAILABLE:
+            REQUEST_COUNT.labels(method="POST", endpoint="/predict", status="200").inc()
+            REQUEST_LATENCY.labels(endpoint="/predict").observe(pred_time)
+        
+        return PredictionResponse(...)
+    except Exception as e:
+        logger.error(f"Prediction error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+# ¿Por qué float() y int() explícitos?
+# - numpy.float64 no es JSON-serializable directamente.
+# - FastAPI/Pydantic pueden fallar al serializar tipos numpy.
+# - Convertir a tipos nativos de Python evita "Object of type float64 is not JSON serializable".
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 6: Endpoint /predict_batch (Optimización para Volumen)
+# ═══════════════════════════════════════════════════════════════════════════════
+@app.post("/predict_batch", response_model=BatchPredictionResponse)
+async def predict_batch(batch_data: BatchCustomerData):
+    # Vectoriza predicciones para eficiencia.
+    df = pd.DataFrame([c.dict() for c in batch_data.customers])
+    results = predictor.predict(df, include_proba=True)  # 1 llamada, N resultados.
+    # ...
+# ¿Por qué endpoint separado para batch?
+# - 1 request con 1000 clientes es más eficiente que 1000 requests de 1.
+# - El modelo puede vectorizar (GPU/CPU SIMD) las predicciones.
+# - Menor overhead de red y serialización.
+```
+
+### 14.6.3 🧪 Laboratorio de Replicación
+
+**Tu misión**: Implementar tu propia API de predicción con métricas.
+
+1. **Crea el schema de request**:
+   ```python
+   # schemas.py
+   from pydantic import BaseModel, Field, validator
+   
+   class CustomerRequest(BaseModel):
+       credit_score: int = Field(..., ge=300, le=850)
+       age: int = Field(..., ge=18, le=100)
+       # Añade más campos según tu modelo
+       
+       @validator("credit_score")
+       def score_must_be_realistic(cls, v):
+           if v < 300:
+               raise ValueError("Credit score too low")
+           return v
+   ```
+
+2. **Implementa el lifecycle**:
+   ```python
+   # app.py
+   from contextlib import asynccontextmanager
+   
+   @asynccontextmanager
+   async def lifespan(app: FastAPI):
+       global model
+       model = joblib.load("models/best_model.pkl")
+       yield
+       model = None  # Cleanup
+   
+   app = FastAPI(lifespan=lifespan)
+   ```
+
+3. **Añade métricas Prometheus**:
+   ```python
+   from prometheus_client import Counter, generate_latest
+   
+   PREDICTIONS = Counter("predictions_total", "Total predictions", ["result"])
+   
+   @app.post("/predict")
+   async def predict(request: CustomerRequest):
+       # ... predicción ...
+       PREDICTIONS.labels(result="churn" if pred == 1 else "no_churn").inc()
+       return {"prediction": pred}
+   ```
+
+### 14.6.4 🚨 Troubleshooting Preventivo
+
+| Síntoma | Causa Probable | Solución |
+|---------|----------------|----------|
+| **"Object of type float64 is not JSON serializable"** | Retornas tipos numpy sin convertir | Usa `float(value)`, `int(value)` antes de retornar. |
+| **503 "Model not available"** | Modelo no se cargó en startup | Verifica path del modelo y logs de startup. |
+| **422 Unprocessable Entity** | Request no cumple schema Pydantic | Revisa el error detallado en response body. |
+| **Latencia alta en /predict** | Modelo se carga en cada request | Mueve carga a `lifespan`, guarda en variable global. |
+| **Métricas no aparecen en /metrics** | prometheus_client no instalado | `pip install prometheus_client` o verifica try/except. |
 
 ---
 

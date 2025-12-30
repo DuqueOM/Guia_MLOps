@@ -16,6 +16,7 @@ Esta guía te enseña a entender, usar y crear scripts operacionales profesional
 - [4. Scripts de Modelos](#4-scripts-de-modelos)
 - [5. Scripts de Auditoría](#5-scripts-de-auditoria)
 - [6. Makefile: Orquestador Principal](#6-makefile-orquestador-principal)
+- [7. 🔬 Ingeniería Inversa: Automatización](#ingenieria-inversa-automatizacion) ⭐ NUEVO
 - [Patrones y Buenas Prácticas](#patrones-y-buenas-practicas)
 - [Ejercicios](#ejercicios)
 
@@ -1009,6 +1010,70 @@ clean-docker: ## Limpia contenedores e imágenes
 # Default
 .DEFAULT_GOAL := help
 ```
+
+---
+
+<a id="ingenieria-inversa-automatizacion"></a>
+
+## 7. 🔬 Ingeniería Inversa Pedagógica: La Automatización Invisible
+
+> **Objetivo**: Entender cómo se orquestan 3 proyectos y múltiples servicios con un solo comando.
+
+Esta sección analiza el "pegamento" que mantiene unido el portafolio: el `Makefile` raíz y el script `demo.sh`.
+
+### 7.1 El Patrón "Recursive Make" (Makefile)
+
+En un monorepo, no queremos duplicar comandos. El `Makefile` raíz actúa como un **director de orquesta** que delega en los `Makefiles` de cada músico (proyecto).
+
+**Archivo**: `Makefile` (raíz)
+
+```makefile
+# BLOQUE: Iteración sobre proyectos
+# ─────────────────────────────────
+PROJECTS := BankChurn-Predictor CarVision-Market-Intelligence TelecomAI-Customer-Intelligence
+
+install:
+	@for project in $(PROJECTS); do \              # 1. Itera por cada carpeta
+		echo "Installing $$project..."; \
+		cd $$project && $(MAKE) install && cd ..; \ # 2. Entra, ejecuta make local, y sale
+	done
+```
+
+**¿Por qué hacerlo así?**
+- **Encapsulamiento**: Cada proyecto sabe cómo instalarse a sí mismo. El raíz no necesita saber qué librerías usa `BankChurn`.
+- **Escalabilidad**: Si añades un 4º proyecto, solo lo agregas a la lista `PROJECTS`.
+
+### 7.2 Anatomía de `scripts/demo.sh`
+
+Este script no es solo una lista de comandos; es un **flujo de orquestación robusto**.
+
+**Archivo**: `scripts/demo.sh`
+
+```bash
+# BLOQUE: Espera Activa (Polling)
+# ───────────────────────────────
+# Problema: docker-compose up retorna inmediatamente, pero los servicios tardan en arrancar.
+# Solución: No usar sleep fijos (flaky), usar polling de health endpoints.
+
+echo "Waiting for services..."
+SERVICES=("localhost:5000" "localhost:8001" ...)
+
+for i in "${!SERVICES[@]}"; do
+    # curl -f: Falla si el código HTTP no es 200 (ej. 500, 404)
+    # Reintenta implícitamente o el usuario debe implementar el loop
+    if curl -sf "http://${SERVICES[$i]}/health" >/dev/null; then
+        echo "✓ Healthy"
+    fi
+done
+```
+
+### 7.3 Troubleshooting de Automatización
+
+| Error Común | Causa | Solución |
+|-------------|-------|----------|
+| `make: *** [BankChurn-Predictor] Error 2` | Falló el make del subproyecto | Ve al directorio del proyecto y corre `make` allí para ver el error real. |
+| `curl: (7) Failed to connect` en demo | El servicio no ha arrancado aún | Aumenta el tiempo de espera o revisa `docker logs` para ver si crasheó al inicio. |
+| `Permission denied` en scripts | Falta bit de ejecución | `chmod +x scripts/*.sh` |
 
 ---
 

@@ -70,6 +70,7 @@ Implementar monitoreo completo: logs, métricas, y drift detection como en el po
 - **16.2** [Prometheus + Grafana](#162-prometheus-grafana)
 - **16.3** [Logging Estructurado](#163-logging-estructurado)
 - **16.4** [Model Monitoring](#164-model-monitoring)
+- **16.5** [🔬 Ingeniería Inversa: Observabilidad Producción](#165-ingenieria-inversa-observabilidad) ⭐ NUEVO
 - [Errores habituales](#errores-habituales)
 - [✅ Checkpoint](#checkpoint)
 - [✅ Ejercicio](#ejercicio)
@@ -850,6 +851,268 @@ docs/runbooks/
 ├── model-degradation.md        # Degradación de métricas
 └── disk-full.md                # Disco lleno (artifacts/logs)
 ```
+
+---
+
+<a id="165-ingenieria-inversa-observabilidad"></a>
+
+## 16.5 🔬 Ingeniería Inversa Pedagógica: Observabilidad de Producción Real
+
+> **Objetivo**: Entender CADA decisión detrás de la configuración de Prometheus/Alertas del portafolio.
+
+Esta sección disecciona la infraestructura de observabilidad real que monitorea los 3 proyectos ML del portafolio.
+
+### 16.5.1 🎯 El "Por Qué" Arquitectónico
+
+¿Por qué el portafolio tiene archivos separados para `prometheus-config.yaml` y `prometheus-rules.yaml`?
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                    │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  PROBLEMA 1: ¿Cómo descubro automáticamente nuevos pods ML en Kubernetes?       │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: Añadir targets manualmente es error-prone y no escala                  │
+│  DECISIÓN: Kubernetes Service Discovery + annotations                           │
+│  RESULTADO: Prometheus auto-descubre pods con `prometheus.io/scrape: true`      │
+│  REFERENCIA: prometheus-config.yaml líneas 37-67                                │
+│                                                                                 │
+│  PROBLEMA 2: ¿Cómo separo reglas de alerta por equipo/dominio?                  │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: Un archivo gigante de reglas es imposible de mantener                  │
+│  DECISIÓN: Grupos de reglas: `ml_services_alerts`, `ml_model_alerts`, `infra`   │
+│  RESULTADO: Cada equipo gestiona sus alertas, menor "alert fatigue"             │
+│  REFERENCIA: prometheus-rules.yaml líneas 1-3, 78-80, 124-126                   │
+│                                                                                 │
+│  PROBLEMA 3: ¿Cómo evito alertas falsas que despiertan al oncall a las 3 AM?    │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: Alert fatigue → ignorar todas las alertas → miss real incidents        │
+│  DECISIÓN: `for: 5m` en reglas (debe persistir 5 min antes de alertar)          │
+│  RESULTADO: Picos transitorios no generan alertas, solo problemas reales        │
+│  REFERENCIA: prometheus-rules.yaml línea 13, 28, 39                             │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 16.5.2 🔍 Anatomía de `prometheus-config.yaml`
+
+**Archivo**: `ML-MLOps-Portfolio/infra/prometheus-config.yaml`
+
+```yaml
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 1: Configuración Global
+# ═══════════════════════════════════════════════════════════════════════════════
+global:
+  scrape_interval: 15s        # Cada 15 segundos, Prometheus "raspa" métricas.
+  scrape_timeout: 10s         # Si un target no responde en 10s, marca como down.
+  evaluation_interval: 15s    # Cada 15s evalúa reglas de alerta.
+  external_labels:            # Labels añadidos a TODAS las métricas.
+    cluster: ml-portfolio     # Identifica el cluster en Grafana multi-cluster.
+    env: production           # Distingue prod/staging/dev.
+# ¿Por qué external_labels?
+# - Cuando federas múltiples Prometheus, necesitas saber de dónde viene cada métrica.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 2: Service Discovery para Kubernetes
+# ═══════════════════════════════════════════════════════════════════════════════
+scrape_configs:
+  - job_name: 'bankchurn-predictor'
+    kubernetes_sd_configs:            # Service Discovery de Kubernetes.
+    - role: pod                       # Descubre pods (no servicios ni endpoints).
+      namespaces:
+        names:
+        - ml-portfolio                # Solo busca en este namespace.
+    relabel_configs:                  # Transforma labels antes de guardar.
+    - source_labels: [__meta_kubernetes_pod_label_app]
+      action: keep                    # keep: solo mantiene los que matchean.
+      regex: bankchurn-predictor      # Solo pods con label app=bankchurn-predictor.
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+      action: keep
+      regex: true                     # Solo pods con annotation prometheus.io/scrape=true.
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+      action: replace
+      target_label: __metrics_path__  # Usa el path de la annotation (ej: /metrics).
+      regex: (.+)
+    - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+      action: replace
+      regex: ([^:]+)(?::\d+)?;(\d+)   # Regex: extrae IP y puerto.
+      replacement: $1:$2               # Combina IP:puerto.
+      target_label: __address__
+# ¿Por qué relabel_configs tan complejo?
+# - Flexibilidad: cada pod puede definir su propio path y puerto via annotations.
+# - Filtrado: solo scrapea pods que explícitamente lo solicitan.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 3: Static Config para MLflow
+# ═══════════════════════════════════════════════════════════════════════════════
+  - job_name: 'mlflow'
+    static_configs:                   # Para servicios que no están en K8s SD.
+    - targets: ['mlflow-service.ml-portfolio.svc.cluster.local:5000']
+      labels:
+        service: mlflow
+        env: production
+# ¿Por qué static para MLflow?
+# - MLflow no es un pod que escala dinámicamente, es un servicio único.
+# - Más simple que configurar annotations en el deployment.
+```
+
+### 16.5.3 🔍 Anatomía de `prometheus-rules.yaml`
+
+**Archivo**: `ML-MLOps-Portfolio/infra/prometheus-rules.yaml`
+
+Este archivo define las **alertas accionables** que notifican al equipo cuando algo va mal.
+
+```yaml
+# ═══════════════════════════════════════════════════════════════════════════════
+# GRUPO 1: Alertas de Servicios ML (Latencia, Errores, Disponibilidad)
+# ═══════════════════════════════════════════════════════════════════════════════
+groups:
+- name: ml_services_alerts
+  interval: 30s                       # Evalúa reglas cada 30s.
+  rules:
+  # Alerta: Error Rate > 5%
+  - alert: HighErrorRate
+    expr: |
+      (
+        sum(rate(http_requests_total{status=~"5.."}[5m])) by (service)
+        /                             # División: errores / total.
+        sum(rate(http_requests_total[5m])) by (service)
+      ) > 0.05                        # Umbral: 5% de errores.
+    for: 5m                           # CRÍTICO: debe persistir 5 min.
+    labels:
+      severity: warning               # warning vs critical: define escalación.
+      team: ml-ops                    # ¿Quién recibe la alerta?
+    annotations:
+      summary: "High error rate on {{ $labels.service }}"
+      description: "Service {{ $labels.service }} has error rate of {{ $value | humanizePercentage }}"
+# ¿Por qué `for: 5m`?
+# - Evita alertar por picos transitorios (ej: un deployment momentáneo).
+# - Si el problema persiste 5 min, es real y merece atención.
+
+  # Alerta: Latencia P95 > 2 segundos
+  - alert: HighLatency
+    expr: |
+      histogram_quantile(0.95,        # Percentil 95: el 95% de requests son más rápidos.
+        sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)
+      ) > 2                           # Umbral: 2 segundos es muy lento para ML inference.
+    for: 5m
+    labels:
+      severity: warning
+      team: ml-ops
+    annotations:
+      summary: "High latency on {{ $labels.service }}"
+      description: "95th percentile latency is {{ $value }}s on {{ $labels.service }}"
+# ¿Por qué P95 y no promedio?
+# - El promedio oculta outliers. P95 muestra la experiencia del "peor 5%".
+# - Si P95 = 2s, significa que 1 de cada 20 usuarios espera >2s.
+
+  # Alerta: Servicio Caído
+  - alert: ServiceDown
+    expr: up{job=~".*-intelligence|.*-predictor"} == 0
+    for: 2m                           # 2 min para servicios críticos (más urgente).
+    labels:
+      severity: critical              # critical → despierta al oncall.
+      team: ml-ops
+    annotations:
+      summary: "Service {{ $labels.job }} is down"
+# ¿Por qué el regex `.*-intelligence|.*-predictor`?
+# - Matchea: bankchurn-predictor, telecom-intelligence, carvision-intelligence.
+# - Un solo regex cubre los 3 proyectos del portafolio.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GRUPO 2: Alertas de Modelo ML (Drift, Confianza, Volumen)
+# ═══════════════════════════════════════════════════════════════════════════════
+- name: ml_model_alerts
+  interval: 1m                        # Evalúa cada minuto (ML puede cambiar rápido).
+  rules:
+  # Alerta: Drift Detectado
+  - alert: ModelDrift
+    expr: model_drift_score > 0.1     # Métrica custom expuesta por la API.
+    for: 15m                          # Drift necesita tiempo para confirmarse.
+    labels:
+      severity: warning
+      team: ml-ops
+    annotations:
+      summary: "Model drift detected on {{ $labels.model }}"
+# ¿Por qué 15 minutos para drift?
+# - Drift es gradual, no instantáneo. 15 min evita falsas alarmas.
+
+  # Alerta: Muchas predicciones de baja confianza
+  - alert: LowPredictionConfidence
+    expr: |
+      (
+        sum(model_predictions_total{confidence="low"}) by (model)
+        /
+        sum(model_predictions_total) by (model)
+      ) > 0.3                         # >30% de predicciones con baja confianza.
+    for: 10m
+    labels:
+      severity: warning
+      team: ml-ops
+# ¿Por qué alertar por baja confianza?
+# - Indica que el modelo está "inseguro" sobre sus predicciones.
+# - Puede señalar datos out-of-distribution o necesidad de reentrenamiento.
+
+  # Alerta: Caída en volumen de predicciones
+  - alert: PredictionRateDrop
+    expr: |
+      (
+        rate(model_predictions_total[5m])
+        /
+        rate(model_predictions_total[5m] offset 1h)  # Compara con hace 1 hora.
+      ) < 0.5                         # Menos del 50% del volumen normal.
+    for: 10m
+    labels:
+      severity: warning
+      team: ml-ops
+# ¿Por qué alertar por caída de volumen?
+# - Puede indicar: frontend roto, datos que no llegan, o cambio en comportamiento.
+# - Es una señal de que "algo cambió" aunque el modelo funcione.
+```
+
+### 16.5.4 🧪 Laboratorio de Replicación
+
+**Tu misión**: Configurar Prometheus con alertas ML básicas.
+
+1. **Añade annotations a tu Deployment de Kubernetes**:
+   ```yaml
+   # k8s/bankchurn-deployment.yaml
+   spec:
+     template:
+       metadata:
+         annotations:
+           prometheus.io/scrape: "true"
+           prometheus.io/port: "8000"
+           prometheus.io/path: "/metrics"
+   ```
+
+2. **Crea tu primera regla de alerta**:
+   ```yaml
+   # infra/my-alerts.yaml
+   groups:
+   - name: mi_primera_alerta
+     rules:
+     - alert: APILatenciaAlta
+       expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 1
+       for: 2m
+       labels:
+         severity: warning
+       annotations:
+         summary: "Latencia P95 > 1 segundo"
+   ```
+
+3. **Verifica en Prometheus UI** (http://localhost:9090/alerts) que la regla aparece.
+
+### 16.5.5 🚨 Troubleshooting Preventivo
+
+| Síntoma | Causa Probable | Solución |
+|---------|----------------|----------|
+| **Target "down" en Prometheus pero el pod está running** | Annotations faltantes o incorrectas | Verifica `prometheus.io/scrape: "true"` en el pod. |
+| **Alerta nunca se dispara aunque hay errores** | El `for:` es muy largo o la expr está mal | Prueba la expr en Prometheus UI primero. Reduce `for:` temporalmente. |
+| **Demasiadas alertas (alert fatigue)** | Umbrales muy bajos o `for:` muy corto | Ajusta umbrales basándote en baseline real. Añade `for: 5m`. |
+| **Métricas de modelo no aparecen** | El endpoint `/metrics` no expone métricas custom | Verifica que `prometheus_client` está instrumentado en tu código. |
+| **Grafana no muestra datos** | Datasource mal configurado o query incorrecta | Prueba la query en Prometheus UI. Verifica URL del datasource. |
 
 ---
 

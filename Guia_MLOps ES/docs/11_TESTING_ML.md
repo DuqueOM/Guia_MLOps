@@ -80,6 +80,7 @@ Dominar el testing en proyectos ML para alcanzar **80%+ de coverage** sin tests 
 - **11.5** [Model Tests: Comportamiento del Modelo](#115-model-tests-comportamiento-del-modelo)
 - **11.6** [Integration Tests: Pipeline Completo](#116-integration-tests-pipeline-completo)
 - **11.7** [Alcanzar 80% Coverage](#117-alcanzar-80-coverage)
+- **11.8** [🔬 Ingeniería Inversa: Tests de Producción](#118-ingenieria-inversa-testing) ⭐ NUEVO
 - [Errores habituales](#errores-habituales)
 - [✅ Ejercicio](#ejercicio)
 - [✅ Checkpoint](#checkpoint)
@@ -906,6 +907,243 @@ class TestAPIWorkflow:
             pytest.skip("FastAPI app not available")
 ```
  
+---
+
+<a id="118-ingenieria-inversa-testing"></a>
+
+## 11.8 🔬 Ingeniería Inversa Pedagógica: Suite de Tests de Producción
+
+> **Objetivo**: Entender CADA decisión detrás de los tests reales del portafolio.
+
+Esta sección disecciona los tests de BankChurn-Predictor que detectan problemas críticos como **data leakage**.
+
+### 11.8.1 🎯 El "Por Qué" Arquitectónico
+
+¿Por qué el portafolio tiene tests específicos para leakage y no solo para accuracy?
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                     │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  PROBLEMA 1: ¿Cómo detecto data leakage antes de que llegue a producción?       │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: Leakage = métricas infladas en dev, modelo inútil en producción        │
+│  DECISIÓN: Test que verifica que el scaler se ajusta SOLO con datos de train    │
+│  RESULTADO: CI falla si el preprocesador "ve" datos de test                     │
+│  REFERENCIA: test_integration.py::test_leakage_prevention                       │
+│                                                                                 │
+│  PROBLEMA 2: ¿Cómo aseguro que el pipeline completo funciona end-to-end?        │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: Unit tests pasan pero el flujo completo falla                          │
+│  DECISIÓN: Test que hace Train → Save → Load → Predict en secuencia             │
+│  RESULTADO: Detecta incompatibilidades entre componentes                        │
+│  REFERENCIA: test_integration.py::test_full_pipeline_flow                       │
+│                                                                                 │
+│  PROBLEMA 3: ¿Cómo mantengo reproducibilidad entre ejecuciones?                 │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: Tests flaky por aleatoriedad en datos/modelos                          │
+│  DECISIÓN: Fixture autouse que setea seed global para todos los tests           │
+│  RESULTADO: Mismos resultados en local y CI                                     │
+│  REFERENCIA: conftest.py::deterministic_seed                                    │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 11.8.2 🔍 Anatomía de `test_integration.py`
+
+**Archivo**: `ML-MLOps-Portfolio/BankChurn-Predictor/tests/test_integration.py`
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════════
+# TEST 1: Detección de Data Leakage (El test más importante del portafolio)
+# ═══════════════════════════════════════════════════════════════════════════════
+def test_leakage_prevention():
+    """Ensure preprocessor is NOT fitted on test data."""
+    
+    # 1. Crear datos sintéticos con un outlier conocido
+    df = pd.DataFrame({
+        "feat1": [0.0] * 9 + [1000.0],   # 9 ceros + 1 outlier gigante.
+        "cat1": ["a"] * 10,
+        "target": [0,0,0,0,0,1,1,1,1,1],  # Balanceado para stratify.
+    })
+    # ¿Por qué este diseño?
+    # - Si el outlier (1000.0) está en TEST y hay leakage, el scaler
+    #   tendrá un mean alto (~100). Sin leakage, mean ≈ 0.
+    
+    # 2. Dividir datos manualmente para saber dónde está el outlier
+    X_train, X_test, _, _ = train_test_split(
+        X, y, test_size=0.5, random_state=42, stratify=y
+    )
+    outlier_in_train = 1000.0 in X_train["feat1"].values
+    
+    # 3. Entrenar el modelo
+    trainer = ChurnTrainer(config, random_state=42)
+    model, metrics = trainer.train(df, df["target"], use_cv=False)
+    
+    # 4. Extraer el mean del scaler (StandardScaler guarda mean_)
+    scaler = trainer.preprocessor_.named_transformers_["num"]["scaler"]
+    scaler_mean = scaler.mean_[0]
+    
+    # 5. Calcular means esperados
+    expected_mean = X_train["feat1"].mean()  # Mean de SOLO train.
+    global_mean = df["feat1"].mean()          # Mean de TODO (leakage).
+    
+    # 6. ASSERT: Scaler debe matchear Train, NO Global
+    np.testing.assert_almost_equal(
+        scaler_mean,
+        expected_mean,
+        decimal=5,
+        err_msg="Scaler mean should match Train mean"
+    )
+    
+    # 7. Detectar leakage: si scaler_mean == global_mean, hay leak
+    if expected_mean != global_mean:
+        assert scaler_mean != global_mean, "Leakage detected!"
+# ¿Por qué este test es crítico?
+# - Data leakage es el error #1 en ML: métricas perfectas en dev, basura en prod.
+# - Este test lo detecta ANTES de que llegue a CI/producción.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TEST 2: Pipeline Completo End-to-End
+# ═══════════════════════════════════════════════════════════════════════════════
+def test_full_pipeline_flow(sample_data, sample_config, tmp_path):
+    """Test complete flow: Train -> Save -> Load -> Predict."""
+    
+    # 1. TRAIN
+    trainer = ChurnTrainer(sample_config)
+    X, y = trainer.prepare_features(sample_data)
+    model, metrics = trainer.train(X, y, use_cv=False)
+    
+    assert model is not None
+    assert "train_f1" in metrics
+    
+    # 2. SAVE
+    model_path = tmp_path / "model.pkl"      # tmp_path: fixture de pytest (dir temporal).
+    trainer.save_model(model_path, None)
+    assert model_path.exists()
+    
+    # Verificar que es un Pipeline sklearn
+    loaded_obj = joblib.load(model_path)
+    assert isinstance(loaded_obj, Pipeline)
+    assert "preprocessor" in loaded_obj.named_steps
+    assert "classifier" in loaded_obj.named_steps
+    
+    # 3. LOAD usando el Predictor de producción
+    predictor = ChurnPredictor.from_files(model_path, None)
+    
+    # 4. PREDICT
+    predictions = predictor.predict(X, include_proba=True)
+    assert len(predictions) == len(X)
+    assert "prediction" in predictions.columns
+    assert "probability" in predictions.columns
+    
+    # 5. EVALUATE
+    evaluator = ModelEvaluator.from_files(model_path, None)
+    eval_metrics = evaluator.evaluate(X, y)
+    assert "accuracy" in eval_metrics
+# ¿Por qué este test es importante?
+# - Verifica que TODOS los componentes trabajan juntos.
+# - Detecta incompatibilidades de versiones/formatos.
+# - Usa tmp_path para no contaminar el filesystem.
+```
+
+### 11.8.3 🔍 Anatomía de `conftest.py`
+
+**Archivo**: `ML-MLOps-Portfolio/BankChurn-Predictor/tests/conftest.py`
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════════
+# FIXTURE: Seed Determinístico para Reproducibilidad
+# ═══════════════════════════════════════════════════════════════════════════════
+@pytest.fixture(autouse=True)           # autouse=True: se ejecuta en TODOS los tests.
+def deterministic_seed() -> Generator[None, None, None]:
+    """Set a deterministic global seed for every test.
+
+    Resolution order:
+    1. TEST_SEED env var if defined.
+    2. SEED env var if defined.
+    3. Fallback to 42.
+    """
+    seed = int(os.getenv("TEST_SEED", os.getenv("SEED", "42")))
+    set_seed(seed)                       # Setea seed para numpy, random, torch, etc.
+    yield                                # Test se ejecuta aquí.
+    # Cleanup (opcional) después del test.
+# ¿Por qué autouse=True?
+# - Garantiza que CADA test tiene el mismo seed inicial.
+# - Evita flaky tests por aleatoriedad.
+# - Permite override vía variable de entorno para debugging.
+
+# ¿Por qué set_seed y no solo np.random.seed?
+# - ML usa múltiples fuentes de aleatoriedad: numpy, random, torch, sklearn.
+# - set_seed() (de common_utils) los setea TODOS de una vez.
+```
+
+### 11.8.4 🧪 Laboratorio de Replicación
+
+**Tu misión**: Implementar un test de leakage para tu proyecto.
+
+1. **Crea un test de leakage básico**:
+   ```python
+   # tests/test_leakage.py
+   import numpy as np
+   import pandas as pd
+   from sklearn.model_selection import train_test_split
+   from sklearn.preprocessing import StandardScaler
+   
+   def test_no_leakage_in_preprocessing():
+       """Verifica que el scaler no ve datos de test."""
+       # Datos con outlier conocido
+       X = pd.DataFrame({"feature": [1, 2, 3, 4, 100]})
+       y = [0, 0, 1, 1, 1]
+       
+       X_train, X_test, y_train, y_test = train_test_split(
+           X, y, test_size=0.4, random_state=42
+       )
+       
+       # Fit scaler SOLO en train
+       scaler = StandardScaler()
+       scaler.fit(X_train)
+       
+       # Verificar que mean es de train, no de todo
+       train_mean = X_train["feature"].mean()
+       global_mean = X["feature"].mean()
+       
+       assert abs(scaler.mean_[0] - train_mean) < 0.01, "Scaler should use train mean"
+       if train_mean != global_mean:
+           assert scaler.mean_[0] != global_mean, "Leakage detected!"
+   ```
+
+2. **Añade fixture de seed a tu conftest.py**:
+   ```python
+   # tests/conftest.py
+   import pytest
+   import numpy as np
+   import random
+   
+   @pytest.fixture(autouse=True)
+   def set_seed():
+       seed = 42
+       np.random.seed(seed)
+       random.seed(seed)
+       yield
+   ```
+
+3. **Ejecuta y verifica**:
+   ```bash
+   pytest tests/test_leakage.py -v
+   ```
+
+### 11.8.5 🚨 Troubleshooting Preventivo
+
+| Síntoma | Causa Probable | Solución |
+|---------|----------------|----------|
+| **Test de leakage pasa pero modelo falla en prod** | Test no cubre el preprocesador real | Usa el mismo código de training que usas en producción. |
+| **Tests pasan localmente pero fallan en CI** | Seeds diferentes o dependencias de orden | Usa `autouse=True` en fixture de seed. Ejecuta con `--randomly-seed=42`. |
+| **Fixture no se ejecuta** | No está en `conftest.py` o scope incorrecto | Verifica que `conftest.py` está en `tests/`. |
+| **tmp_path no existe** | Versión antigua de pytest | `pip install --upgrade pytest` (tmp_path requiere pytest >= 3.9). |
+| **Import errors en tests** | `src/` no está en sys.path | Añade path manipulation al inicio del test file. |
+
 ---
  
 <a id="errores-habituales"></a>

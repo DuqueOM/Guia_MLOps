@@ -13,6 +13,7 @@ Dominar detección de drift, alertas inteligentes y mapeo de métricas ML a KPIs
 3. [EvidentlyAI](#3-evidently)
 4. [Alertas](#4-alertas)
 5. [Métricas → KPIs](#5-kpis)
+5.5. [🔬 Ingeniería Inversa: Drift en CI/CD](#55-ingenieria-inversa-drift) ⭐ NUEVO
 6. [Ejercicio](#6-ejercicio)
 7. [Entrevista Senior](#7-entrevista)
 
@@ -346,6 +347,206 @@ lost = recall_to_revenue(recall, actual_churners, value_per_fn=500)   # $500 por
 print(f"💰 Costo FP (retención desperdiciada): ${wasted:,.0f}/mes")
 print(f"💸 Revenue perdido (churn no detectado): ${lost:,.0f}/mes")
 ```
+
+---
+
+<a id="55-ingenieria-inversa-drift"></a>
+
+## 5.5 🔬 Ingeniería Inversa Pedagógica: Drift Detection en CI/CD
+
+> **Objetivo**: Entender cómo el portafolio automatiza la detección de drift en GitHub Actions.
+
+### 5.5.1 🎯 El "Por Qué" Arquitectónico
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                    │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  PROBLEMA 1: ¿Cómo detecto drift automáticamente sin intervención manual?       │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: Sin automatización, el drift pasa desapercibido por semanas            │
+│  DECISIÓN: Workflow de GitHub Actions con schedule diario (cron)                │
+│  RESULTADO: Detección proactiva 24/7 sin esfuerzo manual                        │
+│  REFERENCIA: drift-detection.yml líneas 4-6                                     │
+│                                                                                 │
+│  PROBLEMA 2: ¿Cómo notifico al equipo cuando hay drift significativo?           │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: Reportes que nadie lee = drift ignorado                                │
+│  DECISIÓN: Crear GitHub Issue automático con labels y acción requerida          │
+│  RESULTADO: Issue visible en backlog, asignable, con contexto completo          │
+│  REFERENCIA: drift-detection.yml líneas 129-161                                 │
+│                                                                                 │
+│  PROBLEMA 3: ¿Cómo escalo drift detection a múltiples proyectos?                │
+│  ─────────────────────────────────────────────────────────────                  │
+│  RIESGO: Un workflow por proyecto = mantenimiento duplicado                     │
+│  DECISIÓN: Matrix strategy con lista de proyectos                               │
+│  RESULTADO: Un workflow, N proyectos monitoreados                               │
+│  REFERENCIA: drift-detection.yml líneas 24-29                                   │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 5.5.2 🔍 Anatomía de `drift-detection.yml`
+
+**Archivo**: `ML-MLOps-Portfolio/.github/workflows/drift-detection.yml`
+
+```yaml
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 1: Triggers - Cuándo ejecutar drift detection
+# ═══════════════════════════════════════════════════════════════════════════════
+name: Data Drift Detection
+
+on:
+  schedule:
+    - cron: '0 2 * * *'           # Diario a las 2 AM UTC.
+  workflow_dispatch:               # Permite ejecutar manualmente desde UI.
+  push:
+    branches: [ main ]
+    paths:
+      - '**/monitoring/drift_detection.py'  # Solo si cambia el script.
+# ¿Por qué cron a las 2 AM?
+# - Ejecuta cuando hay menos carga en el sistema.
+# - Detecta drift acumulado del día anterior.
+# - Resultados disponibles al iniciar el día laboral.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 2: Matrix Strategy para Múltiples Proyectos
+# ═══════════════════════════════════════════════════════════════════════════════
+jobs:
+  drift-detection:
+    strategy:
+      matrix:
+        project:
+          - BankChurn-Predictor
+          # - CarVision-Market-Intelligence   # Descomentar para añadir.
+          # - TelecomAI-Customer-Intelligence
+# ¿Por qué matrix?
+# - Un workflow, múltiples proyectos.
+# - Añadir proyecto = una línea en la lista.
+# - Cada proyecto corre en paralelo.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 3: Ejecución del Script de Drift
+# ═══════════════════════════════════════════════════════════════════════════════
+    steps:
+      - name: Run drift detection
+        id: drift
+        working-directory: ${{ matrix.project }}
+        continue-on-error: true           # NO falla el workflow si hay drift.
+        run: |
+          python monitoring/drift_detection.py \
+            --reference data/raw/Churn.csv \
+            --current data/raw/Churn.csv \
+            --output-html reports/drift_report_${{ github.run_number }}.html \
+            --output-json reports/drift_metrics_${{ github.run_number }}.json \
+            --threshold 0.5 \
+            --target Exited
+# ¿Por qué continue-on-error: true?
+# - Drift detectado NO debe bloquear el workflow.
+# - Queremos los reportes aunque haya drift.
+# - La acción es crear issue, no fallar CI.
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BLOQUE 4: Crear GitHub Issue Automático
+# ═══════════════════════════════════════════════════════════════════════════════
+      - name: Create GitHub Issue on drift alert
+        if: steps.drift.outcome == 'failure'  # Solo si el script detectó drift.
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `⚠️ Data Drift Alert: ${{ matrix.project }}`,
+              body: `# Data Drift Detected
+              
+              **Project:** ${{ matrix.project }}
+              **Date:** ${new Date().toISOString()}
+              
+              ## Action Required
+              1. Review the drift report in the workflow artifacts
+              2. Investigate the cause of drift
+              3. Consider retraining the model if needed
+              `,
+              labels: ['drift-alert', 'monitoring', 'mlops']
+            });
+# ¿Por qué GitHub Issues y no Slack?
+# - Issues son parte del backlog del equipo (visibilidad garantizada).
+# - Labels permiten filtrar y priorizar.
+# - Historial de incidentes queda documentado en el repo.
+```
+
+### 5.5.3 🧪 Laboratorio de Replicación
+
+**Tu misión**: Implementar drift detection automatizado en tu repo.
+
+1. **Crea el script de drift**:
+   ```python
+   # monitoring/drift_detection.py
+   import argparse
+   import json
+   from pathlib import Path
+   import pandas as pd
+   from evidently.report import Report
+   from evidently.metric_preset import DataDriftPreset
+   
+   def main():
+       parser = argparse.ArgumentParser()
+       parser.add_argument("--reference", required=True)
+       parser.add_argument("--current", required=True)
+       parser.add_argument("--output-json", required=True)
+       parser.add_argument("--threshold", type=float, default=0.5)
+       args = parser.parse_args()
+       
+       ref = pd.read_csv(args.reference)
+       cur = pd.read_csv(args.current)
+       
+       report = Report(metrics=[DataDriftPreset()])
+       report.run(reference_data=ref, current_data=cur)
+       
+       # Guardar métricas
+       metrics = report.as_dict()
+       Path(args.output_json).write_text(json.dumps(metrics))
+       
+       # Exit code indica si hay drift
+       if metrics.get("dataset_drift", False):
+           exit(1)  # Drift detectado
+       exit(0)  # Sin drift
+   
+   if __name__ == "__main__":
+       main()
+   ```
+
+2. **Crea el workflow**:
+   ```yaml
+   # .github/workflows/drift-detection.yml
+   name: Drift Detection
+   on:
+     schedule:
+       - cron: '0 6 * * 1'  # Lunes a las 6 AM
+     workflow_dispatch:
+   
+   jobs:
+     check-drift:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - uses: actions/setup-python@v5
+           with:
+             python-version: '3.11'
+         - run: pip install evidently pandas
+         - run: python monitoring/drift_detection.py --reference data/train.csv --current data/prod.csv --output-json drift.json
+   ```
+
+### 5.5.4 🚨 Troubleshooting Preventivo
+
+| Síntoma | Causa Probable | Solución |
+|---------|----------------|----------|
+| **Workflow falla antes de drift check** | Dependencias no instaladas | Añade `pip install evidently pandas` antes del script. |
+| **Issue no se crea aunque hay drift** | Permisos insuficientes | Añade `permissions: issues: write` al job. |
+| **Drift siempre detectado (falso positivo)** | Threshold muy bajo o datos mal alineados | Sube threshold a 0.3-0.5. Verifica que columnas coincidan. |
+| **Reportes no se suben como artifact** | Path incorrecto | Usa `${{ matrix.project }}/reports/` no solo `reports/`. |
 
 ---
 
