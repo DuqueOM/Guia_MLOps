@@ -199,51 +199,173 @@ ci(docker): ...
 ci(dvc): ...
 ```
 
-### Ejemplos Completos
+### 🧠 Mapa Mental de Conceptos: Git Profesional
 
-```bash
-# Simple
-git commit -m "feat(api): add health check endpoint"
-
-# Con body explicativo
-git commit -m "fix(training): handle class imbalance in target variable
-
-The training was failing silently when class ratio exceeded 1:10.
-Added class_weight='balanced' to RandomForestClassifier.
-
-Fixes #123"
-
-# Breaking change (incrementa MAJOR version)
-git commit -m "feat(api)!: change response format to include confidence scores
-
-BREAKING CHANGE: The /predict response now returns an object instead of
-a single float. Clients must update to handle the new format:
-{\"probability\": 0.85, \"confidence\": 0.92, \"prediction\": \"churn\"}"
+```
+                          ╔══════════════════════════════════════╗
+                          ║      GIT PROFESIONAL PARA ML         ║
+                          ╚══════════════════════════════════════╝
+                                            │
+         ┌──────────────────────────────────┼──────────────────────────────────┐
+         ▼                                  ▼                                  ▼
+┌──────────────────┐              ┌──────────────────┐              ┌──────────────────┐
+│  COMMITS         │              │  HOOKS           │              │  BRANCHING       │
+└──────────────────┘              └──────────────────┘              └──────────────────┘
+       │                                 │                                 │
+├─ Conventional                   ├─ pre-commit                    ├─ main (protegida)
+├─ Atómicos                       ├─ ruff/black                    ├─ feature/*
+├─ Descriptivos                   ├─ mypy                          ├─ fix/*
+└─ Scope                          └─ gitleaks                      └─ PR + Review
 ```
 
-### Configurar Commitlint (Validación Automática)
+**Términos clave que debes dominar:**
 
+| Término | Significado | Ejemplo |
+|---------|-------------|---------|
+| **Conventional Commit** | Formato estándar de commits | `feat(api): add endpoint` |
+| **Scope** | Componente afectado | `training`, `api`, `config` |
+| **Pre-commit** | Hooks que corren antes del commit | Lint, format, type check |
+| **Feature branch** | Rama para nueva funcionalidad | `feature/add-batch-prediction` |
+| **Squash** | Combinar commits en uno | Antes de merge a main |
+
+---
+
+### 💻 Ejercicio Puente: Escribir Commits Profesionales
+
+> **Meta**: Antes de trabajar en proyectos grandes, practica escribir commits correctos.
+
+**Ejercicio 1: Convertir commits malos a buenos**
+```
+MALO: "fix"
+BUENO: ???
+
+MALO: "wip"  
+BUENO: ???
+
+MALO: "updates"
+BUENO: ???
+```
+
+**Ejercicio 2: Escribir commits para estos cambios**
+```
+1. Añadiste un endpoint /health a la API
+   → ???
+
+2. Corregiste un bug donde el modelo fallaba con NaN en Age
+   → ???
+
+3. Añadiste tests para el módulo de predicción
+   → ???
+
+4. Mejoraste la latencia de inferencia de 200ms a 50ms
+   → ???
+```
+
+<details>
+<summary>🔍 Ver Soluciones</summary>
+
+**Ejercicio 1:**
+```
+"fix" → "fix(training): handle edge case when dataset is empty"
+"wip" → "feat(api): add initial structure for batch endpoint" (o no hacer commit aún)
+"updates" → "docs(readme): update installation instructions for Python 3.11"
+```
+
+**Ejercicio 2:**
+```
+1. feat(api): add /health endpoint for liveness checks
+2. fix(training): handle NaN values in Age column
+3. test(prediction): add unit tests for ChurnPredictor class
+4. perf(inference): reduce latency from 200ms to 50ms with caching
+```
+</details>
+
+---
+
+### 🛠️ Práctica del Portafolio: Commits en BankChurn
+
+> **Tarea**: Revisar y mejorar el historial de commits de BankChurn.
+
+**Paso 1: Examina el historial actual**
 ```bash
-# Instalar commitlint
-npm install -g @commitlint/cli @commitlint/config-conventional
+cd BankChurn-Predictor
+git log --oneline -20
+```
 
-# Crear config
-cat > commitlint.config.js << 'EOF'
-module.exports = {
-  extends: ['@commitlint/config-conventional'],
-  rules: {
-    'scope-enum': [2, 'always', [
-      'api', 'training', 'inference', 'config', 'data',
-      'pipeline', 'model', 'features', 'tests', 'docs',
-      'ci', 'docker', 'dvc', 'deps'
-    ]],
-    'subject-case': [2, 'always', 'lower-case'],
-  }
-};
-EOF
+**Paso 2: Identifica patrones**
+```
+[ ] ¿Los commits siguen Conventional Commits?
+[ ] ¿Hay commits tipo "fix" o "wip" sin contexto?
+[ ] ¿Los scopes son consistentes?
+```
+
+**Paso 3: Practica con un cambio real**
+```bash
+# Haz un cambio pequeño (ej: mejorar un docstring)
+git checkout -b fix/improve-docstring
+# ... edita un archivo ...
+git add .
+git commit -m "docs(training): improve docstring for ChurnTrainer.fit()"
+```
+
+**Paso 4: Crea un PR (simulado o real)**
+```bash
+git push origin fix/improve-docstring
+# Crear PR en GitHub con descripción clara
 ```
 
 ---
+
+### ✅ Checkpoint de Conocimiento: Git Profesional
+
+**Pregunta 1**: ¿Cuál es el formato correcto de Conventional Commit?
+
+A) `Added new feature for API`  
+B) `feat(api): add batch prediction endpoint`  
+C) `FEAT: API batch prediction`  
+D) `[feat] api - add batch prediction`  
+
+**Pregunta 2**: ¿Por qué es importante el scope (ej: `api`, `training`)?
+
+A) GitHub lo requiere  
+B) Facilita filtrar commits por componente y entender qué afecta cada cambio  
+C) Hace los commits más largos  
+D) Es obligatorio para CI  
+
+**Pregunta 3**: ¿Cuál commit es MEJOR para un code review?
+
+A) `fix`  
+B) `arreglé el bug de los datos`  
+C) `fix(data): handle missing values in Balance column by using median imputation`  
+D) `fix bug`  
+
+**🔧 Escenario de Debugging:**
+
+```
+Situación: Tu código funcionaba hace 3 días pero hoy falla.
+El historial de Git tiene 50 commits en esos 3 días, todos dicen:
+  - "updates"
+  - "fix"
+  - "wip"
+  - "changes"
+
+¿Cómo encontrarías el commit que introdujo el bug?
+```
+
+<details>
+<summary>🔍 Ver Respuestas</summary>
+
+**Pregunta 1**: B) `feat(api): add batch prediction endpoint`
+
+**Pregunta 2**: B) Facilita filtrar commits por componente y entender qué afecta cada cambio.
+
+**Pregunta 3**: C) El commit con descripción completa permite entender el cambio sin leer código.
+
+**Escenario de Debugging**: 
+- Con commits malos: Tendrías que revisar CADA commit manualmente. Pesadilla.
+- **Solución**: Usar `git bisect` para encontrar el commit, pero con mensajes malos no sabrás QUÉ cambió.
+- **Lección**: Conventional Commits hacen que `git bisect` sea útil y que encuentres bugs en minutos, no horas.
+</details>
 
 <a id="52-pre-commit-hooks"></a>
 
@@ -271,7 +393,7 @@ EOF
 ║                    │  ✓ Validar commit message     │                          ║
 ║                    │                               │                          ║
 ║                    └───────────────────────────────┘                          ║
-║                                    │                                          ║
+║                                   │                                           ║
 ║                         ┌─────────┴─────────┐                                 ║
 ║                         ▼                   ▼                                 ║
 ║                    ALL PASS ✅          ANY FAIL ❌                          ║
@@ -850,7 +972,7 @@ PRE-COMMIT:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                     │
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                    │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │  PROBLEMA 1: ¿Cómo evito commits que rompen CI antes de hacer push?             │
 │  DECISIÓN: Pre-commit hooks con linting (flake8, black, isort)                  │

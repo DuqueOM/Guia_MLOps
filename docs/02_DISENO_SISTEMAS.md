@@ -198,15 +198,167 @@ flowchart LR
 | Recomendar productos | Ranking/RecSys | Lift en ventas | NDCG@10, MAP | API < 100ms, cold-start handling |
 | Predecir demanda | Series Temporales | % reducción stockout | MAPE, Bias | Batch semanal |
 
-### Ejercicio 2.1: Traduce Tu Problema
+### 🧠 Mapa Mental de Conceptos: Traducción Negocio → ML
 
-Para el proyecto que elegiste (BankChurn, CarVision, TelecomAI o propio):
+```
+                     ╔══════════════════════════════════════════════════╗
+                     ║       TRADUCCIÓN NEGOCIO → ML → SISTEMA          ║
+                     ╚══════════════════════════════════════════════════╝
+                                            │
+        ┌───────────────────────────────────┼───────────────────────────────────┐
+        ▼                                   ▼                                   ▼
+┌───────────────────┐             ┌───────────────────┐             ┌───────────────────┐
+│  🏢 NEGOCIO       │             │  🧠 ML            │             │  ⚙️ SISTEMA       │
+└───────────────────┘             └───────────────────┘             └───────────────────┘
+       │                                 │                                 │
+├─ Problema ($$$)              ├─ Tipo de problema           ├─ Batch vs Real-time
+├─ KPIs de éxito               ├─ Métrica técnica            ├─ Latencia requerida
+├─ Restricciones               ├─ Features candidatas        ├─ Throughput
+└─ ROI esperado                └─ Baseline                   └─ SLAs
+```
 
-1. **Problema de Negocio**: ¿Qué duele? ¿Cuánto cuesta?
-2. **Tipo de ML**: ¿Clasificación, regresión, clustering, etc.?
-3. **Métrica de Negocio**: ¿Cómo se mide el éxito en $$$?
-4. **Métrica Técnica**: ¿Qué optimizamos? (AUC, RMSE, etc.)
-5. **Requisito de Sistema**: ¿Batch o real-time? ¿Latencia?
+**Términos clave que debes dominar:**
+
+| Término | Significado | Ejemplo |
+|---------|-------------|---------|
+| **Problema de negocio** | Dolor cuantificable en $$$ | "Perdemos $2M/año por churn" |
+| **KPI** | Indicador clave de rendimiento | Retención, conversión, ARPU |
+| **Métrica de negocio** | Cómo mides el éxito | $ retenido/año |
+| **Métrica técnica** | Qué optimiza el modelo | AUC-ROC, RMSE, Precision@K |
+| **Baseline** | Modelo simple de referencia | Logistic Regression, promedio |
+| **SLA** | Service Level Agreement | Latencia < 100ms, uptime 99.5% |
+
+---
+
+### 💻 Ejercicio Puente: De Problema a Solución ML
+
+> **Meta**: Practica traducir problemas de negocio vagos a especificaciones ML concretas.
+
+**Ejercicio 1: Cuantifica el problema**
+```
+Problema vago: "Queremos mejorar la satisfacción del cliente"
+
+TU TAREA: Convierte esto en un problema cuantificable:
+- ¿Cómo se mide la satisfacción actualmente?
+- ¿Cuál es el valor actual?
+- ¿Cuánto cuesta el problema en $$$?
+```
+
+**Ejercicio 2: Elige la métrica correcta**
+```
+Escenario: Hospital - predecir riesgo de readmisión
+- El costo de NO detectar un paciente de riesgo es muy alto (vida)
+- Hay pocos pacientes de alto riesgo (~5%)
+
+TU TAREA: ¿Qué métrica priorizarías?
+A) Accuracy  B) Precision  C) Recall  D) F1
+Justifica tu respuesta.
+```
+
+<details>
+<summary>🔍 Ver Soluciones</summary>
+
+**Ejercicio 1:**
+```
+- Métrica: NPS (Net Promoter Score) = 32
+- Problema: Clientes detractores (NPS < 7) representan 25% de abandono
+- Costo: $500K/año en churn de detractores
+- Objetivo: Identificar detractores antes de que abandonen → Intervención proactiva
+```
+
+**Ejercicio 2:** 
+**C) Recall** es la respuesta correcta.
+- En casos médicos donde el costo de un falso negativo es muy alto (no detectar un paciente de riesgo), priorizamos Recall.
+- Preferimos "falsos positivos" (revisar pacientes sanos) que perder pacientes en riesgo.
+- Con desbalanceo del 5%, Accuracy sería engañosa (95% solo prediciendo "no riesgo").
+</details>
+
+---
+
+### 🛠️ Práctica del Portafolio: Traducir BankChurn
+
+> **Tarea**: Documentar la traducción completa para el proyecto BankChurn-Predictor.
+
+**Paso 1: Identifica los números reales (pistas guiadas)**
+```
+# Lee el README del proyecto
+cat BankChurn-Predictor/README.md
+
+# Busca:
+# - ¿Cuál es el churn rate actual?
+# - ¿Cuántos clientes hay?
+# - ¿Cuál es el valor promedio de un cliente?
+```
+
+**Paso 2: Completa esta tabla**
+```markdown
+| Capa      | Pregunta                    | Tu Respuesta           |
+|-----------|-----------------------------|------------------------|
+| NEGOCIO   | ¿Qué duele?                 | ___________________    |
+| NEGOCIO   | ¿Cuánto cuesta?             | $______/año            |
+| ML        | ¿Qué tipo de problema?      | Clasificación _____    |
+| ML        | ¿Qué métrica optimizamos?   | _____________________  |
+| SISTEMA   | ¿Batch o real-time?         | _____________________  |
+| SISTEMA   | ¿Latencia requerida?        | < _____ ms             |
+```
+
+**Paso 3: Crea el archivo**
+```bash
+# Crea docs/PROBLEM_DEFINITION.md en BankChurn-Predictor
+touch BankChurn-Predictor/docs/PROBLEM_DEFINITION.md
+```
+
+---
+
+### ✅ Checkpoint de Conocimiento: Traducción Negocio → ML
+
+**Pregunta 1**: ¿Por qué es importante cuantificar el problema en $$$?
+
+A) Para impresionar a los stakeholders  
+B) Para saber cuándo el modelo es "suficientemente bueno" y justificar inversión  
+C) Porque es requisito de sklearn  
+D) Para elegir el algoritmo correcto  
+
+**Pregunta 2**: Un e-commerce quiere predecir qué productos recomendarle a cada usuario. ¿Qué tipo de problema ML es?
+
+A) Clasificación binaria  
+B) Regresión  
+C) Ranking/RecSys  
+D) Anomaly detection  
+
+**Pregunta 3**: Si el costo de un falso positivo es $1 y el de un falso negativo es $1000, ¿qué deberías priorizar?
+
+A) Precision  
+B) Recall  
+C) Accuracy  
+D) F1-score  
+
+**🔧 Escenario de Debugging:**
+
+```
+Situación: Tu modelo tiene AUC = 0.95 (excelente), pero el equipo de negocio dice que "no sirve".
+
+Al investigar, descubres:
+- El modelo optimiza para clasificar correctamente a TODOS
+- Pero el negocio solo puede contactar al top 10% de clientes
+
+¿Cuál es el problema? ¿Qué métrica deberías haber usado?
+```
+
+<details>
+<summary>🔍 Ver Respuestas</summary>
+
+**Pregunta 1**: B) Para saber cuándo el modelo es "suficientemente bueno" y justificar inversión.
+
+**Pregunta 2**: C) Ranking/RecSys. El objetivo es ordenar productos por relevancia para cada usuario.
+
+**Pregunta 3**: B) Recall. Con costo de FN >>> costo de FP, necesitas minimizar falsos negativos.
+
+**Escenario de Debugging**: 
+- **Problema**: AUC mide discriminación global, pero el negocio solo actúa sobre el top 10%.
+- **Solución**: Usar **Precision@K** o **Lift@10%** como métrica principal.
+- **Lección**: Siempre pregunta "¿cómo se USARÁ el modelo?" antes de elegir métricas.
+</details>
 
 ---
 
@@ -348,6 +500,183 @@ El **ML Canvas** es un framework de 1 página que captura todas las decisiones c
 - Consumidores:
 ```
 
+### 🧠 Mapa Mental de Conceptos: ML Canvas
+
+```
+                       ╔═════════════════════════════════════╗
+                       ║         ML CANVAS: 8 SECCIONES      ║
+                       ╚═════════════════════════════════════╝
+                                            │
+    ┌───────────────┬───────────────┬───────┴───────┬───────────────┐
+    ▼               ▼               ▼               ▼               ▼               
+┌─────────┐    ┌─────────┐     ┌─────────┐     ┌─────────┐    ┌─────────┐
+│ 1.Prob  │    │ 2.Valor │     │ 3.Datos │     │ 4.Feats │    │ 5.Model │
+│ Negocio │    │         │     │         │     │         │    │         │
+└─────────┘    └─────────┘     └─────────┘     └─────────┘    └─────────┘
+    │               │               │               │               
+    ├───────────────┴───────────────┴───────────────┴───────────────┤
+    ▼                                                               ▼
+┌─────────────────────┐   ┌─────────────────────┐   ┌─────────────────────┐
+│ 6. Métricas Éxito   │   │ 7. Riesgos          │   │ 8. Plan Despliegue  │
+│ (Negocio/ML/Sistema)│   │ (Téc/Ops/Éticos)    │   │ (MVP/V2/Consumidor) │
+└─────────────────────┘   └─────────────────────┘   └─────────────────────┘
+```
+
+**Términos clave que debes dominar:**
+
+| Sección | Pregunta Clave | Error Común |
+|---------|----------------|-------------|
+| **1. Problema** | ¿Qué duele en $$$? | Vago: "mejorar experiencia" |
+| **2. Valor** | ¿Cuál es el ROI? | Sin números concretos |
+| **3. Datos** | ¿Fuente, volumen, calidad? | Asumir datos perfectos |
+| **4. Features** | ¿Qué información predice? | Sin features derivadas |
+| **5. Modelo** | ¿Baseline vs target? | Saltar directo a XGBoost |
+| **6. Métricas** | ¿Negocio + ML + Sistema? | Solo métricas ML |
+| **7. Riesgos** | ¿Técnicos, ops, éticos? | Ignorar data drift |
+| **8. Despliegue** | ¿MVP y consumidores? | Plan sin fases |
+
+---
+
+### 💻 Ejercicio Puente: Canvas Simplificado
+
+> **Meta**: Antes de llenar un Canvas completo, practica con las secciones críticas.
+
+**Ejercicio: Uber Eats - Tiempo de Entrega**
+```
+Contexto: Uber Eats quiere predecir el tiempo de entrega para mostrarlo al usuario.
+
+TU TAREA: Completa solo estas 4 secciones:
+
+1. PROBLEMA DE NEGOCIO:
+   - ¿Qué pasa si el tiempo mostrado es incorrecto?
+   - ¿Cuánto cuesta en términos de negocio?
+
+2. TIPO DE PROBLEMA ML:
+   - ¿Clasificación, regresión, ranking?
+
+3. MÉTRICAS:
+   - Negocio: ____________________
+   - ML: ________________________
+   - Sistema: ___________________
+
+4. RIESGOS:
+   - ¿Qué puede salir mal?
+```
+
+<details>
+<summary>🔍 Ver Solución</summary>
+
+```
+1. PROBLEMA DE NEGOCIO:
+   - Si subestima: usuario frustrado, mala reseña, posible reembolso ($5-15)
+   - Si sobreestima: usuario cancela y va a competidor (pérdida de orden $20+)
+   - Costo: ~$X millones/año en cancelaciones y reembolsos
+
+2. TIPO DE PROBLEMA ML:
+   - Regresión (predecir minutos continuos)
+   - O clasificación en buckets (15-20min, 20-30min, etc.)
+
+3. MÉTRICAS:
+   - Negocio: % órdenes entregadas dentro del tiempo mostrado
+   - ML: MAE (Mean Absolute Error) en minutos
+   - Sistema: Latencia <50ms (debe calcular al cargar menú)
+
+4. RIESGOS:
+   - Técnico: Modelo no captura tráfico en tiempo real
+   - Operacional: Drift cuando cambian restaurantes/repartidores
+   - Ético: Discriminación geográfica en tiempos
+```
+</details>
+
+---
+
+### 🛠️ Práctica del Portafolio: ML Canvas para BankChurn
+
+> **Tarea**: Crear el ML Canvas completo para BankChurn-Predictor.
+
+**Paso 1: Usa el template**
+```bash
+# Crea el archivo
+touch BankChurn-Predictor/docs/ML_CANVAS.md
+
+# Copia el template de esta guía
+```
+
+**Paso 2: Completa cada sección (pistas guiadas)**
+
+```markdown
+## 1. 🎯 Problema de Negocio
+# Pista: Busca en el README cuántos clientes hay y cuál es el churn rate
+# Calcula: clientes * churn_rate * valor_promedio_cliente
+
+## 3. 📊 Datos Disponibles
+# Pista: Revisa data/raw/*.csv
+# ¿Cuántas filas? ¿Cuántas columnas? ¿Hay nulos?
+
+## 6. 📏 Métricas de Éxito
+# NEGOCIO: $ retenido = clientes_salvados * valor_cliente
+# ML: AUC > 0.85, Recall > 60%
+# SISTEMA: Latencia P99 < ___ms
+```
+
+**Paso 3: Revisa con el checklist**
+```
+[ ] ¿Cada sección tiene NÚMEROS, no solo palabras?
+[ ] ¿Las métricas de negocio conectan con las de ML?
+[ ] ¿Identificaste al menos 3 riesgos?
+[ ] ¿El plan de despliegue tiene MVP claro?
+```
+
+---
+
+### ✅ Checkpoint de Conocimiento: ML Canvas
+
+**Pregunta 1**: ¿Por qué necesitas 3 tipos de métricas (negocio, ML, sistema)?
+
+A) Porque es el estándar de la industria  
+B) Porque cada stakeholder tiene diferentes preocupaciones  
+C) Para tener más documentación  
+D) Porque sklearn lo requiere  
+
+**Pregunta 2**: ¿Qué sección del Canvas te ayuda a evitar "model decay"?
+
+A) Problema de Negocio  
+B) Features Candidatas  
+C) Riesgos y Mitigaciones  
+D) Plan de Despliegue  
+
+**Pregunta 3**: Tu Canvas dice "mejorar la experiencia del cliente". ¿Qué está mal?
+
+A) Nada, es un objetivo válido  
+B) Falta cuantificar: ¿cómo se mide? ¿cuál es el baseline?  
+C) Debería decir "maximizar ROI"  
+D) Falta mencionar el algoritmo  
+
+**�� Escenario de Debugging:**
+
+```
+Situación: Completaste el ML Canvas pero tu manager dice:
+"Esto está muy bonito pero no me convence de que vale la pena invertir 3 meses de desarrollo"
+
+¿Qué sección del Canvas probablemente está débil?
+```
+
+<details>
+<summary>🔍 Ver Respuestas</summary>
+
+**Pregunta 1**: B) Porque cada stakeholder tiene diferentes preocupaciones. CEO quiere $$$, Data Scientists quieren AUC, Ops quiere latencia.
+
+**Pregunta 2**: C) Riesgos y Mitigaciones. Aquí documentas model decay y cómo monitorearlo/reentrenar.
+
+**Pregunta 3**: B) Falta cuantificar. "Mejorar experiencia" no es medible. Necesita: "Reducir NPS detractores de 25% a 15%".
+
+**Escenario de Debugging**: 
+Las secciones **1. Problema de Negocio** y **2. Propuesta de Valor** están débiles.
+- Falta el costo actual del problema en $$$
+- Falta el ROI esperado de la solución
+- Sin estos números, no hay caso de negocio para la inversión
+</details>
+
 ---
 
 <a id="23-arquitectura-con-el-modelo-c4"></a>
@@ -459,6 +788,178 @@ C4Component
     Rel(middleware, prometheus, "Exposes", "Counters/Histograms")
     Rel(routes, config, "Reads", "Settings")
 ```
+
+### 🧠 Mapa Mental de Conceptos: Modelo C4
+
+```
+                     ╔═══════════════════════════════════════╗
+                     ║     MODELO C4: 4 NIVELES DE ZOOM      ║
+                     ╚═══════════════════════════════════════╝
+                                           │
+         ┌─────────────────────────────────┼─────────────────────────────┐
+         ▼                                 ▼                             ▼
+┌─────────────────┐             ┌─────────────────┐             ┌─────────────────┐
+│  NIVEL 1        │             │  NIVEL 2        │             │  NIVEL 3-4      │
+│  CONTEXTO       │             │  CONTENEDORES   │             │  COMPONENTES    │
+└─────────────────┘             └─────────────────┘             └─────────────────┘
+       │                               │                               │
+├─ Vista de pájaro            ├─ Apps, DBs, servicios         ├─ Módulos internos
+├─ Usuarios externos          ├─ Comunicación entre partes    ├─ Clases/funciones
+├─ Sistemas externos          ├─ Tecnologías específicas      └─ (Generado de código)
+└─ "¿Qué es esto?"            └─ "¿Qué partes tiene?"
+```
+
+**Términos clave que debes dominar:**
+
+| Nivel | Audiencia | Pregunta | Elementos Típicos |
+|-------|-----------|----------|-------------------|
+| **Contexto** | Todos | ¿Qué es y quién lo usa? | Personas, Sistema, Sistemas Externos |
+| **Contenedores** | Arquitectos | ¿Qué partes tiene? | API, DB, Queue, Storage |
+| **Componentes** | Developers | ¿Cómo está organizado? | Routes, Services, Repositories |
+| **Código** | Implementador | ¿Cómo funciona? | Clases, Funciones (autodoc) |
+
+---
+
+### 💻 Ejercicio Puente: Diagrama de Contexto Simple
+
+> **Meta**: Antes de diagramar sistemas ML complejos, practica con un sistema simple.
+
+**Ejercicio: App de Notas**
+```
+Contexto: Una app móvil de notas que sincroniza con la nube.
+
+TU TAREA: Dibuja el diagrama de CONTEXTO identificando:
+1. ¿Quién USA el sistema? (Personas)
+2. ¿Qué ES el sistema? (Sistema principal)
+3. ¿Con qué EXTERNOS se comunica? (Otros sistemas)
+
+Usa este formato ASCII:
+┌─────────┐         ┌─────────────┐         ┌─────────┐
+│ Usuario │ ──────► │  Notes App  │ ──────► │ Cloud   │
+└─────────┘         └─────────────┘         │ Storage │
+                                            └─────────┘
+```
+
+<details>
+<summary>🔍 Ver Solución</summary>
+
+```
+                    DIAGRAMA DE CONTEXTO: NOTES APP
+                    
+    ┌──────────────┐                              ┌──────────────┐
+    │   Usuario    │                              │   Google     │
+    │   Móvil      │                              │   Auth       │
+    └──────┬───────┘                              └──────▲───────┘
+           │ CRUD notas                                  │ OAuth
+           ▼                                             │
+    ┌──────────────────────────────────────────────────────────┐
+    │                                                          │
+    │                    NOTES APP                             │
+    │             (App móvil + Backend)                        │
+    │                                                          │
+    └──────────────────────────┬───────────────────────────────┘
+                               │ Sync
+                               ▼
+                        ┌──────────────┐
+                        │  Firebase    │
+                        │  Firestore   │
+                        └──────────────┘
+```
+</details>
+
+---
+
+### 🛠️ Práctica del Portafolio: C4 para BankChurn
+
+> **Tarea**: Crear diagramas C4 para BankChurn-Predictor.
+
+**Paso 1: Diagrama de Contexto (pistas guiadas)**
+```
+Identifica:
+- PERSONAS: ¿Quién usa el sistema? (Equipo Retención, Data Team)
+- SISTEMA: ¿Qué es BankChurn? (Sistema de predicción de churn)
+- EXTERNOS: ¿De dónde vienen los datos? ¿A dónde van las predicciones?
+```
+
+**Paso 2: Diagrama de Contenedores**
+```
+Revisa la estructura real del proyecto:
+ls -la BankChurn-Predictor/
+
+Identifica contenedores:
+- ¿Hay API? → app/fastapi_app.py
+- ¿Hay modelo? → models/*.pkl
+- ¿Hay tracking? → mlruns/
+- ¿Hay storage? → data/, artifacts/
+```
+
+**Paso 3: Usa Mermaid**
+```mermaid
+C4Context
+    title Tu Diagrama Aquí
+    
+    Person(user, "Usuario", "Descripción")
+    System(system, "Tu Sistema", "Descripción")
+    System_Ext(external, "Sistema Externo", "Descripción")
+    
+    Rel(user, system, "Usa", "HTTP")
+```
+
+**Paso 4: Guarda en docs/**
+```bash
+# Crea el archivo
+touch BankChurn-Predictor/docs/ARCHITECTURE.md
+```
+
+---
+
+### ✅ Checkpoint de Conocimiento: Modelo C4
+
+**Pregunta 1**: ¿Por qué C4 tiene 4 niveles en vez de 1?
+
+A) Para complicar la documentación  
+B) Porque diferentes audiencias necesitan diferentes niveles de detalle  
+C) Porque Mermaid lo requiere  
+D) Para cumplir con estándares ISO  
+
+**Pregunta 2**: ¿En qué nivel de C4 mostrarías "Prometheus" y "Grafana"?
+
+A) Contexto  
+B) Contenedores  
+C) Componentes  
+D) Código  
+
+**Pregunta 3**: Tu diagrama de Contenedores muestra 5 microservicios, pero el código solo tiene 1 API. ¿Qué está mal?
+
+A) Nada, es la arquitectura futura  
+B) El diagrama no refleja la realidad, confundirá a nuevos desarrolladores  
+C) Faltan más microservicios  
+D) C4 siempre requiere microservicios  
+
+**🔧 Escenario de Debugging:**
+
+```
+Situación: Un nuevo developer se une al equipo y mira tu diagrama C4.
+Pregunta: "¿Dónde está el código de este contenedor 'Feature Store'?"
+Respuesta: "Eh... todavía no existe, es para el futuro."
+
+¿Qué regla de C4 estás violando?
+```
+
+<details>
+<summary>🔍 Ver Respuestas</summary>
+
+**Pregunta 1**: B) Porque diferentes audiencias necesitan diferentes niveles de detalle. CEO ve Contexto, Developer ve Componentes.
+
+**Pregunta 2**: B) Contenedores. Son aplicaciones/servicios que forman parte del sistema.
+
+**Pregunta 3**: B) El diagrama no refleja la realidad. Documenta lo que EXISTE hoy, no lo que imaginas.
+
+**Escenario de Debugging**: 
+Estás violando la regla **"Documenta la realidad, no la aspiración"**.
+- Solución: Separa claramente "Arquitectura Actual (MVP)" de "Arquitectura Futura (V2)".
+- Los nuevos developers deben poder navegar del diagrama al código 1:1.
+</details>
 
 ---
 
@@ -686,6 +1187,209 @@ Usaremos **DVC** (Data Version Control) con remote storage en S3/GCS.
 ## Referencias
 - [DVC vs Git LFS](https://dvc.org/doc/user-guide/large-dataset-optimization)
 ```
+
+### 🧠 Mapa Mental de Conceptos: ADRs
+
+```
+                          ╔═══════════════════════════════════════╗
+                          ║    ADR: ARCHITECTURE DECISION RECORD  ║
+                          ╚═══════════════════════════════════════╝
+                                            │
+          ┌─────────────────────────────────┼─────────────────────────────────┐
+          ▼                                 ▼                                 ▼
+┌──────────────────┐             ┌──────────────────┐             ┌──────────────────┐
+│    CONTEXTO      │             │    DECISIÓN      │             │  CONSECUENCIAS   │
+└──────────────────┘             └──────────────────┘             └──────────────────┘
+       │                                │                                   │
+├─ ¿Cuál es el problema?        ├─ ¿Qué elegimos?                   ├─ Positivas
+├─ ¿Qué restricciones?          ├─ ¿Por qué?                        ├─ Negativas
+└─ ¿Qué opciones hay?           └─ ¿Cuándo se decidió?              └─ Neutras
+                                                                            │
+                                                                            ▼
+                                                                   ┌──────────────────┐
+                                                                   │   ALTERNATIVAS   │
+                                                                   │   RECHAZADAS     │
+                                                                   └──────────────────┘
+```
+
+**Términos clave que debes dominar:**
+
+| Elemento | Propósito | Ejemplo |
+|----------|-----------|---------|
+| **Estado** | ¿Vigente o superado? | Propuesto, Aceptado, Deprecado |
+| **Contexto** | ¿Por qué decidir esto? | "Necesitamos API REST, opciones: Flask, FastAPI" |
+| **Decisión** | ¿Qué elegimos? | "Usaremos FastAPI" |
+| **Consecuencias** | ¿Qué ganamos/perdemos? | "+: Async, Tipos | -: Menos tutoriales" |
+| **Alternativas** | ¿Qué rechazamos y por qué? | "Flask: sin async, sin tipos" |
+
+---
+
+### 💻 Ejercicio Puente: Tu Primer ADR
+
+> **Meta**: Antes de documentar decisiones ML complejas, practica con decisiones simples.
+
+**Ejercicio: Base de Datos para App de Notas**
+```markdown
+# ADR-001: Elegir Base de Datos
+
+## Contexto
+Necesitamos almacenar notas de usuarios. Opciones:
+- PostgreSQL (relacional)
+- MongoDB (documento)
+- Firebase (serverless)
+
+## TU TAREA: Completa el ADR
+
+## Decisión
+[¿Cuál elegirías para una app simple de notas y por qué?]
+
+## Consecuencias
+### Positivas
+- ...
+
+### Negativas
+- ...
+
+## Alternativas Rechazadas
+| Alternativa | Razón de Rechazo |
+|-------------|------------------|
+| ...         | ...              |
+```
+
+<details>
+<summary>🔍 Ver Solución</summary>
+
+```markdown
+# ADR-001: Usar Firebase Firestore
+
+## Estado
+Aceptado
+
+## Contexto
+App de notas móvil simple. Prioridades:
+- Time-to-market rápido (MVP en 2 semanas)
+- Sin backend que mantener
+- Sync automático entre dispositivos
+
+## Decisión
+Usaremos **Firebase Firestore** como base de datos.
+
+## Consecuencias
+### Positivas
+- Zero backend: SDK directo desde app
+- Sync real-time incluido
+- Auth integrado
+- Escalado automático
+
+### Negativas
+- Vendor lock-in (Google)
+- Queries limitados vs SQL
+- Costos pueden escalar con usuarios
+
+## Alternativas Rechazadas
+| Alternativa | Razón de Rechazo |
+|-------------|------------------|
+| PostgreSQL | Requiere backend, más tiempo de desarrollo |
+| MongoDB | Similar overhead que Postgres para MVP |
+```
+</details>
+
+---
+
+### 🛠️ Práctica del Portafolio: ADRs para BankChurn
+
+> **Tarea**: Crear al menos 2 ADRs para decisiones clave de BankChurn-Predictor.
+
+**ADR 1: Framework de API (pistas guiadas)**
+```markdown
+# ADR-003: FastAPI sobre Flask
+
+## Contexto
+# Pista: ¿Por qué necesitas API? ¿Qué opciones hay?
+
+## Decisión
+# Pista: ¿Qué eligió el portafolio?
+
+## Consecuencias
+# Positivas: Pydantic, OpenAPI, async...
+# Negativas: Menos tutoriales, async learning curve...
+
+## Alternativas
+# Flask: ¿por qué no?
+# Django REST: ¿por qué no?
+```
+
+**ADR 2: Pipeline Unificado vs Separado**
+```markdown
+# ADR-004: Pipeline Único
+
+## Contexto
+# ¿Guardar preprocessor.pkl y model.pkl separados, o todo junto?
+
+## Decisión
+# ¿Qué hace el portafolio?
+
+## Consecuencias
+# ¿Qué problema resuelve el pipeline único?
+```
+
+**Paso Final: Guarda en docs/decisions/**
+```bash
+mkdir -p BankChurn-Predictor/docs/decisions
+touch BankChurn-Predictor/docs/decisions/ADR-003-fastapi.md
+touch BankChurn-Predictor/docs/decisions/ADR-004-pipeline.md
+```
+
+---
+
+### ✅ Checkpoint de Conocimiento: ADRs
+
+**Pregunta 1**: ¿Por qué documentar alternativas RECHAZADAS es tan importante como la decisión tomada?
+
+A) Para demostrar que investigaste  
+B) Para que futuros devs no propongan lo mismo sin saber por qué se rechazó  
+C) Porque es el formato estándar  
+D) Para tener más documentación  
+
+**Pregunta 2**: Un ADR dice "Estado: Aceptado" pero hace 2 años que el equipo usa otra tecnología. ¿Qué deberías hacer?
+
+A) Eliminarlo  
+B) Cambiarlo a "Deprecado" o "Superseded por ADR-XXX"  
+C) Dejarlo como está  
+D) Crear un nuevo ADR sin mencionar el viejo  
+
+**Pregunta 3**: ¿Cuándo deberías crear un nuevo ADR?
+
+A) Para cada línea de código  
+B) Para decisiones que afectan arquitectura y son difíciles de revertir  
+C) Solo cuando el manager lo pide  
+D) Al final del proyecto  
+
+**🔧 Escenario de Debugging:**
+
+```
+Situación: Un nuevo developer pregunta:
+"¿Por qué usamos DVC y no Git LFS? LFS parece más simple."
+
+No hay ADR documentando esta decisión.
+
+¿Qué harías?
+```
+
+<details>
+<summary>🔍 Ver Respuestas</summary>
+
+**Pregunta 1**: B) Para que futuros devs no propongan lo mismo sin saber por qué se rechazó. Evita discusiones repetidas.
+
+**Pregunta 2**: B) Cambiarlo a "Deprecado" o "Superseded por ADR-XXX". Mantén el historial pero marca que ya no aplica.
+
+**Pregunta 3**: B) Para decisiones que afectan arquitectura y son difíciles de revertir.
+
+**Escenario de Debugging**: 
+1. **Ahora**: Explica verbalmente la razón (DVC tiene pipelines, LFS no)
+2. **Después**: Crea el ADR que falta (ADR-004: DVC sobre Git LFS)
+3. **Lección**: Las decisiones tácitas son deuda de documentación
+</details>
 
 ---
 

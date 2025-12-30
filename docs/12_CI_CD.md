@@ -141,6 +141,68 @@ jobs:                                 # ¿Qué ejecutar?
 
 <a id="122-matrix-testing-multiples-versiones"></a>
 
+
+
+### 🧠 Mapa Mental de Conceptos: CI/CD
+
+```
+                          ╔══════════════════════════════════════╗
+                          ║   CI/CD CON GITHUB ACTIONS           ║
+                          ╚══════════════════════════════════════╝
+                                            │
+         ┌──────────────────────────────────┼──────────────────────────────────┐
+         ▼                                  ▼                                  ▼
+┌──────────────────┐              ┌──────────────────┐              ┌──────────────────┐
+│       CI         │              │       CD         │              │  COMPONENTES     │
+└──────────────────┘              └──────────────────┘              └──────────────────┘
+       │                                 │                                 │
+├─ Lint (ruff)                   ├─ Docker build                   ├─ on: (triggers)
+├─ Test (pytest)                 ├─ Push to registry               ├─ jobs:
+├─ Coverage                      ├─ Deploy                         ├─ steps:
+└─ Security scan                 └─ Rollback                       └─ matrix:
+```
+
+**Términos clave:** workflow, trigger, job, step, matrix, secrets
+
+---
+
+
+### 💻 Ejercicio Puente: GitHub Actions
+
+> **Meta**: Practica el concepto antes de aplicarlo al portafolio.
+
+**Ejercicio básico:**
+1. Lee la sección teórica siguiente
+2. Identifica los patrones clave del código de ejemplo
+3. Replica el patrón en un proyecto de prueba
+
+---
+
+### 🛠️ Práctica del Portafolio: CI/CD en BankChurn
+
+> **Tarea**: Aplicar este módulo en BankChurn-Predictor.
+
+```bash
+cd BankChurn-Predictor
+# Explora el código relacionado con GitHub Actions
+```
+
+**Checklist:**
+- [ ] Localicé el código relevante
+- [ ] Entendí la implementación actual
+- [ ] Identifiqué posibles mejoras
+
+---
+
+### ✅ Checkpoint de Conocimiento
+
+**Pregunta 1**: ¿Cuál es el objetivo principal de CI/CD?
+
+**Pregunta 2**: ¿Cómo se implementa en el portafolio?
+
+**🔧 Escenario Debugging**: Si algo falla en GitHub Actions, ¿cuál sería tu primer paso de diagnóstico?
+
+
 ## 12.2 Matrix Testing: Múltiples Versiones
 
 ### El Problema: "Funciona en mi versión de Python"
@@ -1008,7 +1070,7 @@ Esta sección aplica el método de "Shadow Coder Senior": diseccionamos el pipel
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                     │
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                    │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                 │
 │  PROBLEMA 1: Tenemos 3 proyectos (BankChurn, CarVision, Telecom) en un repo     │

@@ -149,6 +149,208 @@ MiProyecto-ML/
 └── README.md                     # 📖 DOCUMENTACIÓN PRINCIPAL
 ```
 
+### 🧠 Mapa Mental de Conceptos: Estructura de Proyecto
+
+```
+                        ╔═════════════════════════════════════════════╗
+                        ║   ESTRUCTURA PROFESIONAL DE PROYECTO ML     ║
+                        ╚═════════════════════════════════════════════╝
+                                            │
+        ┌───────────────────────────────────┼───────────────────────────────────┐
+        ▼                                   ▼                                   ▼
+┌───────────────────┐             ┌───────────────────┐             ┌───────────────────┐
+│  📦 CÓDIGO        │             │  ⚙️ CONFIG       │             │  🔧 HERRAMIENTAS  │
+└───────────────────┘             └───────────────────┘             └───────────────────┘
+       │                                 │                                 │
+├─ src/<paquete>/             ├─ pyproject.toml               ├─ Makefile
+├─ app/                       ├─ configs/*.yaml               ├─ Dockerfile
+├─ tests/                     ├─ .pre-commit                  ├─ .github/workflows/
+└─ scripts/                   └─ .gitignore                   └─ README.md
+                                         │
+                                         ▼
+                              ┌───────────────────┐
+                              │  📊 DATOS         │
+                              │  (gitignored)     │
+                              └───────────────────┘
+                                     │
+                              ├─ data/raw/
+                              ├─ data/processed/
+                              ├─ artifacts/
+                              └─ mlruns/
+```
+
+**Términos clave que debes dominar:**
+
+| Directorio | Propósito | Gitignored? |
+|------------|-----------|-------------|
+| **src/** | Código fuente instalable | No |
+| **tests/** | Tests (espejo de src) | No |
+| **app/** | APIs y dashboards | No |
+| **configs/** | Configuración YAML | No |
+| **data/** | Datos raw/procesados | ✅ Sí |
+| **artifacts/** | Modelos entrenados | ✅ Sí |
+| **mlruns/** | Experimentos MLflow | ✅ Sí |
+
+---
+
+### 💻 Ejercicio Puente: Crear Estructura Mínima
+
+> **Meta**: Antes de estructurar un proyecto ML completo, practica con una estructura mínima.
+
+**Ejercicio 1: Estructura desde cero**
+```bash
+# TU TAREA: Crea esta estructura mínima para un proyecto "myproject"
+# 
+# myproject/
+# ├── src/
+# │   └── myproject/
+# │       ├── __init__.py
+# │       └── main.py
+# ├── tests/
+# │   └── test_main.py
+# ├── pyproject.toml
+# └── README.md
+#
+# PISTA: Usa mkdir -p y touch
+```
+
+**Ejercicio 2: Verificar instalación**
+```bash
+# Después de crear la estructura y pyproject.toml mínimo
+cd myproject
+pip install -e .
+python -c "from myproject import main; print('✅ Funciona!')"
+```
+
+<details>
+<summary>🔍 Ver Solución</summary>
+
+```bash
+# Crear estructura
+mkdir -p myproject/src/myproject myproject/tests
+touch myproject/src/myproject/__init__.py
+touch myproject/src/myproject/main.py
+touch myproject/tests/test_main.py
+touch myproject/README.md
+
+# Crear pyproject.toml mínimo
+cat > myproject/pyproject.toml << 'EOF'
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "myproject"
+version = "0.1.0"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+EOF
+
+# Verificar
+cd myproject
+pip install -e .
+python -c "from myproject import main; print('✅ Funciona!')"
+```
+</details>
+
+---
+
+### 🛠️ Práctica del Portafolio: Verificar Estructura de BankChurn
+
+> **Tarea**: Verificar que BankChurn-Predictor sigue la estructura profesional.
+
+**Paso 1: Explora la estructura real**
+```bash
+cd BankChurn-Predictor
+tree -L 2 --dirsfirst
+# O sin tree: find . -maxdepth 2 -type d | head -20
+```
+
+**Paso 2: Checklist de verificación**
+```
+[ ] ¿Existe src/bankchurn/__init__.py?
+[ ] ¿Existe tests/conftest.py?
+[ ] ¿Existe pyproject.toml con [tool.setuptools.packages.find] where=["src"]?
+[ ] ¿Existe Makefile con targets: install, test, lint?
+[ ] ¿.gitignore excluye data/, artifacts/, mlruns/?
+```
+
+**Paso 3: Ejecuta los comandos del Makefile**
+```bash
+make install      # Debe funcionar sin errores
+make test         # Debe ejecutar pytest
+make lint         # Debe ejecutar ruff/mypy
+```
+
+**Paso 4: Si algo falla, documenta**
+```
+¿Qué falló? ___________________
+¿Por qué? ___________________
+¿Cómo lo arreglaste? ___________________
+```
+
+---
+
+### ✅ Checkpoint de Conocimiento: Estructura de Proyecto
+
+**Pregunta 1**: ¿Por qué ponemos el código en `src/` en vez de en la raíz?
+
+A) Es más rápido  
+B) Fuerza que el código esté INSTALADO para importarlo (evita bugs de imports)  
+C) GitHub lo requiere  
+D) Ocupa menos espacio  
+
+**Pregunta 2**: ¿Por qué `data/` y `artifacts/` deben estar en .gitignore?
+
+A) Son archivos temporales  
+B) Son archivos binarios grandes que no deben versionarse en Git  
+C) Git no soporta esos formatos  
+D) Hace el repo más rápido  
+
+**Pregunta 3**: ¿Cuál es el propósito del archivo `__init__.py`?
+
+A) Almacenar configuración  
+B) Marcar un directorio como paquete Python importable  
+C) Ejecutar tests  
+D) Documentar el proyecto  
+
+**�� Escenario de Debugging:**
+
+```
+Situación: Ejecutas pytest en CI y obtienes:
+  ModuleNotFoundError: No module named 'bankchurn'
+
+Pero en tu máquina local funciona perfectamente.
+
+El workflow de CI tiene:
+  - run: pip install -r requirements.txt
+  - run: pytest
+```
+
+**¿Cuál es el problema y cómo lo solucionarías?**
+
+<details>
+<summary>🔍 Ver Respuestas</summary>
+
+**Pregunta 1**: B) Fuerza que el código esté INSTALADO para importarlo. Esto evita el problema "funciona en mi máquina".
+
+**Pregunta 2**: B) Son archivos binarios grandes. Git no está diseñado para archivos grandes; usa DVC o storage externo.
+
+**Pregunta 3**: B) Marcar un directorio como paquete Python importable.
+
+**Escenario de Debugging**: 
+- **Problema**: El CI solo instala dependencias, pero NO instala tu paquete.
+- **Solución**: Cambiar el workflow:
+```yaml
+- run: pip install -e ".[dev]"  # Instala TU paquete + deps
+- run: pytest
+```
+</details>
+
+---
+
 <a id="como-se-aplica"></a>
 
 ## 🧩 Cómo se aplica en este portafolio

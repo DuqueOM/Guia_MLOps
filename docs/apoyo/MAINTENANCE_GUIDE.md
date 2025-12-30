@@ -245,7 +245,7 @@ docs/guia_mlops/
 |---------|-----------|:-------------:|
 | [RECURSOS_POR_MODULO.md](RECURSOS_POR_MODULO.md) | Videos y cursos externos | Trimestral |
 | [DECISIONES_TECH.md](DECISIONES_TECH.md) | ADRs de herramientas | Semestral |
-| [21_GLOSARIO.md](21_GLOSARIO.md) | Definiciones de términos | Mensual |
+| [21_GLOSARIO.md](../21_GLOSARIO.md) | Definiciones de términos | Mensual |
 | [RUBRICA_EVALUACION.md](RUBRICA_EVALUACION.md) | Sistema de puntuación | Semestral |
 
 ### Recursos Externos

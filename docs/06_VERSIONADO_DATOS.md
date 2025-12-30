@@ -188,6 +188,219 @@ Para que esto cuente como progreso real, fuerza este mapeo:
 | Delta Lake | Ilimitado | ✅ | ❌ | Spark | Alta |
 | LakeFS | Ilimitado | ✅ | ❌ | Server | Alta |
 
+### 🧠 Mapa Mental de Conceptos: DVC y Versionado de Datos
+
+```
+                          ╔══════════════════════════════════════╗
+                          ║   DVC: DATA VERSION CONTROL          ║
+                          ╚══════════════════════════════════════╝
+                                            │
+         ┌──────────────────────────────────┼──────────────────────────────────┐
+         ▼                                  ▼                                  ▼
+┌──────────────────┐              ┌──────────────────┐              ┌──────────────────┐
+│  VERSIONADO      │              │  PIPELINES       │              │  REMOTES         │
+└──────────────────┘              └──────────────────┘              └──────────────────┘
+       │                                 │                                 │
+├─ data/*.dvc                     ├─ dvc.yaml                      ├─ S3
+├─ .dvc/ (metadatos)              ├─ params.yaml                   ├─ GCS
+├─ dvc add                        ├─ dvc repro                     ├─ Azure
+├─ dvc checkout                   ├─ dvc dag                       ├─ GDrive
+└─ dvc push/pull                  └─ stages                        └─ Local
+```
+
+**Términos clave que debes dominar:**
+
+| Término | Significado | Comando |
+|---------|-------------|---------|
+| **dvc add** | Trackear archivo/carpeta con DVC | `dvc add data/raw/churn.csv` |
+| **dvc.yaml** | Pipeline declarativo (DAG) | Define stages y dependencias |
+| **params.yaml** | Parámetros del pipeline | Hiperparámetros, configs |
+| **dvc repro** | Ejecutar pipeline reproducible | Solo re-ejecuta lo que cambió |
+| **Remote** | Storage externo para datos | S3, GCS, GDrive, local |
+| **.dvc file** | Metadatos del archivo trackeado | Hash MD5, tamaño |
+
+---
+
+### 💻 Ejercicio Puente: DVC Básico
+
+> **Meta**: Antes de crear pipelines complejos, domina el versionado básico.
+
+**Ejercicio 1: Inicializar DVC**
+```bash
+# TU TAREA: En un proyecto nuevo
+mkdir my-dvc-project && cd my-dvc-project
+git init
+dvc init
+
+# ¿Qué archivos creó dvc init?
+ls -la .dvc/
+```
+
+**Ejercicio 2: Trackear un archivo**
+```bash
+# Crea un CSV de prueba
+echo "id,value" > data.csv
+echo "1,100" >> data.csv
+
+# TU TAREA: Trackea con DVC
+dvc add data.csv
+
+# ¿Qué archivos se crearon?
+ls -la data.csv*
+cat data.csv.dvc
+```
+
+**Ejercicio 3: Simular cambio de versión**
+```bash
+# Commit versión 1
+git add data.csv.dvc .gitignore
+git commit -m "data: add initial dataset v1"
+
+# Modifica el archivo
+echo "2,200" >> data.csv
+dvc add data.csv
+git add data.csv.dvc
+git commit -m "data: add new row to dataset v2"
+
+# TU TAREA: Vuelve a la versión 1
+git checkout HEAD~1 -- data.csv.dvc
+dvc checkout
+cat data.csv  # ¿Qué versión tienes?
+```
+
+<details>
+<summary>🔍 Ver Solución</summary>
+
+```bash
+# Ejercicio 1: dvc init crea:
+# .dvc/
+# ├── .gitignore
+# └── config
+
+# Ejercicio 2: dvc add crea:
+# data.csv.dvc  (metadatos con hash MD5)
+# Además añade "data.csv" a .gitignore
+
+# data.csv.dvc contiene algo como:
+# outs:
+# - md5: abc123...
+#   size: 20
+#   hash: md5
+#   path: data.csv
+
+# Ejercicio 3: Después de checkout
+# Tienes la versión 1 (solo 1 fila de datos)
+# Porque Git restauró el .dvc con el hash antiguo
+# Y dvc checkout descargó esa versión del cache
+```
+</details>
+
+---
+
+### 🛠️ Práctica del Portafolio: DVC en BankChurn
+
+> **Tarea**: Explorar y entender la configuración DVC de BankChurn-Predictor.
+
+**Paso 1: Examina la estructura**
+```bash
+cd BankChurn-Predictor
+ls -la .dvc/
+cat .dvc/config
+ls -la data/
+```
+
+**Paso 2: Entiende el pipeline**
+```bash
+# Ver el DAG visual
+dvc dag
+
+# Ver el pipeline completo
+cat dvc.yaml
+
+# Ver los parámetros
+cat params.yaml
+```
+
+**Paso 3: Reproduce el pipeline**
+```bash
+# Ver qué está desactualizado
+dvc status
+
+# Ejecutar pipeline completo
+dvc repro
+
+# ¿Qué stages se ejecutaron?
+```
+
+**Paso 4: Simula un experimento**
+```bash
+# Cambia un parámetro en params.yaml
+# ej: test_size: 0.3 → test_size: 0.2
+
+# ¿Qué stages necesitan re-ejecutarse?
+dvc status
+
+# Ejecuta
+dvc repro
+```
+
+---
+
+### ✅ Checkpoint de Conocimiento: DVC
+
+**Pregunta 1**: ¿Qué guarda Git cuando usas DVC para datos?
+
+A) El archivo de datos completo  
+B) Solo el archivo .dvc con metadatos (hash MD5)  
+C) Una copia comprimida  
+D) Nada, DVC reemplaza a Git  
+
+**Pregunta 2**: ¿Cuál es la ventaja de `dvc repro` sobre correr scripts manualmente?
+
+A) Es más rápido  
+B) Solo re-ejecuta stages cuyas dependencias cambiaron  
+C) Usa menos memoria  
+D) Es más fácil de escribir  
+
+**Pregunta 3**: Si haces `git checkout v1.0.0` pero NO haces `dvc checkout`, ¿qué pasa?
+
+A) Tienes código v1.0.0 pero datos de la versión actual (inconsistente)  
+B) Todo funciona automáticamente  
+C) Git falla  
+D) DVC borra los datos  
+
+**🔧 Escenario de Debugging:**
+
+```
+Situación: Ejecutas dvc repro y obtienes:
+  ERROR: failed to reproduce 'train': 
+  Could not find data/raw/churn.csv
+
+Pero el archivo .dvc existe: data/raw/churn.csv.dvc
+```
+
+**¿Cuál es el problema y cómo lo solucionarías?**
+
+<details>
+<summary>🔍 Ver Respuestas</summary>
+
+**Pregunta 1**: B) Solo el archivo .dvc con metadatos. Los datos reales van al remote storage.
+
+**Pregunta 2**: B) Solo re-ejecuta stages cuyas dependencias cambiaron. Ahorra tiempo y recursos.
+
+**Pregunta 3**: A) Tienes código v1.0.0 pero datos de la versión actual. SIEMPRE haz `dvc checkout` después de `git checkout`.
+
+**Escenario de Debugging**: 
+- **Problema**: El archivo `.dvc` existe, pero los datos reales no están descargados.
+- **Solución**: 
+```bash
+dvc pull  # Descarga los datos del remote
+# O si no hay remote configurado:
+dvc checkout  # Restaura desde cache local
+```
+- **Prevención**: Después de `git clone` siempre ejecuta `dvc pull`.
+</details>
+
 ---
 
 <a id="62-configuracion"></a>
@@ -507,43 +720,43 @@ dvc dag --outs train
 ### Visualización del DAG
 
 ```
-╔═══════════════════════════════════════════════════════════════════════════════╗
-║                              DVC DAG: BANKCHURN                               ║
-╠═══════════════════════════════════════════════════════════════════════════════╣
-║                                                                               ║
-║                        ┌─────────────────┐                                    ║
-║                        │  data/raw/*.csv │                                    ║
-║                        │  configs/*.yaml │                                    ║
-║                        └────────┬────────┘                                    ║
-║                                 │                                             ║
-║                                 ▼                                             ║
-║                        ┌─────────────────┐                                    ║
-║                        │    prepare      │                                    ║
-║                        └────────┬────────┘                                    ║
-║                                 │                                             ║
-║                                 ▼                                             ║
-║                        ┌─────────────────┐                                    ║
-║                        │   featurize     │                                    ║
-║                        └────────┬────────┘                                    ║
-║                                 │                                             ║
-║                     ┌───────────┴───────────┐                                 ║
-║                     ▼                       ▼                                 ║
-║            ┌─────────────────┐    ┌─────────────────┐                         ║
-║            │     train       │    │    (test data)  │                         ║
-║            └────────┬────────┘    └────────┬────────┘                         ║
-║                     │                      │                                  ║
-║                     └──────────┬───────────┘                                  ║
-║                                ▼                                              ║
-║                       ┌─────────────────┐                                     ║
-║                       │    evaluate     │                                     ║
-║                       └────────┬────────┘                                     ║
-║                                │                                              ║
-║                                ▼                                              ║
-║                       ┌─────────────────┐                                     ║
-║                       │    metrics/     │                                     ║
-║                       └─────────────────┘                                     ║
-║                                                                               ║
-╚═══════════════════════════════════════════════════════════════════════════════╝
+╔═════════════════════════════════════════════════════════════════════════╗
+║                         DVC DAG: BANKCHURN                              ║
+╠═════════════════════════════════════════════════════════════════════════╣
+║                                                                         ║
+║                        ┌─────────────────┐                              ║
+║                        │  data/raw/*.csv │                              ║
+║                        │  configs/*.yaml │                              ║
+║                        └────────┬────────┘                              ║
+║                                 │                                       ║
+║                                 ▼                                       ║
+║                        ┌─────────────────┐                              ║
+║                        │    prepare      │                              ║
+║                        └────────┬────────┘                              ║
+║                                 │                                       ║
+║                                 ▼                                       ║
+║                        ┌─────────────────┐                              ║
+║                        │   featurize     │                              ║
+║                        └────────┬────────┘                              ║
+║                                 │                                       ║
+║                     ┌───────────┴───────────┐                           ║
+║                     ▼                       ▼                           ║
+║            ┌─────────────────┐    ┌─────────────────┐                   ║
+║            │     train       │    │    (test data)  │                   ║
+║            └────────┬────────┘    └────────┬────────┘                   ║
+║                     │                      │                            ║
+║                     └──────────┬───────────┘                            ║
+║                                ▼                                        ║
+║                       ┌─────────────────┐                               ║
+║                       │    evaluate     │                               ║
+║                       └────────┬────────┘                               ║
+║                                │                                        ║
+║                                ▼                                        ║
+║                       ┌─────────────────┐                               ║
+║                       │    metrics/     │                               ║
+║                       └─────────────────┘                               ║
+║                                                                         ║
+╚═════════════════════════════════════════════════════════════════════════╝
 ```
 
 ---
@@ -698,7 +911,7 @@ def train():
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                     │
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                    │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │  PROBLEMA 1: ¿Cómo garantizo que preprocesamiento se re-ejecuta si cambia algo? │
 │  DECISIÓN: deps: [data/raw/Churn.csv, configs/config.yaml, script.py]           │

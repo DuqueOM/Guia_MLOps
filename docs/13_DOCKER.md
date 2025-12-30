@@ -90,6 +90,89 @@
 
 <a id="131-dockerfile-basico-vs-optimizado"></a>
  
+### 🧠 Mapa Mental de Conceptos: Docker para ML
+
+```
+                          ╔══════════════════════════════════════╗
+                          ║      DOCKER PROFESIONAL PARA ML      ║
+                          ╚══════════════════════════════════════╝
+                                            │
+         ┌──────────────────────────────────┼──────────────────────────────────┐
+         ▼                                  ▼                                  ▼
+┌──────────────────┐              ┌──────────────────┐              ┌──────────────────┐
+│   DOCKERFILE     │              │  OPTIMIZACIÓN    │              │   SEGURIDAD      │
+└──────────────────┘              └──────────────────┘              └──────────────────┘
+       │                                 │                                 │
+├─ FROM (base image)              ├─ Multi-stage build            ├─ Non-root user
+├─ COPY (archivos)                ├─ Layer caching                ├─ .dockerignore
+├─ RUN (comandos)                 ├─ Slim/Alpine base             ├─ CVE scanning
+├─ CMD (entrypoint)               ├─ .dockerignore                └─ Secrets mgmt
+└─ EXPOSE (puertos)               └─ Reduce tamaño
+```
+
+**Términos clave:**
+
+| Término | Significado | Ejemplo |
+|---------|-------------|---------|
+| **Multi-stage** | Compilar en una imagen, correr en otra | Builder + Runtime |
+| **Layer** | Cada instrucción crea una capa | Cacheable |
+| **Slim** | Imagen base reducida | `python:3.11-slim` |
+| **.dockerignore** | Archivos a no copiar | `.git`, `data/`, `__pycache__` |
+
+---
+
+### 💻 Ejercicio Puente: Dockerfile Mínimo
+
+**TU TAREA:** Crea un Dockerfile básico para una API FastAPI
+```dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY src/ ./src/
+COPY app/ ./app/
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0"]
+```
+
+---
+
+
+### 💻 Ejercicio Puente: Containerización
+
+> **Meta**: Practica el concepto antes de aplicarlo al portafolio.
+
+**Ejercicio básico:**
+1. Lee la sección teórica siguiente
+2. Identifica los patrones clave del código de ejemplo
+3. Replica el patrón en un proyecto de prueba
+
+---
+
+### 🛠️ Práctica del Portafolio: Docker en BankChurn
+
+> **Tarea**: Aplicar este módulo en BankChurn-Predictor.
+
+```bash
+cd BankChurn-Predictor
+# Explora el código relacionado con Containerización
+```
+
+**Checklist:**
+- [ ] Localicé el código relevante
+- [ ] Entendí la implementación actual
+- [ ] Identifiqué posibles mejoras
+
+---
+
+### ✅ Checkpoint de Conocimiento
+
+**Pregunta 1**: ¿Cuál es el objetivo principal de Docker?
+
+**Pregunta 2**: ¿Cómo se implementa en el portafolio?
+
+**🔧 Escenario Debugging**: Si algo falla en Containerización, ¿cuál sería tu primer paso de diagnóstico?
+
+
 ## 13.1 Dockerfile Básico vs Optimizado
 
 ### ❌ Nivel 1: Básico (No usar en producción)
@@ -821,7 +904,7 @@ Antes de escribir una sola línea de Docker, pregúntate: **¿qué problema esto
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                     │
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                    │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                 │
 │  PROBLEMA 1: Imágenes de 1.5GB que tardan 10min en desplegar                    │
@@ -1579,21 +1662,21 @@ El Dockerfile que construyes es solo el primer paso. En producción, esa imagen 
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                    FLUJO: DOCKERFILE → KUBERNETES                                │
+│                    FLUJO: DOCKERFILE → KUBERNETES                               │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                 │
 │  1. BUILD                          2. PUSH                        3. DEPLOY     │
 │  ─────────                         ─────                          ───────       │
-│  ┌──────────────┐                 ┌──────────────┐              ┌────────────┐ │
-│  │ Dockerfile   │  docker build   │ Image        │  docker push │ K8s        │ │
-│  │              │ ───────────────►│ bankchurn    │ ────────────►│ Deployment │ │
-│  │ Multi-stage  │                 │ :v2.0.0      │              │            │ │
-│  │ ~350MB       │                 │              │              │ 3 replicas │ │
-│  └──────────────┘                 └──────────────┘              └────────────┘ │
+│  ┌──────────────┐                 ┌──────────────┐              ┌────────────┐  │
+│  │ Dockerfile   │  docker build   │ Image        │  docker push │ K8s        │  │
+│  │              │ ───────────────►│ bankchurn    │ ────────────►│ Deployment │  │
+│  │ Multi-stage  │                 │ :v2.0.0      │              │            │  │
+│  │ ~350MB       │                 │              │              │ 3 replicas │  │
+│  └──────────────┘                 └──────────────┘              └────────────┘  │
 │                                           │                            │        │
 │  BankChurn-Predictor/                     │                            │        │
-│  Dockerfile                        Registry                   k8s/bankchurn-   │
-│                                   (DockerHub/                 deployment.yaml  │
+│  Dockerfile                        Registry                   k8s/bankchurn-    │
+│                                   (DockerHub/                 deployment.yaml   │
 │                                    GitHub)                                      │
 │                                                                                 │
 └─────────────────────────────────────────────────────────────────────────────────┘

@@ -95,6 +95,54 @@
 
 ---
 
+
+### 🧠 Mapa Mental de Conceptos
+
+**Términos clave para este módulo:**
+- Revisa los conceptos principales en las secciones siguientes
+- Practica con los ejercicios del portafolio BankChurn
+- Aplica los checkpoints para verificar tu comprensión
+
+---
+
+
+
+### 💻 Ejercicio Puente: Capstone
+
+> **Meta**: Practica el concepto antes de aplicarlo al portafolio.
+
+**Ejercicio básico:**
+1. Lee la sección teórica siguiente
+2. Identifica los patrones clave del código de ejemplo
+3. Replica el patrón en un proyecto de prueba
+
+---
+
+### 🛠️ Práctica del Portafolio: Proyecto Integrador en BankChurn
+
+> **Tarea**: Aplicar este módulo en BankChurn-Predictor.
+
+```bash
+cd BankChurn-Predictor
+# Explora el código relacionado con Capstone
+```
+
+**Checklist:**
+- [ ] Localicé el código relevante
+- [ ] Entendí la implementación actual
+- [ ] Identifiqué posibles mejoras
+
+---
+
+### ✅ Checkpoint de Conocimiento
+
+**Pregunta 1**: ¿Cuál es el objetivo principal de Proyecto Integrador?
+
+**Pregunta 2**: ¿Cómo se implementa en el portafolio?
+
+**🔧 Escenario Debugging**: Si algo falla en Capstone, ¿cuál sería tu primer paso de diagnóstico?
+
+
 ## ✅ <a id="203-checklist-de-entrega-100-puntos"></a> Checklist de Entrega (100 puntos)
 
 ### Fase 1: Estructura y Configuración (20 puntos)
@@ -551,7 +599,7 @@ if __name__ == "__main__":
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                    EVOLUCIÓN DEL PORTAFOLIO: 1 → 3 PROYECTOS                     │
+│                    EVOLUCIÓN DEL PORTAFOLIO: 1 → 3 PROYECTOS                    │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │  PROBLEMA 1: ¿Cómo comparto código entre BankChurn, CarVision y TelecomAI?      │
 │  DECISIÓN: common_utils/ como librería interna instalable                       │
@@ -776,13 +824,13 @@ cd proyecto1 && python -c "from src.proyecto1.training import train; train()"
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     DATA LAYER                               │
+│                     DATA LAYER                              │
 ├─────────────────────────────────────────────────────────────┤
-│  S3 (raw) → Spark (ETL) → Feature Store (Redis) → DVC      │
+│  S3 (raw) → Spark (ETL) → Feature Store (Redis) → DVC       │
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                    TRAINING LAYER                            │
+│                    TRAINING LAYER                           │
 ├─────────────────────────────────────────────────────────────┤
 │  MLflow Tracking → Kubernetes Jobs → Model Registry         │
 │  - Batch training diario                                    │
@@ -790,7 +838,7 @@ cd proyecto1 && python -c "from src.proyecto1.training import train; train()"
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                    SERVING LAYER                             │
+│                    SERVING LAYER                            │
 ├─────────────────────────────────────────────────────────────┤
 │  Load Balancer → FastAPI (K8s HPA) → Redis Cache            │
 │  - 3 replicas mínimo                                        │
@@ -799,7 +847,7 @@ cd proyecto1 && python -c "from src.proyecto1.training import train; train()"
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                  MONITORING LAYER                            │
+│                  MONITORING LAYER                           │
 ├─────────────────────────────────────────────────────────────┤
 │  Prometheus → Grafana → Alerting → Evidently (drift)        │
 │  - Latency p99 < 100ms                                      │

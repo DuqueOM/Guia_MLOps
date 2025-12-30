@@ -102,15 +102,15 @@ Para que esto cuente como progreso real, fuerza este mapeo:
 ║  • Escribes código en celdas desordenadas                                     ║
 ║  • Variables globales por todos lados                                         ║
 ║  • "Funciona" = éxito                                                         ║
-║  • Cuando algo falla, reinicias el kernel y vuelves a correr todo            ║
+║  • Cuando algo falla, reinicias el kernel y vuelves a correr todo             ║
 ║                                                                               ║
 ║  En producción:                                                               ║
-║  • El código debe ser MODULAR (dividido en piezas reutilizables)             ║
-║  • Las dependencias deben ser EXPLÍCITAS (no variables mágicas)              ║
-║  • "Funciona" = pasa tests + se entiende + se mantiene                       ║
-║  • Cuando algo falla, necesitas DIAGNOSTICAR sin reiniciar                   ║
+║  • El código debe ser MODULAR (dividido en piezas reutilizables)              ║
+║  • Las dependencias deben ser EXPLÍCITAS (no variables mágicas)               ║
+║  • "Funciona" = pasa tests + se entiende + se mantiene                        ║
+║  • Cuando algo falla, necesitas DIAGNOSTICAR sin reiniciar                    ║
 ║                                                                               ║
-║  Esta guía te lleva del primer mindset al segundo.                           ║
+║  Esta guía te lleva del primer mindset al segundo.                            ║
 ╚═══════════════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -654,13 +654,204 @@ Ejecutar:
 mypy src/  # Verifica tipos en todo el código
 ```
 
+### 🧠 Mapa Mental de Conceptos: Type Hints
+
+```
+                            ╔═══════════════════════════════════════╗
+                            ║           TYPE HINTS EN PYTHON        ║
+                            ╚═══════════════════════════════════════╝
+                                              │
+              ┌───────────────────────────────┼───────────────────────────────┐
+              ▼                               ▼                               ▼
+    ┌─────────────────┐             ┌─────────────────┐             ┌─────────────────┐
+    │  TIPOS BÁSICOS  │             │   TIPOS ML      │             │ TIPOS AVANZADOS │
+    └─────────────────┘             └─────────────────┘             └─────────────────┘
+           │                               │                               │
+    ├─ str, int, float              ├─ pd.DataFrame                  ├─ TypedDict
+    ├─ bool                         ├─ pd.Series                     ├─ Literal
+    ├─ List[T]                      ├─ NDArray[np.float64]           ├─ Protocol
+    ├─ Dict[K,V]                    ├─ BaseEstimator                 ├─ TypeVar
+    ├─ Tuple[T,...]                 ├─ Pipeline                      └─ Generic
+    ├─ Optional[T]                  └─ ArrayLike
+    └─ Union[A,B]
+```
+
+**Términos clave que debes dominar:**
+
+| Término | Significado | Ejemplo |
+|---------|-------------|---------|
+| **Type hint** | Anotación de tipo en firma de función | `def f(x: int) -> str:` |
+| **Generic** | Tipo parametrizado | `List[str]`, `Dict[str, float]` |
+| **Optional** | Puede ser el tipo o None | `Optional[Path] = Union[Path, None]` |
+| **Union** | Varios tipos posibles | `Union[str, int]` |
+| **Literal** | Solo valores específicos | `Literal["train", "eval"]` |
+| **TypedDict** | Dict con estructura fija | Métricas con claves conocidas |
+| **mypy** | Verificador estático de tipos | Detecta errores antes de ejecutar |
+
+---
+
+### 💻 Ejercicio Puente: Type Hints Básicos
+
+> **Meta**: Antes de tipar código ML complejo, practica con funciones simples.
+
+**Ejercicio 1: Función Calculadora**
+```python
+# ❌ Sin tipos - ¿Qué recibe? ¿Qué retorna?
+def calcular_promedio(numeros):
+    return sum(numeros) / len(numeros)
+
+# ✅ TU TAREA: Añade type hints a esta función
+# Pista: numeros es una lista de floats, retorna un float
+```
+
+**Ejercicio 2: Función con Múltiples Retornos**
+```python
+# ❌ Sin tipos
+def dividir_dataset(datos, porcentaje):
+    punto_corte = int(len(datos) * porcentaje)
+    return datos[:punto_corte], datos[punto_corte:]
+
+# ✅ TU TAREA: Añade type hints
+# Pista: datos es List[Any], porcentaje es float, retorna Tuple de dos listas
+```
+
+**Ejercicio 3: Función con Parámetro Opcional**
+```python
+# ❌ Sin tipos
+def cargar_datos(ruta, separador=","):
+    import pandas as pd
+    return pd.read_csv(ruta, sep=separador)
+
+# ✅ TU TAREA: Añade type hints usando Path y Optional
+```
+
+<details>
+<summary>🔍 Ver Soluciones</summary>
+
+```python
+from typing import List, Tuple, Any, Optional
+from pathlib import Path
+import pandas as pd
+
+# Ejercicio 1
+def calcular_promedio(numeros: List[float]) -> float:
+    return sum(numeros) / len(numeros)
+
+# Ejercicio 2
+def dividir_dataset(datos: List[Any], porcentaje: float) -> Tuple[List[Any], List[Any]]:
+    punto_corte = int(len(datos) * porcentaje)
+    return datos[:punto_corte], datos[punto_corte:]
+
+# Ejercicio 3
+def cargar_datos(ruta: Path, separador: str = ",") -> pd.DataFrame:
+    return pd.read_csv(ruta, sep=separador)
+```
+</details>
+
+---
+
+### 🛠️ Práctica del Portafolio: Type Hints en BankChurn
+
+> **Tarea**: Aplicar type hints al código real del proyecto BankChurn-Predictor.
+
+**Paso 1: Identifica las funciones sin tipos**
+```bash
+# Ejecuta mypy para ver qué funciones necesitan tipos
+cd BankChurn-Predictor
+mypy src/bankchurn/ --disallow-untyped-defs
+```
+
+**Paso 2: Prioriza las funciones públicas**
+- `src/bankchurn/training.py` → funciones `fit`, `predict`, `evaluate`
+- `src/bankchurn/config.py` → clase de configuración
+- `src/bankchurn/data.py` → funciones de carga de datos
+
+**Paso 3: Aplica el patrón (pistas guiadas)**
+
+```python
+# En src/bankchurn/training.py
+# ANTES: def prepare_features(df, num_cols, cat_cols, target):
+# 
+# DESPUÉS: Añade estos tipos:
+# - df: ¿Qué estructura de datos es? → pd.______
+# - num_cols, cat_cols: ¿Listas de qué? → List[___]
+# - target: ¿Qué tipo simple? → ___
+# - Retorno: ¿Qué devuelve? Tuple de (array, series, transformer)
+```
+
+**Paso 4: Verifica con mypy**
+```bash
+mypy src/bankchurn/ --strict
+# Objetivo: 0 errores en tus archivos
+```
+
+**❌ NO hagas esto:**
+- Copiar tipos de otro lado sin entenderlos
+- Usar `Any` para "resolver" errores de mypy
+- Ignorar warnings con `# type: ignore` sin justificación
+
+**✅ SÍ haz esto:**
+- Consulta la documentación de los tipos que uses
+- Crea type aliases para tipos repetidos
+- Documenta por qué un tipo es complejo si lo es
+
+---
+
+### ✅ Checkpoint de Conocimiento: Type Hints
+
+**Pregunta 1**: ¿Cuál es la diferencia entre `List[str]` y `list`?
+
+A) No hay diferencia, son equivalentes  
+B) `List[str]` especifica que TODOS los elementos son strings  
+C) `list` solo funciona en Python 2  
+D) `List[str]` es más lento en ejecución  
+
+**Pregunta 2**: ¿Qué significa `Optional[Path]`?
+
+A) El parámetro es obligatorio y debe ser un Path  
+B) El parámetro puede ser un Path O puede ser None  
+C) El parámetro se ignora si no se proporciona  
+D) El parámetro debe tener un valor por defecto  
+
+**Pregunta 3**: ¿Por qué usamos `Literal["train", "eval"]` en vez de `str`?
+
+A) Es más rápido en ejecución  
+B) mypy puede verificar que SOLO usemos esos valores exactos  
+C) Ocupa menos memoria  
+D) Es requerido por sklearn  
+
+**🔧 Escenario de Debugging:**
+
+```python
+def entrenar_modelo(X: pd.DataFrame, y: pd.Series) -> Pipeline:
+    modelo = RandomForestClassifier()
+    modelo.fit(X, y)
+    return modelo  # ← mypy dice: "Incompatible return type"
+```
+
+**¿Cuál es el problema y cómo lo solucionarías?**
+
+<details>
+<summary>🔍 Ver Respuestas</summary>
+
+**Pregunta 1**: B) `List[str]` especifica que TODOS los elementos son strings.
+
+**Pregunta 2**: B) El parámetro puede ser un Path O puede ser None.
+
+**Pregunta 3**: B) mypy puede verificar que SOLO usemos esos valores exactos.
+
+**Escenario de Debugging**: 
+- **Problema**: La función dice que retorna `Pipeline`, pero `RandomForestClassifier` no es un `Pipeline`.
+- **Solución**: Cambiar el tipo de retorno a `BaseEstimator`, o envolver el modelo en un Pipeline real.
+</details>
+
 ---
 
 <a id="12-pydantic-validation-automatica"></a>
 
 ## 1.2 Pydantic: Validación Automática
 
-### La Analogía del Guardia de Seguridad
+### 🎓 Explicación Teórica: El Guardia de Seguridad
 
 ```
 ╔═══════════════════════════════════════════════════════════════════════════╗
@@ -884,13 +1075,253 @@ except ValidationError as e:
     #   ensure this value is greater than or equal to 2 (type=value_error.number.not_ge)
 ```
 
+### 🧠 Mapa Mental de Conceptos: Pydantic
+
+```
+                         ╔════════════════════════════════════════╗
+                         ║      PYDANTIC: VALIDACIÓN DE DATOS     ║
+                         ╚════════════════════════════════════════╝
+                                           │
+           ┌───────────────────────────────┼───────────────────────────────┐
+           ▼                               ▼                               ▼
+ ┌──────────────────┐            ┌──────────────────┐           ┌──────────────────┐
+ │   BaseModel      │            │     Field()      │           │   Validadores    │
+ └──────────────────┘            └──────────────────┘           └──────────────────┘
+        │                               │                              │
+ ├─ Herencia                     ├─ ge, le (rangos)             ├─ @validator
+ ├─ Anidamiento                  ├─ min_length                  ├─ @field_validator
+ ├─ .model_dump()                ├─ pattern (regex)             ├─ @model_validator
+ ├─ .model_validate()            ├─ default                     └─ ValidationError
+ └─ from_yaml()                  └─ description
+```
+
+**Términos clave que debes dominar:**
+
+| Término | Significado | Ejemplo |
+|---------|-------------|---------|
+| **BaseModel** | Clase base para modelos Pydantic | `class Config(BaseModel):` |
+| **Field** | Define restricciones en campos | `Field(ge=0, le=1.0)` |
+| **ValidationError** | Excepción cuando datos inválidos | Mensaje claro con campo y razón |
+| **Anidamiento** | Modelos dentro de modelos | `ModelConfig` dentro de `BankChurnConfig` |
+| **Coerción** | Conversión automática de tipos | `"42"` → `42` si el campo es `int` |
+| **Literal** | Solo valores específicos | `Literal["soft", "hard"]` |
+
+---
+
+### 💻 Ejercicio Puente: Validación con Pydantic
+
+> **Meta**: Antes de validar configs ML complejas, practica con modelos simples.
+
+**Ejercicio 1: Config de Usuario Básica**
+```python
+from pydantic import BaseModel, Field
+
+# ✅ TU TAREA: Crea un modelo UserConfig con:
+# - username: str (mínimo 3 caracteres)
+# - age: int (entre 18 y 120)
+# - email: str (debe contener "@")
+# - is_active: bool (default True)
+
+class UserConfig(BaseModel):
+    # ... tu código aquí
+    pass
+```
+
+**Ejercicio 2: Config Anidada**
+```python
+# ✅ TU TAREA: Crea dos modelos:
+# 1. DatabaseConfig con: host (str), port (int entre 1-65535), name (str)
+# 2. AppConfig que contenga: app_name (str), database (DatabaseConfig)
+
+class DatabaseConfig(BaseModel):
+    pass
+
+class AppConfig(BaseModel):
+    pass
+```
+
+**Ejercicio 3: Validador Personalizado**
+```python
+from pydantic import BaseModel, field_validator
+
+# ✅ TU TAREA: Crea PasswordConfig donde:
+# - password debe tener al menos 8 caracteres
+# - password debe contener al menos un número
+# Pista: usa @field_validator
+
+class PasswordConfig(BaseModel):
+    password: str
+    
+    # ... tu validador aquí
+```
+
+<details>
+<summary>🔍 Ver Soluciones</summary>
+
+```python
+from pydantic import BaseModel, Field, field_validator
+from typing import Literal
+import re
+
+# Ejercicio 1
+class UserConfig(BaseModel):
+    username: str = Field(..., min_length=3)
+    age: int = Field(..., ge=18, le=120)
+    email: str = Field(..., pattern=r".*@.*")
+    is_active: bool = True
+
+# Ejercicio 2
+class DatabaseConfig(BaseModel):
+    host: str
+    port: int = Field(..., ge=1, le=65535)
+    name: str
+
+class AppConfig(BaseModel):
+    app_name: str
+    database: DatabaseConfig
+
+# Ejercicio 3
+class PasswordConfig(BaseModel):
+    password: str = Field(..., min_length=8)
+    
+    @field_validator("password")
+    @classmethod
+    def must_contain_number(cls, v: str) -> str:
+        if not re.search(r"\d", v):
+            raise ValueError("Password debe contener al menos un número")
+        return v
+```
+</details>
+
+---
+
+### 🛠️ Práctica del Portafolio: Config Pydantic en BankChurn
+
+> **Tarea**: Implementar configuración validada con Pydantic en BankChurn-Predictor.
+
+**Paso 1: Identifica qué necesita validación**
+```bash
+# Revisa el archivo de configuración actual
+cat BankChurn-Predictor/configs/config.yaml
+```
+
+Típicamente necesitas validar:
+- `test_size`: debe estar entre 0.0 y 1.0
+- `cv_folds`: debe ser >= 2
+- `random_state`: debe ser entero positivo
+- `model_type`: solo valores permitidos
+
+**Paso 2: Crea la estructura anidada (pistas guiadas)**
+
+```python
+# src/bankchurn/config.py
+
+from pydantic import BaseModel, Field
+from typing import List, Literal
+
+class ModelConfig(BaseModel):
+    # test_size: ¿Qué restricciones necesita? → Field(..., ge=___, le=___)
+    # cv_folds: ¿Cuál es el mínimo válido? → Field(..., ge=___)
+    # model_type: ¿Qué valores son válidos? → Literal["___", "___", "___"]
+    pass
+
+class DataConfig(BaseModel):
+    # target_column: str simple
+    # categorical_features: ¿Lista de qué?
+    # numerical_features: ¿Lista de qué?
+    pass
+
+class BankChurnConfig(BaseModel):
+    model: ModelConfig
+    data: DataConfig
+    
+    @classmethod
+    def from_yaml(cls, path: str) -> "BankChurnConfig":
+        # ¿Cómo cargas y validas un YAML?
+        pass
+```
+
+**Paso 3: Prueba con datos inválidos**
+```python
+# Test que DEBE fallar
+config_dict = {
+    "model": {"test_size": 1.5, "cv_folds": 1},
+    "data": {"target_column": "Exited"}
+}
+# ¿Qué error esperas ver?
+```
+
+**❌ NO hagas esto:**
+- Validar "después" de usar los datos
+- Atrapar `ValidationError` y continuar con defaults
+- Hardcodear valores que deberían venir del YAML
+
+**✅ SÍ haz esto:**
+- Fallar rápido si la config es inválida
+- Documentar cada restricción con `description=`
+- Crear tests para configs válidas E inválidas
+
+---
+
+### ✅ Checkpoint de Conocimiento: Pydantic
+
+**Pregunta 1**: ¿Cuál es la ventaja de `Field(ge=0, le=1)` sobre validar manualmente?
+
+A) Es más rápido en ejecución  
+B) El error se detecta AL CARGAR la config, no después  
+C) Ocupa menos memoria  
+D) Es requerido por FastAPI  
+
+**Pregunta 2**: Si tienes `ModelConfig` anidado dentro de `BankChurnConfig`, ¿qué pasa si `ModelConfig` tiene un campo inválido?
+
+A) Solo `ModelConfig` falla, `BankChurnConfig` se crea parcialmente  
+B) Toda la validación falla con error claro indicando el campo anidado  
+C) Se ignora el error y se usa un default  
+D) Python crashea sin mensaje útil  
+
+**Pregunta 3**: ¿Por qué usar `Literal["random_forest", "logistic"]` en vez de `str`?
+
+A) Es más rápido  
+B) Si escribes `"random_forrest"` (typo), Pydantic te avisa inmediatamente  
+C) Es requerido por sklearn  
+D) Ocupa menos memoria  
+
+**🔧 Escenario de Debugging:**
+
+```python
+class TrainingConfig(BaseModel):
+    epochs: int = Field(10, ge=1)
+    learning_rate: float = Field(0.001, ge=0)
+    batch_size: int = 32
+
+config = TrainingConfig(epochs="cinco", learning_rate=-0.01)
+# ← ¿Qué errores verás y en qué orden?
+```
+
+<details>
+<summary>🔍 Ver Respuestas</summary>
+
+**Pregunta 1**: B) El error se detecta AL CARGAR la config, no después. Esto evita que el error aparezca en medio del entrenamiento.
+
+**Pregunta 2**: B) Toda la validación falla con error claro indicando el campo anidado. Pydantic muestra la ruta completa: `model -> test_size`.
+
+**Pregunta 3**: B) Si escribes `"random_forrest"` (typo), Pydantic te avisa inmediatamente. Esto previene errores silenciosos.
+
+**Escenario de Debugging**: 
+Pydantic mostrará **2 errores**:
+1. `epochs`: Input should be a valid integer, unable to parse string as an integer
+2. `learning_rate`: Input should be greater than or equal to 0
+
+Ambos errores se reportan juntos, no uno a la vez.
+</details>
+
 ---
 
 <a id="13-src-layout-estructura-profesional"></a>
 
 ## 1.3 src/ Layout: Estructura Profesional
 
-### La Analogía de la Casa
+### 🎓 Explicación Teórica: La Casa Organizada
 
 ```
 ╔═══════════════════════════════════════════════════════════════════════════╗
@@ -1063,13 +1494,242 @@ python -c "from bankchurn.config import BankChurnConfig; print('✅ Funciona!')"
 pytest tests/
 ```
 
+### 🧠 Mapa Mental de Conceptos: src/ Layout
+
+```
+                        ╔═════════════════════════════════════════╗
+                        ║    ESTRUCTURA PROFESIONAL DE PROYECTO   ║
+                        ╚═════════════════════════════════════════╝
+                                          │
+          ┌───────────────────────────────┼───────────────────────────────┐
+          ▼                               ▼                               ▼
+┌──────────────────┐             ┌──────────────────┐           ┌──────────────────┐
+│   src/ layout    │             │  pyproject.toml  │           │   Instalación    │
+└──────────────────┘             └──────────────────┘           └──────────────────┘
+       │                               │                              │
+├─ src/<paquete>/               ├─ [project]                    ├─ pip install -e .
+├─ tests/                       ├─ dependencies                 ├─ modo editable
+├─ configs/                     ├─ [project.scripts]            ├─ importable
+├─ data/                        ├─ [tool.pytest]                └─ reproducible
+└─ artifacts/                   └─ [tool.mypy]
+```
+
+**Términos clave que debes dominar:**
+
+| Término | Significado | Ejemplo |
+|---------|-------------|---------|
+| **src/ layout** | Código fuente en carpeta `src/` | `src/bankchurn/training.py` |
+| **pyproject.toml** | Archivo de configuración del proyecto | Define nombre, deps, herramientas |
+| **Modo editable** | Instalar paquete para desarrollo | `pip install -e .` |
+| **__init__.py** | Marca una carpeta como paquete Python | Permite imports |
+| **Paquete** | Código distribuible e importable | `from bankchurn import ...` |
+| **Makefile** | Comandos comunes automatizados | `make train`, `make test` |
+
+---
+
+### 💻 Ejercicio Puente: Crear Estructura Básica
+
+> **Meta**: Antes de estructurar un proyecto ML completo, practica con uno simple.
+
+**Ejercicio 1: Crear estructura mínima**
+```bash
+# TU TAREA: Crea esta estructura desde cero
+# mylib/
+# ├── src/
+# │   └── mylib/
+# │       ├── __init__.py
+# │       └── calculator.py   # función add(a, b) -> int
+# ├── tests/
+# │   └── test_calculator.py
+# └── pyproject.toml
+
+# Pista 1: Inicia con estos comandos
+mkdir -p mylib/src/mylib mylib/tests
+touch mylib/src/mylib/__init__.py
+```
+
+**Ejercicio 2: Escribir pyproject.toml mínimo**
+```toml
+# TU TAREA: Completa este pyproject.toml
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mylib"
+version = "0.1.0"
+# ¿Qué más necesitas para que funcione?
+
+[tool.setuptools.packages.find]
+# ¿Dónde busca los paquetes?
+```
+
+**Ejercicio 3: Verificar instalación**
+```bash
+# TU TAREA: Después de crear la estructura
+cd mylib
+pip install -e .
+python -c "from mylib.calculator import add; print(add(2, 3))"
+# ¿Qué deberías ver? ¿Qué error obtienes si algo está mal?
+```
+
+<details>
+<summary>🔍 Ver Soluciones</summary>
+
+```bash
+# Crear estructura
+mkdir -p mylib/src/mylib mylib/tests
+touch mylib/src/mylib/__init__.py
+
+# calculator.py
+cat > mylib/src/mylib/calculator.py << 'EOF'
+def add(a: int, b: int) -> int:
+    """Suma dos enteros."""
+    return a + b
+EOF
+
+# test_calculator.py
+cat > mylib/tests/test_calculator.py << 'EOF'
+from mylib.calculator import add
+
+def test_add():
+    assert add(2, 3) == 5
+EOF
+
+# pyproject.toml completo
+cat > mylib/pyproject.toml << 'EOF'
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mylib"
+version = "0.1.0"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+EOF
+
+# Verificar
+cd mylib
+pip install -e .
+python -c "from mylib.calculator import add; print(add(2, 3))"  # Output: 5
+pytest tests/  # Debe pasar
+```
+</details>
+
+---
+
+### 🛠️ Práctica del Portafolio: Estructura de BankChurn
+
+> **Tarea**: Verificar y entender la estructura del proyecto BankChurn-Predictor.
+
+**Paso 1: Explora la estructura existente**
+```bash
+cd BankChurn-Predictor
+tree -L 3 --dirsfirst
+# O si no tienes tree:
+find . -type d -name "__pycache__" -prune -o -print | head -40
+```
+
+**Paso 2: Verifica los puntos clave (checklist)**
+```
+[ ] ¿Existe src/bankchurn/__init__.py?
+[ ] ¿Existe pyproject.toml en la raíz?
+[ ] ¿El pyproject.toml tiene [tool.setuptools.packages.find] where = ["src"]?
+[ ] ¿Puedes ejecutar: pip install -e . sin errores?
+[ ] ¿Puedes ejecutar: python -c "from bankchurn.config import BankChurnConfig"?
+```
+
+**Paso 3: Si algo falla, diagnostica (pistas guiadas)**
+
+```bash
+# Error: "No module named 'bankchurn'"
+# Diagnóstico: ¿Instalaste en modo editable?
+pip list | grep bankchurn
+# Si no aparece → pip install -e .
+
+# Error: "ModuleNotFoundError" en CI pero no local
+# Diagnóstico: ¿Tu pyproject.toml tiene where = ["src"]?
+grep -A2 "packages.find" pyproject.toml
+```
+
+**❌ NO hagas esto:**
+- Poner código Python en la raíz del proyecto
+- Hacer imports relativos desde scripts sueltos
+- Modificar PYTHONPATH manualmente
+
+**✅ SÍ haz esto:**
+- Todo código en `src/<paquete>/`
+- Instalar siempre con `pip install -e .`
+- Tests que importen el paquete como lo haría un usuario
+
+---
+
+### ✅ Checkpoint de Conocimiento: src/ Layout
+
+**Pregunta 1**: ¿Por qué ponemos el código en `src/` en vez de en la raíz?
+
+A) Es más rápido de ejecutar  
+B) Fuerza que el código esté INSTALADO para poder importarlo  
+C) Ocupa menos espacio en disco  
+D) Es requerido por GitHub  
+
+**Pregunta 2**: ¿Qué hace `pip install -e .`?
+
+A) Instala el paquete en modo producción  
+B) Instala el paquete de forma que los cambios se reflejen sin reinstalar  
+C) Elimina el paquete existente  
+D) Crea un archivo ejecutable  
+
+**Pregunta 3**: ¿Cuál es el propósito principal de `pyproject.toml`?
+
+A) Almacenar datos del modelo  
+B) Definir metadata, dependencias y configuración de herramientas  
+C) Guardar logs de ejecución  
+D) Contener los tests  
+
+**🔧 Escenario de Debugging:**
+
+```
+Situación: Tu código funciona perfecto en local.
+En GitHub Actions ves:
+  ModuleNotFoundError: No module named 'bankchurn'
+
+El workflow de CI tiene:
+  - name: Install
+    run: pip install -r requirements.txt
+```
+
+**¿Cuál es el problema y cómo lo solucionarías?**
+
+<details>
+<summary>🔍 Ver Respuestas</summary>
+
+**Pregunta 1**: B) Fuerza que el código esté INSTALADO para poder importarlo. Esto evita el problema "funciona en mi máquina".
+
+**Pregunta 2**: B) Instala el paquete de forma que los cambios se reflejen sin reinstalar. El `-e` significa "editable".
+
+**Pregunta 3**: B) Definir metadata, dependencias y configuración de herramientas. Es el estándar moderno de Python.
+
+**Escenario de Debugging**: 
+- **Problema**: El CI solo instala dependencias de `requirements.txt`, pero NO instala TU paquete.
+- **Solución**: Cambiar el workflow:
+```yaml
+- name: Install
+  run: pip install -e ".[dev]"
+```
+Esto instala tu paquete Y las dependencias de desarrollo.
+</details>
+
 ---
 
 <a id="14-principios-solid-para-ml"></a>
 
 ## 1.4 Principios SOLID para ML
 
-### Single Responsibility: Un Módulo, Una Tarea
+### 🎓 Explicación Teórica: Un Módulo, Una Tarea
 
 ```python
 # ❌ ANTES: Un archivo hace TODO
@@ -1141,6 +1801,228 @@ def evaluate_model(
         "roc_auc": roc_auc_score(y_test, y_proba),
     }
 ```
+
+### 🧠 Mapa Mental de Conceptos: SOLID
+
+```
+                   ╔══════════════════════════════════════╗
+                   ║    PRINCIPIOS SOLID PARA ML          ║
+                   ╚══════════════════════════════════════╝
+                                           │
+     ┌──────────────┬──────────────┬───────┴───────┬──────────────┐
+     ▼              ▼              ▼               ▼              ▼
+┌─────────┐    ┌─────────┐    ┌─────────┐     ┌─────────┐    ┌─────────┐
+│    S    │    │    O    │    │    L    │     │    I    │    │    D    │
+│ Single  │    │  Open   │    │ Liskov  │     │Interface│    │  Dep.   │
+│ Respons │    │ Closed  │    │  Subst  │     │  Segr   │    │  Inv    │
+└─────────┘    └─────────┘    └─────────┘     └─────────┘    └─────────┘
+     │              │              │               │              │
+Una clase      Extender sin   Subclases       Interfaces      Depender de
+una tarea      modificar      sustituibles    pequeñas        abstracciones
+```
+
+**Términos clave que debes dominar:**
+
+| Principio | Significado en ML | Ejemplo |
+|-----------|-------------------|---------|
+| **S - Single Responsibility** | Un módulo = una tarea | `data.py`, `training.py`, `evaluation.py` separados |
+| **O - Open/Closed** | Extensible sin modificar | Añadir modelo nuevo sin tocar Trainer |
+| **L - Liskov Substitution** | Subclases intercambiables | `ChurnTrainer` funciona donde esperes `BaseTrainer` |
+| **I - Interface Segregation** | Interfaces pequeñas y específicas | No forzar métodos que no se usan |
+| **D - Dependency Inversion** | Depender de abstracciones | Inyectar modelo, no hardcodear |
+
+---
+
+### 💻 Ejercicio Puente: Aplicar Single Responsibility
+
+> **Meta**: Antes de refactorizar código ML complejo, practica separando responsabilidades simples.
+
+**Ejercicio 1: Separar funciones mezcladas**
+```python
+# ❌ ANTES: Una función hace TODO
+def process_and_train(data_path, output_path):
+    # Carga datos
+    df = pd.read_csv(data_path)
+    # Limpia
+    df = df.dropna()
+    # Entrena
+    model = RandomForestClassifier()
+    X, y = df.drop("target", axis=1), df["target"]
+    model.fit(X, y)
+    # Guarda
+    joblib.dump(model, output_path)
+    return model
+
+# ✅ TU TAREA: Separa en 3 funciones con responsabilidad única
+# 1. load_data(path) -> DataFrame
+# 2. train_model(X, y) -> modelo
+# 3. save_model(model, path) -> None
+```
+
+**Ejercicio 2: Identificar violaciones**
+```python
+# ¿Qué principio SOLID viola este código?
+class DataProcessor:
+    def load_csv(self, path): ...
+    def load_json(self, path): ...
+    def clean_data(self, df): ...
+    def train_model(self, X, y): ...
+    def evaluate_model(self, model, X, y): ...
+    def save_to_database(self, data): ...
+    def send_email_report(self, metrics): ...
+
+# TU TAREA: ¿Cuántas responsabilidades tiene? ¿Cómo lo separarías?
+```
+
+<details>
+<summary>🔍 Ver Soluciones</summary>
+
+```python
+# Ejercicio 1: Funciones separadas
+def load_data(path: Path) -> pd.DataFrame:
+    """Solo carga y limpia datos."""
+    df = pd.read_csv(path)
+    return df.dropna()
+
+def train_model(X: pd.DataFrame, y: pd.Series) -> BaseEstimator:
+    """Solo entrena el modelo."""
+    model = RandomForestClassifier()
+    model.fit(X, y)
+    return model
+
+def save_model(model: BaseEstimator, path: Path) -> None:
+    """Solo guarda el modelo."""
+    joblib.dump(model, path)
+
+# Ejercicio 2: Viola Single Responsibility
+# Tiene 4+ responsabilidades:
+# 1. Carga de datos (load_csv, load_json)
+# 2. Limpieza (clean_data)
+# 3. ML (train_model, evaluate_model)
+# 4. Persistencia (save_to_database)
+# 5. Notificaciones (send_email_report)
+
+# Separación correcta:
+class DataLoader: ...      # Solo cargar
+class DataCleaner: ...     # Solo limpiar
+class ModelTrainer: ...    # Solo entrenar/evaluar
+class DatabaseWriter: ...  # Solo persistir
+class EmailNotifier: ...   # Solo notificar
+```
+</details>
+
+---
+
+### 🛠️ Práctica del Portafolio: SOLID en BankChurn
+
+> **Tarea**: Verificar que el código de BankChurn-Predictor sigue principios SOLID.
+
+**Paso 1: Analiza la estructura actual**
+```bash
+ls -la BankChurn-Predictor/src/bankchurn/
+# ¿Cada archivo tiene UNA responsabilidad?
+```
+
+**Paso 2: Verifica Single Responsibility (pistas guiadas)**
+```
+Archivo           | ¿Responsabilidad única?
+─────────────────────────────────────────────
+config.py         | ✅ Solo configuración
+data.py           | ¿Solo carga datos?
+training.py       | ¿Solo entrena? ¿O también evalúa?
+evaluation.py     | ¿Solo métricas?
+prediction.py     | ¿Solo inferencia?
+```
+
+**Paso 3: Si encuentras violaciones, propón refactor**
+```python
+# Ejemplo de violación común:
+# training.py que también guarda artefactos y loguea a MLflow
+
+# Pregunta: ¿Cómo separarías estas responsabilidades?
+# Pista: Considera un archivo artifacts.py y tracking.py
+```
+
+**❌ NO hagas esto:**
+- Crear archivos de 1 línea solo "por seguir SOLID"
+- Abstraer prematuramente (YAGNI)
+- Ignorar la cohesión lógica
+
+**✅ SÍ haz esto:**
+- Archivos de 50-300 líneas con propósito claro
+- Nombres que reflejen la responsabilidad
+- Poder describir cada módulo en UNA frase
+
+---
+
+### ✅ Checkpoint de Conocimiento: SOLID
+
+**Pregunta 1**: ¿Qué significa "Single Responsibility" en el contexto de ML?
+
+A) Cada función debe tener solo 1 línea  
+B) Cada módulo debe tener UNA razón para cambiar  
+C) Solo una persona puede modificar el código  
+D) Cada clase debe heredar de una sola clase base  
+
+**Pregunta 2**: Si quieres añadir un nuevo modelo (XGBoost) a tu pipeline, ¿qué principio te ayuda a hacerlo sin modificar código existente?
+
+A) Single Responsibility  
+B) Open/Closed  
+C) Liskov Substitution  
+D) Interface Segregation  
+
+**Pregunta 3**: ¿Por qué separamos `data.py`, `training.py` y `evaluation.py`?
+
+A) Para tener más archivos en el proyecto  
+B) Porque cada uno tiene UNA responsabilidad y cambia por razones diferentes  
+C) Porque Python lo requiere  
+D) Para que el código sea más lento  
+
+**🔧 Escenario de Debugging:**
+
+```python
+# Tu compañero escribió este código:
+class MLPipeline:
+    def run(self, data_path, config_path, model_path, metrics_path, 
+            mlflow_uri, slack_webhook, email_list, s3_bucket):
+        # 500 líneas de código que hacen TODO
+        ...
+```
+
+**¿Qué problemas ves? ¿Cómo lo refactorizarías siguiendo SOLID?**
+
+<details>
+<summary>�� Ver Respuestas</summary>
+
+**Pregunta 1**: B) Cada módulo debe tener UNA razón para cambiar. Si cambian las métricas, solo tocas `evaluation.py`.
+
+**Pregunta 2**: B) Open/Closed. El sistema está abierto a extensión (nuevo modelo) pero cerrado a modificación (no tocas el Trainer existente).
+
+**Pregunta 3**: B) Porque cada uno tiene UNA responsabilidad y cambia por razones diferentes.
+
+**Escenario de Debugging**: 
+**Problemas:**
+1. Viola Single Responsibility (hace TODO)
+2. Viola Interface Segregation (parámetros que no siempre se usan)
+3. 500 líneas = imposible de testear
+
+**Refactor:**
+```python
+class DataLoader: ...
+class FeatureEngineer: ...
+class ModelTrainer: ...
+class MetricsCalculator: ...
+class MLflowTracker: ...
+class SlackNotifier: ...
+class S3Uploader: ...
+
+# Orquestador ligero que usa los componentes
+class Pipeline:
+    def __init__(self, loader, trainer, tracker, ...):
+        self.loader = loader
+        ...
+```
+</details>
 
 ---
 
@@ -1243,9 +2125,258 @@ class ChurnTrainer(BaseTrainer):
         return {"accuracy": accuracy_score(y, y_pred)}
 ```
 
-### Puente al Portafolio
+### 🧠 Mapa Mental de Conceptos: OOP para ML
 
-Crear `common_utils/base.py` con `BaseTrainer` para que los 3 proyectos compartan la misma interfaz.
+```
+                        ╔══════════════════════════════════════════╗
+                        ║   OOP PROFESIONAL PARA ML                ║
+                        ╚══════════════════════════════════════════╝
+                                          │
+            ┌─────────────────────────────┼─────────────────────────────┐
+            ▼                             ▼                             ▼
+  ┌──────────────────┐          ┌──────────────────┐         ┌──────────────────┐
+  │     Protocol     │          │       ABC        │         │   Composición    │
+  │   (Duck Typing)  │          │  (Herencia)      │         │   vs Herencia    │
+  └──────────────────┘          └──────────────────┘         └──────────────────┘
+         │                             │                            │
+  ├─ @runtime_checkable        ├─ @abstractmethod            ├─ Inyección
+  ├─ Verificable por mypy      ├─ Fuerza implementación      ├─ Flexibilidad
+  ├─ No requiere herencia      ├─ Clase base compartida      └─ Testeable
+  └─ Ideal para sklearn        └─ Ideal para TUS clases
+```
+
+**Términos clave que debes dominar:**
+
+| Término | Significado | Cuándo Usar |
+|---------|-------------|-------------|
+| **Protocol** | Interfaz implícita (duck typing) | Para compatibilidad con sklearn |
+| **ABC** | Abstract Base Class | Para TUS clases base |
+| **@abstractmethod** | Método que DEBE implementarse | Forzar contratos |
+| **@runtime_checkable** | Verificar en tiempo de ejecución | `isinstance()` con Protocol |
+| **Composición** | "tiene un" vs "es un" | Preferir sobre herencia |
+| **Inyección** | Pasar dependencias como parámetros | Testing y flexibilidad |
+
+---
+
+### 💻 Ejercicio Puente: Crear Clase Abstracta
+
+> **Meta**: Antes de crear jerarquías de Trainers, practica con abstracciones simples.
+
+**Ejercicio 1: Definir un Protocol**
+```python
+from typing import Protocol, runtime_checkable
+
+# ✅ TU TAREA: Crea un Protocol "Serializable" que requiera:
+# - save(path: Path) -> None
+# - load(path: Path) -> "Serializable"
+
+@runtime_checkable
+class Serializable(Protocol):
+    # ... tu código aquí
+    pass
+```
+
+**Ejercicio 2: Crear una ABC**
+```python
+from abc import ABC, abstractmethod
+
+# ✅ TU TAREA: Crea una ABC "BasePreprocessor" con:
+# - fit(X) -> "BasePreprocessor" (abstracto)
+# - transform(X) -> ndarray (abstracto)
+# - fit_transform(X) -> ndarray (concreto, usa fit y transform)
+
+class BasePreprocessor(ABC):
+    # ... tu código aquí
+    pass
+```
+
+**Ejercicio 3: Implementar la ABC**
+```python
+# ✅ TU TAREA: Crea "StandardScalerCustom" que:
+# - Hereda de BasePreprocessor
+# - Implementa fit() guardando media y std
+# - Implementa transform() normalizando datos
+
+class StandardScalerCustom(BasePreprocessor):
+    # ... tu código aquí
+    pass
+```
+
+<details>
+<summary>🔍 Ver Soluciones</summary>
+
+```python
+from typing import Protocol, runtime_checkable
+from abc import ABC, abstractmethod
+from pathlib import Path
+import numpy as np
+from numpy.typing import NDArray
+
+# Ejercicio 1: Protocol
+@runtime_checkable
+class Serializable(Protocol):
+    def save(self, path: Path) -> None: ...
+    def load(self, path: Path) -> "Serializable": ...
+
+# Ejercicio 2: ABC
+class BasePreprocessor(ABC):
+    @abstractmethod
+    def fit(self, X: NDArray) -> "BasePreprocessor":
+        pass
+    
+    @abstractmethod
+    def transform(self, X: NDArray) -> NDArray:
+        pass
+    
+    def fit_transform(self, X: NDArray) -> NDArray:
+        """Método concreto que usa los abstractos."""
+        return self.fit(X).transform(X)
+
+# Ejercicio 3: Implementación
+class StandardScalerCustom(BasePreprocessor):
+    def __init__(self):
+        self.mean_: NDArray | None = None
+        self.std_: NDArray | None = None
+    
+    def fit(self, X: NDArray) -> "StandardScalerCustom":
+        self.mean_ = X.mean(axis=0)
+        self.std_ = X.std(axis=0)
+        return self
+    
+    def transform(self, X: NDArray) -> NDArray:
+        if self.mean_ is None:
+            raise ValueError("Fit first!")
+        return (X - self.mean_) / self.std_
+```
+</details>
+
+---
+
+### 🛠️ Práctica del Portafolio: BaseTrainer Compartido
+
+> **Tarea**: Crear una clase base que los 3 proyectos del portafolio puedan usar.
+
+**Paso 1: Diseña la interfaz común**
+```python
+# ¿Qué métodos TODOS los trainers deben tener?
+# - fit(X, y) → entrena el modelo
+# - predict(X) → genera predicciones
+# - evaluate(X, y) → calcula métricas
+# - save(path) → guarda el modelo
+# - load(path) → carga el modelo
+```
+
+**Paso 2: Crea la ABC (pistas guiadas)**
+```python
+# common_utils/base.py
+
+from abc import ABC, abstractmethod
+import pandas as pd
+from pathlib import Path
+
+class BaseTrainer(ABC):
+    """Clase base para todos los trainers del portafolio."""
+    
+    @abstractmethod
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "BaseTrainer":
+        # ¿Qué debe hacer? Solo la firma, no implementación
+        ...
+    
+    @abstractmethod
+    def predict(self, X: pd.DataFrame) -> pd.Series:
+        ...
+    
+    # ¿Qué otros métodos abstractos necesitas?
+    # ¿Hay métodos concretos que puedas implementar aquí?
+```
+
+**Paso 3: Implementa en cada proyecto**
+```python
+# BankChurn-Predictor/src/bankchurn/training.py
+from common_utils.base import BaseTrainer
+
+class ChurnTrainer(BaseTrainer):
+    # ¿Qué métodos DEBES implementar?
+    # ¿Qué pasa si olvidas implementar uno?
+    pass
+```
+
+**❌ NO hagas esto:**
+- Crear jerarquías profundas (más de 2 niveles)
+- Usar herencia cuando composición es mejor
+- Forzar métodos que no todos usan
+
+**✅ SÍ haz esto:**
+- Interfaces pequeñas y cohesivas
+- Preferir composición sobre herencia
+- Usar Protocol para compatibilidad con sklearn
+
+---
+
+### ✅ Checkpoint de Conocimiento: OOP para ML
+
+**Pregunta 1**: ¿Cuál es la diferencia entre Protocol y ABC?
+
+A) Protocol es más rápido  
+B) Protocol no requiere herencia, ABC sí  
+C) ABC es para Python 2  
+D) No hay diferencia  
+
+**Pregunta 2**: ¿Por qué sklearn usa duck typing en vez de herencia estricta?
+
+A) Es más fácil de programar  
+B) Permite que CUALQUIER clase con `fit()` y `predict()` funcione  
+C) Es requerido por Python  
+D) Ocupa menos memoria  
+
+**Pregunta 3**: ¿Qué pasa si intentas instanciar una ABC sin implementar todos los métodos abstractos?
+
+A) Funciona con valores por defecto  
+B) Python lanza TypeError inmediatamente  
+C) Solo falla cuando llamas al método  
+D) mypy lo ignora  
+
+**🔧 Escenario de Debugging:**
+
+```python
+class BaseModel(ABC):
+    @abstractmethod
+    def fit(self, X, y): ...
+    @abstractmethod
+    def predict(self, X): ...
+
+class MyModel(BaseModel):
+    def fit(self, X, y):
+        self.model = RandomForestClassifier()
+        self.model.fit(X, y)
+        return self
+    
+    # Olvidé implementar predict()
+
+model = MyModel()  # ← ¿Qué error verás?
+```
+
+<details>
+<summary>🔍 Ver Respuestas</summary>
+
+**Pregunta 1**: B) Protocol no requiere herencia, ABC sí. Protocol verifica por "forma" (duck typing).
+
+**Pregunta 2**: B) Permite que CUALQUIER clase con `fit()` y `predict()` funcione. No importa de qué clase herede.
+
+**Pregunta 3**: B) Python lanza TypeError inmediatamente al intentar instanciar.
+
+**Escenario de Debugging**: 
+```
+TypeError: Can't instantiate abstract class MyModel with abstract method predict
+```
+El error ocurre EN LA INSTANCIACIÓN, no después. Esto es intencional: falla rápido.
+
+**Solución**: Implementar el método faltante:
+```python
+def predict(self, X):
+    return self.model.predict(X)
+```
+</details>
 
 ---
 
@@ -1337,6 +2468,244 @@ def preprocess(raw: DataFrame[RawDataSchema]) -> DataFrame[ProcessedDataSchema]:
     df = df.drop(columns=["RowNumber", "CustomerId", "Surname"])
     return df
 ```
+
+### 🧠 Mapa Mental de Conceptos: Pandera
+
+```
+                         ╔════════════════════════════════════════╗
+                         ║   PANDERA: VALIDACIÓN DE DATAFRAMES    ║
+                         ╚════════════════════════════════════════╝
+                                           │
+           ┌───────────────────────────────┼──────────────────────────────┐
+           ▼                               ▼                              ▼
+ ┌──────────────────┐            ┌──────────────────┐           ┌──────────────────┐
+ │  DataFrameModel  │            │     pa.Field     │           │    Decoradores   │
+ └──────────────────┘            └──────────────────┘           └──────────────────┘
+        │                               │                              │
+ ├─ Series[tipo]                 ├─ ge, le (rangos)            ├─ @pa.check_types
+ ├─ Config.strict                ├─ isin (valores)             ├─ @pa.check()
+ ├─ Config.coerce                ├─ nullable                   └─ SchemaError
+ └─ Herencia de schemas          └─ regex, custom
+```
+
+**Términos clave que debes dominar:**
+
+| Término | Significado | Ejemplo |
+|---------|-------------|---------|
+| **DataFrameModel** | Define estructura esperada del DF | Columnas, tipos, restricciones |
+| **Series[type]** | Tipo de cada columna | `Series[int]`, `Series[float]` |
+| **pa.Field** | Restricciones en columna | `ge=0`, `le=100`, `isin=[0,1]` |
+| **strict=True** | Rechaza columnas extra | Solo las definidas |
+| **coerce=True** | Convierte tipos automáticamente | `"42"` → `42` |
+| **@pa.check_types** | Valida entrada/salida de función | Decorador mágico |
+| **SchemaError** | Error cuando datos inválidos | Mensaje claro |
+
+---
+
+### �� Ejercicio Puente: Validación Básica con Pandera
+
+> **Meta**: Antes de validar datos ML complejos, practica con schemas simples.
+
+**Ejercicio 1: Schema básico**
+```python
+import pandera as pa
+from pandera.typing import Series
+
+# ✅ TU TAREA: Crea un schema "PersonSchema" con:
+# - name: str (no nulo)
+# - age: int (entre 0 y 150)
+# - email: str (debe contener "@")
+
+class PersonSchema(pa.DataFrameModel):
+    # ... tu código aquí
+    pass
+```
+
+**Ejercicio 2: Schema con validación personalizada**
+```python
+# ✅ TU TAREA: Crea un schema "TransactionSchema" con:
+# - amount: float (positivo)
+# - currency: str (solo "USD", "EUR", "MXN")
+# - timestamp: datetime
+
+class TransactionSchema(pa.DataFrameModel):
+    # ... tu código aquí
+    pass
+```
+
+**Ejercicio 3: Usar @pa.check_types**
+```python
+from pandera.typing import DataFrame
+
+# ✅ TU TAREA: Decora esta función para validar entrada y salida
+# Entrada: DataFrame[PersonSchema]
+# Salida: DataFrame con personas mayores de 18
+
+def filter_adults(df):
+    return df[df["age"] >= 18]
+```
+
+<details>
+<summary>🔍 Ver Soluciones</summary>
+
+```python
+import pandera as pa
+from pandera.typing import Series, DataFrame
+from datetime import datetime
+
+# Ejercicio 1
+class PersonSchema(pa.DataFrameModel):
+    name: Series[str] = pa.Field(nullable=False)
+    age: Series[int] = pa.Field(ge=0, le=150)
+    email: Series[str] = pa.Field(regex=r".*@.*")
+
+# Ejercicio 2
+class TransactionSchema(pa.DataFrameModel):
+    amount: Series[float] = pa.Field(gt=0)
+    currency: Series[str] = pa.Field(isin=["USD", "EUR", "MXN"])
+    timestamp: Series[datetime]
+
+# Ejercicio 3
+class AdultSchema(PersonSchema):
+    age: Series[int] = pa.Field(ge=18, le=150)
+
+@pa.check_types
+def filter_adults(df: DataFrame[PersonSchema]) -> DataFrame[AdultSchema]:
+    return df[df["age"] >= 18]
+```
+</details>
+
+---
+
+### 🛠️ Práctica del Portafolio: Pandera en BankChurn
+
+> **Tarea**: Implementar validación de datos con Pandera en BankChurn-Predictor.
+
+**Paso 1: Identifica los datos que necesitan validación**
+```bash
+# Revisa las columnas del dataset
+head -1 BankChurn-Predictor/data/raw/Churn_Modelling.csv
+```
+
+**Paso 2: Define schemas para cada etapa (pistas guiadas)**
+
+```python
+# src/bankchurn/schemas.py
+
+import pandera as pa
+from pandera.typing import Series
+
+class RawChurnSchema(pa.DataFrameModel):
+    """Schema permisivo para datos crudos."""
+    # CreditScore: ¿Qué rango es válido? (FICO: 300-850)
+    # Age: ¿Puede ser negativo? ¿Cuál es el máximo razonable?
+    # Balance: ¿Puede ser negativo?
+    # Exited: ¿Qué valores son válidos? (0, 1)
+    
+    class Config:
+        strict = False  # ¿Por qué False aquí?
+
+class ProcessedChurnSchema(pa.DataFrameModel):
+    """Schema estricto para datos listos para entrenar."""
+    # Mismos campos pero:
+    # - Sin nullable
+    # - Rangos más estrictos
+    
+    class Config:
+        strict = True  # ¿Por qué True aquí?
+```
+
+**Paso 3: Aplica validación en el pipeline**
+```python
+@pa.check_types
+def load_and_validate(path: Path) -> DataFrame[RawChurnSchema]:
+    # ¿Qué error verás si los datos son inválidos?
+    pass
+
+@pa.check_types
+def preprocess(raw: DataFrame[RawChurnSchema]) -> DataFrame[ProcessedChurnSchema]:
+    # ¿Qué transformaciones necesitas?
+    pass
+```
+
+**❌ NO hagas esto:**
+- Ignorar SchemaError y continuar
+- Poner restricciones demasiado estrictas en datos crudos
+- Validar solo en desarrollo, no en producción
+
+**✅ SÍ haz esto:**
+- Schema permisivo para entrada, estricto para salida
+- Documentar cada restricción
+- Incluir validación en tests
+
+---
+
+### ✅ Checkpoint de Conocimiento: Pandera
+
+**Pregunta 1**: ¿Cuál es la ventaja principal de Pandera sobre validar manualmente?
+
+A) Es más rápido en ejecución  
+B) Los errores aparecen EN LA CARGA, no en sklearn después  
+C) Ocupa menos memoria  
+D) Es requerido por pandas  
+
+**Pregunta 2**: ¿Qué hace `strict=True` en Config?
+
+A) Hace la validación más lenta pero segura  
+B) Rechaza DataFrames con columnas NO definidas en el schema  
+C) Convierte tipos automáticamente  
+D) Requiere que todos los valores sean no nulos  
+
+**Pregunta 3**: ¿Para qué sirve `@pa.check_types`?
+
+A) Solo documenta los tipos  
+B) Valida entrada Y salida de la función automáticamente  
+C) Hace la función más rápida  
+D) Solo funciona en clases  
+
+**🔧 Escenario de Debugging:**
+
+```python
+class ChurnSchema(pa.DataFrameModel):
+    CreditScore: Series[int] = pa.Field(ge=300, le=850)
+    Age: Series[int] = pa.Field(ge=18, le=100)
+    Exited: Series[int] = pa.Field(isin=[0, 1])
+
+# Cargas datos y obtienes:
+# SchemaError: Column 'Age' failed element-wise validator 0:
+#   <Check greater_than_or_equal_to: greater_than_or_equal_to(18)>
+# failure cases:
+#      index  Age
+#   0    127   15
+#   1    890   17
+```
+
+**¿Qué significa este error y cómo lo solucionarías?**
+
+<details>
+<summary>🔍 Ver Respuestas</summary>
+
+**Pregunta 1**: B) Los errores aparecen EN LA CARGA, no en sklearn después. Esto hace debugging mucho más fácil.
+
+**Pregunta 2**: B) Rechaza DataFrames con columnas NO definidas en el schema. Útil para evitar columnas inesperadas.
+
+**Pregunta 3**: B) Valida entrada Y salida de la función automáticamente. Actúa como un contrato.
+
+**Escenario de Debugging**: 
+- **Significado**: Hay 2 filas (índices 127 y 890) donde Age es menor que 18.
+- **Opciones de solución**:
+  1. Si son datos inválidos: filtrarlos antes de validar
+  2. Si son válidos en tu contexto: ajustar el schema `ge=0`
+  3. Si son errores de captura: revisar la fuente de datos
+
+```python
+# Opción 1: Filtrar
+df = df[df["Age"] >= 18]
+
+# Opción 2: Ajustar schema
+Age: Series[int] = pa.Field(ge=0, le=100)  # Permitir menores
+```
+</details>
 
 ---
 

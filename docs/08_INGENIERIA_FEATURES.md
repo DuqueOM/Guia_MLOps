@@ -110,6 +110,93 @@ Para que esto cuente como progreso real, fuerza este mapeo:
 ╚═══════════════════════════════════════════════════════════════════════════╝
 ```
 
+### 🧠 Mapa Mental de Conceptos: Feature Engineering Seguro
+
+```
+                          ╔══════════════════════════════════════╗
+                          ║    FEATURE ENGINEERING SIN LEAKAGE   ║
+                          ╚══════════════════════════════════════╝
+                                            │
+         ┌──────────────────────────────────┼──────────────────────────────────┐
+         ▼                                  ▼                                  ▼
+┌──────────────────┐              ┌──────────────────┐              ┌──────────────────┐
+│  TIPOS LEAKAGE   │              │  FEATURES OK     │              │  PREVENCIÓN      │
+└──────────────────┘              └──────────────────┘              └──────────────────┘
+       │                                 │                                 │
+├─ Target leakage                ├─ Datos del pasado            ├─ Split temporal
+├─ Temporal leakage              ├─ Info disponible             ├─ Pipeline unificado
+├─ Contaminación train/test      │   en producción              ├─ Validación cruzada
+└─ Agregados con futuro          └─ Features derivadas          └─ Checklist audit
+                                     de features OK
+```
+
+**Términos clave que debes dominar:**
+
+| Tipo de Leakage | Descripción | Ejemplo |
+|-----------------|-------------|---------|
+| **Target leakage** | Feature calculada usando el target | `price_per_mile = price / odometer` |
+| **Temporal leakage** | Usar datos del futuro | Media de ventas incluyendo mañana |
+| **Contaminación** | Train/test comparten info | Normalizar antes de split |
+
+---
+
+### 💻 Ejercicio Puente: Detectar Leakage
+
+> **Meta**: Antes de crear features complejas, aprende a detectar leakage.
+
+**Ejercicio: ¿Cuáles tienen leakage?**
+```
+Contexto: Predecir si un cliente abandonará (churn)
+
+Feature 1: edad_cliente
+Feature 2: dias_desde_ultimo_login  
+Feature 3: razon_cancelacion (motivo que dio al cancelar)
+Feature 4: productos_activos
+Feature 5: promedio_transacciones_futuras (próximos 30 días)
+
+TU TAREA: Marca cuáles tienen leakage y por qué
+```
+
+<details>
+<summary>🔍 Ver Solución</summary>
+
+```
+Feature 1: edad_cliente → ✅ OK (disponible en producción)
+Feature 2: dias_desde_ultimo_login → ✅ OK (disponible)
+Feature 3: razon_cancelacion → ❌ LEAKAGE (solo existe SI ya canceló)
+Feature 4: productos_activos → ✅ OK (disponible)
+Feature 5: promedio_transacciones_futuras → ❌ LEAKAGE TEMPORAL (info del futuro)
+```
+</details>
+
+---
+
+### ✅ Checkpoint de Conocimiento: Feature Engineering
+
+**Pregunta 1**: ¿Por qué `price_per_mile = price / odometer` es leakage si quieres predecir `price`?
+
+A) Porque usa demasiadas columnas  
+B) Porque la feature CONTIENE información del target  
+C) Porque es muy fácil de calcular  
+D) Porque sklearn no lo soporta  
+
+**Pregunta 2**: Si tu modelo tiene 99% accuracy en validación pero 50% en producción, ¿qué es lo más probable?
+
+A) El modelo es muy bueno  
+B) Hay data leakage en las features o el split  
+C) Producción tiene más datos  
+D) sklearn tiene un bug  
+
+<details>
+<summary>🔍 Ver Respuestas</summary>
+
+**Pregunta 1**: B) La feature CONTIENE información del target. El modelo "aprende" a despejar, no a predecir.
+
+**Pregunta 2**: B) Hay data leakage. Performance irreal en validación + caída en producción = señal clásica de leakage.
+</details>
+
+---
+
 ### Ejemplo Clásico: Predecir Precio con precio_per_mile
 
 ```python

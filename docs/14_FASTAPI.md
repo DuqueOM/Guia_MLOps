@@ -82,6 +82,95 @@ Construir APIs de ML robustas, documentadas y production-ready como las del port
 
 <a id="141-estructura-de-una-api-ml"></a>
 
+### 🧠 Mapa Mental de Conceptos: FastAPI para ML
+
+```
+                          ╔══════════════════════════════════════╗
+                          ║      FASTAPI PARA ML PRODUCTION      ║
+                          ╚══════════════════════════════════════╝
+                                            │
+         ┌──────────────────────────────────┼──────────────────────────────────┐
+         ▼                                  ▼                                  ▼
+┌──────────────────┐              ┌──────────────────┐              ┌──────────────────┐
+│    ENDPOINTS     │              │    SCHEMAS       │              │   LIFECYCLE      │
+└──────────────────┘              └──────────────────┘              └──────────────────┘
+       │                                 │                                 │
+├─ /health                        ├─ PredictionRequest          ├─ Startup: load model
+├─ /predict                       ├─ PredictionResponse         ├─ Shutdown: cleanup
+├─ /batch                         ├─ Validación Pydantic        └─ Global state
+└─ /docs (auto)                   └─ OpenAPI spec
+```
+
+**Términos clave:**
+
+| Término | Significado | Ejemplo |
+|---------|-------------|---------|
+| **Schema** | Modelo Pydantic para validar I/O | `PredictionRequest` |
+| **Lifespan** | Startup/shutdown hooks | Cargar modelo una vez |
+| **HTTPException** | Error HTTP estructurado | `HTTPException(404, "Not found")` |
+| **Dependency** | Inyección de dependencias | Conexión DB, auth |
+
+---
+
+### 💻 Ejercicio Puente: API Mínima
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/health")
+def health():
+    return {"status": "healthy"}
+
+@app.post("/predict")
+def predict(data: dict):
+    # TU TAREA: Cargar modelo y predecir
+    return {"prediction": 0.85}
+```
+
+**Ejecutar:** `uvicorn app:app --reload`
+**Ver docs:** `http://localhost:8000/docs`
+
+---
+
+
+### 💻 Ejercicio Puente: APIs ML
+
+> **Meta**: Practica el concepto antes de aplicarlo al portafolio.
+
+**Ejercicio básico:**
+1. Lee la sección teórica siguiente
+2. Identifica los patrones clave del código de ejemplo
+3. Replica el patrón en un proyecto de prueba
+
+---
+
+### 🛠️ Práctica del Portafolio: FastAPI en BankChurn
+
+> **Tarea**: Aplicar este módulo en BankChurn-Predictor.
+
+```bash
+cd BankChurn-Predictor
+# Explora el código relacionado con APIs ML
+```
+
+**Checklist:**
+- [ ] Localicé el código relevante
+- [ ] Entendí la implementación actual
+- [ ] Identifiqué posibles mejoras
+
+---
+
+### ✅ Checkpoint de Conocimiento
+
+**Pregunta 1**: ¿Cuál es el objetivo principal de FastAPI?
+
+**Pregunta 2**: ¿Cómo se implementa en el portafolio?
+
+**🔧 Escenario Debugging**: Si algo falla en APIs ML, ¿cuál sería tu primer paso de diagnóstico?
+
+
 ## 14.1 Estructura de una API ML
 
 ### Anatomía Típica
@@ -571,7 +660,7 @@ Esta sección disecciona `app/fastapi_app.py` de BankChurn-Predictor, una API ML
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                     │
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                    │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                 │
 │  PROBLEMA 1: ¿Cómo cargo el modelo una sola vez sin bloquearlo en cada request? │

@@ -193,6 +193,185 @@ flowchart TB
     style L4 fill:#e1bee7
 ```
 
+### 🧠 Mapa Mental de Conceptos: Entornos Reproducibles
+
+```
+                         ╔═════════════════════════════════════════╗
+                         ║    ENTORNOS REPRODUCIBLES EN ML         ║
+                         ╚═════════════════════════════════════════╝
+                                            │
+         ┌──────────────────────────────────┼──────────────────────────────────┐
+         ▼                                  ▼                                  ▼
+┌──────────────────┐              ┌──────────────────┐              ┌──────────────────┐
+│   HERRAMIENTAS   │              │    CONCEPTOS     │              │     ARCHIVOS     │
+└──────────────────┘              └──────────────────┘              └──────────────────┘
+       │                                 │                                 │
+├─ venv (built-in)               ├─ Lockfile                       ├─ requirements.txt
+├─ pip-tools                     ├─ Pinning                        ├─ pyproject.toml
+├─ Poetry                        ├─ Reproducibilidad               ├─ poetry.lock
+├─ Conda                         ├─ Aislamiento                    ├─ environment.yml
+└─ Docker                        └─ Version drift                  └─ Dockerfile
+```
+
+**Términos clave que debes dominar:**
+
+| Término | Significado | Ejemplo |
+|---------|-------------|---------|
+| **Entorno virtual** | Aislamiento de paquetes por proyecto | `.venv/`, `conda env` |
+| **Lockfile** | Archivo con versiones exactas congeladas | `requirements.txt`, `poetry.lock` |
+| **Pinning** | Fijar versión exacta de una dependencia | `pandas==2.0.3` vs `pandas>=2.0` |
+| **Version drift** | Versiones diferentes entre máquinas | Dev: 1.3.0, Prod: 1.0.2 |
+| **pip-tools** | Herramienta para generar lockfiles | `pip-compile`, `pip-sync` |
+
+---
+
+### 💻 Ejercicio Puente: Crear Entorno Básico
+
+> **Meta**: Antes de usar herramientas avanzadas, domina lo básico.
+
+**Ejercicio 1: venv + requirements.txt**
+```bash
+# TU TAREA: Crea un entorno virtual y lockfile desde cero
+# 1. Crear entorno
+python -m venv .venv
+
+# 2. Activar (Linux/Mac)
+source .venv/bin/activate
+
+# 3. Instalar dependencias
+pip install pandas scikit-learn
+
+# 4. Generar lockfile
+pip freeze > requirements.txt
+
+# 5. ¿Qué contiene requirements.txt?
+cat requirements.txt
+```
+
+**Ejercicio 2: Reproducir en otra máquina (simulado)**
+```bash
+# TU TAREA: Simula "otra máquina" con entorno nuevo
+deactivate
+rm -rf .venv
+python -m venv .venv
+source .venv/bin/activate
+
+# Instalar desde lockfile
+pip install -r requirements.txt
+
+# Verificar: ¿mismas versiones?
+python -c "import pandas; print(pandas.__version__)"
+```
+
+<details>
+<summary>🔍 Ver Solución</summary>
+
+```bash
+# El requirements.txt debería tener algo como:
+# numpy==1.24.3
+# pandas==2.0.3
+# scikit-learn==1.3.0
+# (más dependencias transitivas)
+
+# La clave es que las versiones son EXACTAS (==)
+# No rangos (>=), no "whatever pip decides"
+```
+</details>
+
+---
+
+### 🛠️ Práctica del Portafolio: Entorno de BankChurn
+
+> **Tarea**: Recrear el entorno exacto de BankChurn-Predictor.
+
+**Paso 1: Examina los archivos de dependencias**
+```bash
+cd BankChurn-Predictor
+ls -la requirements*.txt pyproject.toml
+```
+
+**Paso 2: Crea entorno limpio**
+```bash
+# Destruir cualquier entorno existente
+rm -rf .venv
+
+# Crear nuevo
+python -m venv .venv
+source .venv/bin/activate
+```
+
+**Paso 3: Instala con el método del proyecto**
+```bash
+# Opción 1: Si hay Makefile
+make install
+
+# Opción 2: Si usa pyproject.toml
+pip install -e ".[dev]"
+
+# Opción 3: Si hay requirements.txt
+pip install -r requirements.txt
+```
+
+**Paso 4: Verifica**
+```bash
+pytest  # ¿Pasan los tests?
+python -c "from bankchurn import ChurnTrainer; print('✅')"
+```
+
+---
+
+### ✅ Checkpoint de Conocimiento: Entornos
+
+**Pregunta 1**: ¿Cuál es la diferencia entre `pandas>=2.0` y `pandas==2.0.3`?
+
+A) No hay diferencia  
+B) `>=2.0` permite cualquier versión 2.x+, `==2.0.3` fija versión exacta  
+C) `==2.0.3` es más rápido  
+D) `>=2.0` es para producción  
+
+**Pregunta 2**: ¿Por qué un lockfile es importante para CI/CD?
+
+A) Hace la instalación más rápida  
+B) Garantiza que CI instale EXACTAMENTE las mismas versiones que desarrollo  
+C) GitHub lo requiere  
+D) Reduce el tamaño del repositorio  
+
+**Pregunta 3**: Developer A tiene `numpy 1.24`, Developer B tiene `numpy 1.21`. ¿Qué problema pueden tener?
+
+A) Ninguno, numpy es compatible  
+B) Funciones que existen en 1.24 no existen en 1.21 (código de A falla en B)  
+C) El código será más lento  
+D) Git tendrá conflictos  
+
+**🔧 Escenario de Debugging:**
+
+```
+Situación: Ejecutas tu código en CI y obtienes:
+  AttributeError: module 'sklearn.preprocessing' has no attribute 'TargetEncoder'
+
+Pero en tu máquina local funciona.
+
+Tu requirements.txt tiene:
+  scikit-learn>=1.0
+```
+
+**¿Cuál es el problema y cómo lo solucionarías?**
+
+<details>
+<summary>🔍 Ver Respuestas</summary>
+
+**Pregunta 1**: B) `>=2.0` permite cualquier versión 2.x+. Esto causa "version drift".
+
+**Pregunta 2**: B) Garantiza que CI instale EXACTAMENTE las mismas versiones.
+
+**Pregunta 3**: B) Funciones que existen en 1.24 no existen en 1.21.
+
+**Escenario de Debugging**: 
+- **Problema**: `TargetEncoder` se añadió en sklearn 1.3. `>=1.0` permite instalar 1.0-1.2 donde no existe.
+- **Solución**: Usar versión pinneada: `scikit-learn==1.3.0`
+- **Mejor práctica**: Usar `pip-compile` para generar lockfile con versiones exactas.
+</details>
+
 ---
 
 <a id="42-comparativa"></a>

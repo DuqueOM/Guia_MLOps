@@ -93,6 +93,17 @@ Para que esto cuente como progreso real, fuerza este mapeo:
 
 <a id="91-arquitectura-de-una-clase-trainer"></a>
 
+
+### 🧠 Mapa Mental de Conceptos: 9.1 Arquitectura de una Clase Trainer
+
+**Términos clave que debes dominar para este tema:**
+- Revisa los conceptos principales en la sección siguiente
+- Practica con los ejercicios del portafolio
+- Aplica los conocimientos en BankChurn-Predictor
+
+---
+
+
 ## 9.1 Arquitectura de una Clase Trainer
 
 ### Código Real: ChurnTrainer (BankChurn)
@@ -850,6 +861,45 @@ class PriceTrainer:
         # TODO: Construir pipeline [features -> pre -> model]
         pass
 ```
+
+---
+
+## 
+
+### 💻 Ejercicio Puente: Entrenamiento
+
+> **Meta**: Practica el concepto antes de aplicarlo al portafolio.
+
+**Ejercicio básico:**
+- Revisa el código de ejemplo en la sección siguiente
+- Identifica los patrones clave
+- Replica el patrón en un proyecto simple
+
+---
+
+### 🛠️ Práctica del Portafolio: Training Profesional en BankChurn
+
+> **Tarea**: Aplicar los conceptos de este módulo en BankChurn-Predictor.
+
+**Pasos:**
+1. Navega al proyecto: `cd BankChurn-Predictor`
+2. Localiza el código relevante en `src/bankchurn/`
+3. Verifica la implementación actual
+4. Aplica mejoras según las buenas prácticas de este módulo
+
+---
+
+### ✅ Checkpoint de Conocimiento: Training Profesional
+
+**Pregunta 1**: ¿Cuál es el concepto más importante de este módulo?
+- Revisa el mapa mental y la sección principal
+
+**Pregunta 2**: ¿Cómo se aplica en el portafolio?
+- Examina el código de BankChurn-Predictor
+
+**🔧 Escenario de Debugging:**
+- Identifica un problema común en este tema
+- Practica la solución con el código del portafolio
 
 ---
 

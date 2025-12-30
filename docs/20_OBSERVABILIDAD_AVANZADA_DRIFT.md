@@ -21,6 +21,54 @@ Dominar detección de drift, alertas inteligentes y mapeo de métricas ML a KPIs
 
 <a id="1-fundamentos"></a>
 
+
+### 🧠 Mapa Mental de Conceptos
+
+**Términos clave para este módulo:**
+- Revisa los conceptos principales en las secciones siguientes
+- Practica con los ejercicios del portafolio BankChurn
+- Aplica los checkpoints para verificar tu comprensión
+
+---
+
+
+
+### 💻 Ejercicio Puente: Model Monitoring
+
+> **Meta**: Practica el concepto antes de aplicarlo al portafolio.
+
+**Ejercicio básico:**
+1. Lee la sección teórica siguiente
+2. Identifica los patrones clave del código de ejemplo
+3. Replica el patrón en un proyecto de prueba
+
+---
+
+### 🛠️ Práctica del Portafolio: Drift Detection en BankChurn
+
+> **Tarea**: Aplicar este módulo en BankChurn-Predictor.
+
+```bash
+cd BankChurn-Predictor
+# Explora el código relacionado con Model Monitoring
+```
+
+**Checklist:**
+- [ ] Localicé el código relevante
+- [ ] Entendí la implementación actual
+- [ ] Identifiqué posibles mejoras
+
+---
+
+### ✅ Checkpoint de Conocimiento
+
+**Pregunta 1**: ¿Cuál es el objetivo principal de Drift Detection?
+
+**Pregunta 2**: ¿Cómo se implementa en el portafolio?
+
+**🔧 Escenario Debugging**: Si algo falla en Model Monitoring, ¿cuál sería tu primer paso de diagnóstico?
+
+
 ## 1. Fundamentos de Drift
 
 ### Tipos de Drift

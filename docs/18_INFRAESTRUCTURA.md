@@ -57,7 +57,9 @@
  - **18.8** [Cómo se usó en el Portafolio](#188-como-se-uso-en-el-portafolio)
  - [Errores habituales](#errores-habituales)
  - [✅ Ejercicio](#ejercicio)
- - [✅ Checkpoint](#checkpoint)
+ - [<a id="checkpoint"></a>
+
+✅ Checkpoint](#checkpoint)
  
  ## 🎯 Objetivo
  
@@ -68,6 +70,56 @@
 ---
 
 <a id="181-terraform-basico"></a>
+
+
+### 🧠 Mapa Mental de Conceptos
+
+**Términos clave para este módulo:**
+- Revisa los conceptos principales en las secciones siguientes
+- Practica con los ejercicios del portafolio BankChurn
+- Aplica los checkpoints para verificar tu comprensión
+
+---
+
+
+
+### 💻 Ejercicio Puente: Cloud/K8s
+
+> **Meta**: Practica el concepto antes de aplicarlo al portafolio.
+
+**Ejercicio básico:**
+1. Lee la sección teórica siguiente
+2. Identifica los patrones clave del código de ejemplo
+3. Replica el patrón en un proyecto de prueba
+
+---
+
+### 🛠️ Práctica del Portafolio: Infraestructura en BankChurn
+
+> **Tarea**: Aplicar este módulo en BankChurn-Predictor.
+
+```bash
+cd BankChurn-Predictor
+# Explora el código relacionado con Cloud/K8s
+```
+
+**Checklist:**
+- [ ] Localicé el código relevante
+- [ ] Entendí la implementación actual
+- [ ] Identifiqué posibles mejoras
+
+---
+
+### <a id="checkpoint"></a>
+
+✅ Checkpoint de Conocimiento
+
+**Pregunta 1**: ¿Cuál es el objetivo principal de Infraestructura?
+
+**Pregunta 2**: ¿Cómo se implementa en el portafolio?
+
+**🔧 Escenario Debugging**: Si algo falla en Cloud/K8s, ¿cuál sería tu primer paso de diagnóstico?
+
 
 ## Terraform Básico
 
@@ -249,12 +301,12 @@ Terraform y K8s son skills valiosos, pero no necesarios para demostrar competenc
 ║                                                                           ║
 ║  Principales drivers de costo en MLOps:                                   ║
 ║  • Cómputo: EC2/VMs, nodos de K8s, GPUs, Jobs de entrenamiento            ║
-║  • Almacenamiento: S3/GCS, volúmenes, snapshots, buckets "olvidados"     ║
+║  • Almacenamiento: S3/GCS, volúmenes, snapshots, buckets "olvidados"      ║
 ║  • Networking: tráfico de salida (egress), balanceadores de carga         ║
-║  • Servicios gestionados: EKS/GKE fee, bases de datos, colas, etc.       ║
+║  • Servicios gestionados: EKS/GKE fee, bases de datos, colas, etc.        ║
 ║                                                                           ║
 ║  Pregunta que siempre debes hacerte:                                      ║
-║  "¿Este recurso está generando valor AHORA MISMO o podría estar apagado?"║
+║  "¿Este recurso está generando valor AHORA MISMO o podría estar apagado?" ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 ```
 

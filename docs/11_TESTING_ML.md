@@ -143,7 +143,118 @@ Dominar el testing en proyectos ML para alcanzar **80%+ de coverage** sin tests 
 │              (funciones individuales, transformers)                     │   Rápidos, muchos
 └─────────────────────────────────────────────────────────────────────────┘   test_features.py
 ```
- 
+
+### 🧠 Mapa Mental de Conceptos: Testing ML
+
+```
+                          ╔══════════════════════════════════════╗
+                          ║      TESTING PROFESIONAL EN ML       ║
+                          ╚══════════════════════════════════════╝
+                                            │
+         ┌──────────────────────────────────┼──────────────────────────────────┐
+         ▼                                  ▼                                  ▼
+┌──────────────────┐              ┌──────────────────┐              ┌──────────────────┐
+│  TIPOS DE TESTS  │              │  HERRAMIENTAS    │              │  MÉTRICAS        │
+└──────────────────┘              └──────────────────┘              └──────────────────┘
+       │                                 │                                 │
+├─ Unit tests                     ├─ pytest                        ├─ Coverage >= 80%
+├─ Data tests                     ├─ pytest-cov                    ├─ Tests por módulo
+├─ Model tests                    ├─ fixtures                      ├─ Tiempo de ejecución
+├─ Integration tests              ├─ conftest.py                   └─ Flaky rate
+└─ E2E tests                      └─ markers (@slow)
+```
+
+**Términos clave que debes dominar:**
+
+| Término | Significado | Ejemplo |
+|---------|-------------|---------|
+| **Unit test** | Prueba función individual | `test_calculate_age()` |
+| **Data test** | Valida estructura de datos | Schema, rangos, NaN |
+| **Fixture** | Datos/objetos reutilizables | `@pytest.fixture` |
+| **Coverage** | % código cubierto por tests | `pytest --cov` |
+| **Marker** | Etiqueta tests | `@pytest.mark.slow` |
+
+---
+
+### 💻 Ejercicio Puente: Tests Básicos
+
+> **Meta**: Antes de crear suites complejas, domina pytest básico.
+
+**Ejercicio 1: Tu primer test**
+```python
+# tests/test_example.py
+def add(a, b):
+    return a + b
+
+def test_add():
+    assert add(2, 3) == 5
+    assert add(-1, 1) == 0
+
+# TU TAREA: Ejecuta con pytest
+# pytest tests/test_example.py -v
+```
+
+**Ejercicio 2: Fixture básica**
+```python
+import pytest
+
+@pytest.fixture
+def sample_data():
+    return {"name": "test", "value": 42}
+
+def test_with_fixture(sample_data):
+    assert sample_data["value"] == 42
+```
+
+<details>
+<summary>🔍 Ver Comandos Útiles</summary>
+
+```bash
+# Ejecutar todos los tests
+pytest
+
+# Con verbose
+pytest -v
+
+# Con coverage
+pytest --cov=src/
+
+# Solo tests rápidos
+pytest -m "not slow"
+
+# Parar al primer fallo
+pytest -x
+```
+</details>
+
+---
+
+### ✅ Checkpoint de Conocimiento: Testing
+
+**Pregunta 1**: ¿Por qué los Unit tests están en la base de la pirámide?
+
+A) Son los más importantes  
+B) Son rápidos, baratos, y detectan errores temprano  
+C) pytest los ejecuta primero  
+D) Son más fáciles de escribir  
+
+**Pregunta 2**: ¿Qué valida un Data test?
+
+A) Que el modelo predice bien  
+B) Que los datos tienen el schema correcto, rangos válidos, sin NaN inesperados  
+C) Que la API responde  
+D) Que el código está formateado  
+
+<details>
+<summary>🔍 Ver Respuestas</summary>
+
+**Pregunta 1**: B) Son rápidos, baratos, y detectan errores temprano. Por eso hay muchos.
+
+**Pregunta 2**: B) Schema correcto, rangos válidos, sin NaN inesperados. Validación de datos.
+</details>
+
+---
+
 ### Coverage del Portafolio Real
  
 | Proyecto | Coverage | Tests | Tipo Principal |
@@ -156,6 +267,43 @@ Dominar el testing en proyectos ML para alcanzar **80%+ de coverage** sin tests 
  
 <a id="112-fixtures-y-conftestpy"></a>
  
+
+### 💻 Ejercicio Puente: Pytest y Coverage
+
+> **Meta**: Practica el concepto antes de aplicarlo al portafolio.
+
+**Ejercicio básico:**
+1. Lee la sección teórica siguiente
+2. Identifica los patrones clave del código de ejemplo
+3. Replica el patrón en un proyecto de prueba
+
+---
+
+### 🛠️ Práctica del Portafolio: Testing ML en BankChurn
+
+> **Tarea**: Aplicar este módulo en BankChurn-Predictor.
+
+```bash
+cd BankChurn-Predictor
+# Explora el código relacionado con Pytest y Coverage
+```
+
+**Checklist:**
+- [ ] Localicé el código relevante
+- [ ] Entendí la implementación actual
+- [ ] Identifiqué posibles mejoras
+
+---
+
+### ✅ Checkpoint de Conocimiento
+
+**Pregunta 1**: ¿Cuál es el objetivo principal de Testing ML?
+
+**Pregunta 2**: ¿Cómo se implementa en el portafolio?
+
+**🔧 Escenario Debugging**: Si algo falla en Pytest y Coverage, ¿cuál sería tu primer paso de diagnóstico?
+
+
 ## 11.2 Fixtures y conftest.py
  
 ### ¿Qué es una Fixture?
@@ -923,7 +1071,7 @@ Esta sección disecciona los tests de BankChurn-Predictor que detectan problemas
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                     │
+│                    DECISIONES ARQUITECTÓNICAS DEL PORTAFOLIO                    │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                 │
 │  PROBLEMA 1: ¿Cómo detecto data leakage antes de que llegue a producción?       │

@@ -6,8 +6,8 @@ Dominar la gestión de costos cloud para cargas de trabajo ML, incluyendo estrat
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║  "El mejor modelo no es el más preciso, sino el que genera más ROI          ║
-║   considerando costos de entrenamiento, inferencia e infraestructura."      ║
+║  "El mejor modelo no es el más preciso, sino el que genera más ROI           ║
+║   considerando costos de entrenamiento, inferencia e infraestructura."       ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -26,6 +26,54 @@ Dominar la gestión de costos cloud para cargas de trabajo ML, incluyendo estrat
 ---
 
 <a id="1-fundamentos"></a>
+
+
+### 🧠 Mapa Mental de Conceptos
+
+**Términos clave para este módulo:**
+- Revisa los conceptos principales en las secciones siguientes
+- Practica con los ejercicios del portafolio BankChurn
+- Aplica los checkpoints para verificar tu comprensión
+
+---
+
+
+
+### 💻 Ejercicio Puente: Costos
+
+> **Meta**: Practica el concepto antes de aplicarlo al portafolio.
+
+**Ejercicio básico:**
+1. Lee la sección teórica siguiente
+2. Identifica los patrones clave del código de ejemplo
+3. Replica el patrón en un proyecto de prueba
+
+---
+
+### 🛠️ Práctica del Portafolio: Cloud FinOps en BankChurn
+
+> **Tarea**: Aplicar este módulo en BankChurn-Predictor.
+
+```bash
+cd BankChurn-Predictor
+# Explora el código relacionado con Costos
+```
+
+**Checklist:**
+- [ ] Localicé el código relevante
+- [ ] Entendí la implementación actual
+- [ ] Identifiqué posibles mejoras
+
+---
+
+### ✅ Checkpoint de Conocimiento
+
+**Pregunta 1**: ¿Cuál es el objetivo principal de Cloud FinOps?
+
+**Pregunta 2**: ¿Cómo se implementa en el portafolio?
+
+**🔧 Escenario Debugging**: Si algo falla en Costos, ¿cuál sería tu primer paso de diagnóstico?
+
 
 ## 1. Fundamentos de FinOps
 
@@ -48,21 +96,21 @@ Dominar la gestión de costos cloud para cargas de trabajo ML, incluyendo estrat
 │                    DISTRIBUCIÓN TÍPICA DE COSTOS ML                         │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  TRAINING (30-50% del costo total)                                         │
-│  ├── Compute (GPU/CPU)................ 70%                                 │
-│  ├── Storage (datasets)............... 20%                                 │
-│  └── Networking....................... 10%                                 │
+│  TRAINING (30-50% del costo total)                                          │
+│  ├── Compute (GPU/CPU)................ 70%                                  │
+│  ├── Storage (datasets)............... 20%                                  │
+│  └── Networking....................... 10%                                  │
 │                                                                             │
-│  INFERENCE (40-60% del costo total)                                        │
-│  ├── Compute (API servers)............ 60%                                 │
-│  ├── Load Balancer.................... 15%                                 │
-│  ├── Storage (model artifacts)........ 15%                                 │
-│  └── Networking (egress).............. 10%                                 │
+│  INFERENCE (40-60% del costo total)                                         │
+│  ├── Compute (API servers)............ 60%                                  │
+│  ├── Load Balancer.................... 15%                                  │
+│  ├── Storage (model artifacts)........ 15%                                  │
+│  └── Networking (egress).............. 10%                                  │
 │                                                                             │
-│  SUPPORTING (10-20% del costo total)                                       │
-│  ├── MLflow/Experiment Tracking....... 30%                                 │
-│  ├── Monitoring/Logging............... 40%                                 │
-│  └── CI/CD............................ 30%                                 │
+│  SUPPORTING (10-20% del costo total)                                        │
+│  ├── MLflow/Experiment Tracking....... 30%                                  │
+│  ├── Monitoring/Logging............... 40%                                  │
+│  └── CI/CD............................ 30%                                  │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```

@@ -299,10 +299,10 @@ rm -rf __pycache__ .pytest_cache .coverage htmlcov
 
 | Plantilla | Módulo |
 |-----------|--------|
-| README, pyproject, Makefile | [03_ESTRUCTURA_PROYECTO.md](03_ESTRUCTURA_PROYECTO.md) |
-| GitHub Actions | [12_CI_CD.md](12_CI_CD.md) |
-| Dockerfile | [13_DOCKER.md](13_DOCKER.md) |
-| Model Card | [19_DOCUMENTACION.md](19_DOCUMENTACION.md) |
+| README, pyproject, Makefile | [03_ESTRUCTURA_PROYECTO.md](../03_ESTRUCTURA_PROYECTO.md) |
+| GitHub Actions | [12_CI_CD.md](../12_CI_CD.md) |
+| Dockerfile | [13_DOCKER.md](../13_DOCKER.md) |
+| Model Card | [19_DOCUMENTACION.md](../19_DOCUMENTACION.md) |
 
 ---
 

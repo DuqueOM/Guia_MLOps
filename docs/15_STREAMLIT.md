@@ -80,6 +80,54 @@ Construir dashboards interactivos profesionales como el de CarVision.
  
 <a id="151-estructura-de-un-dashboard-ml"></a>
  
+
+### 🧠 Mapa Mental de Conceptos: 15.1 Estructura de un Dashboard ML
+
+**Términos clave que debes dominar para este tema:**
+- Revisa los conceptos principales en la sección siguiente
+- Practica con los ejercicios del portafolio
+- Aplica los conocimientos en BankChurn-Predictor
+
+---
+
+
+
+### 💻 Ejercicio Puente: Dashboards
+
+> **Meta**: Practica el concepto antes de aplicarlo al portafolio.
+
+**Ejercicio básico:**
+1. Lee la sección teórica siguiente
+2. Identifica los patrones clave del código de ejemplo
+3. Replica el patrón en un proyecto de prueba
+
+---
+
+### 🛠️ Práctica del Portafolio: Streamlit en BankChurn
+
+> **Tarea**: Aplicar este módulo en BankChurn-Predictor.
+
+```bash
+cd BankChurn-Predictor
+# Explora el código relacionado con Dashboards
+```
+
+**Checklist:**
+- [ ] Localicé el código relevante
+- [ ] Entendí la implementación actual
+- [ ] Identifiqué posibles mejoras
+
+---
+
+### ✅ Checkpoint de Conocimiento
+
+**Pregunta 1**: ¿Cuál es el objetivo principal de Streamlit?
+
+**Pregunta 2**: ¿Cómo se implementa en el portafolio?
+
+**🔧 Escenario Debugging**: Si algo falla en Dashboards, ¿cuál sería tu primer paso de diagnóstico?
+
+
 ## 15.1 Estructura de un Dashboard ML
  
 ### Arquitectura del Dashboard CarVision

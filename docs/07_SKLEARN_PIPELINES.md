@@ -178,6 +178,196 @@ predictions = pipeline.predict(X_new)              # predict() internamente tran
 # ✅ El scaler usa mean/std del entrenamiento      → Consistencia garantizada.
 # ✅ El encoder conoce las categorías del entrenamiento → No crash por categorías nuevas.
 # ✅ Las predicciones son consistentes             → Sin training-serving skew.
+
+### 🧠 Mapa Mental de Conceptos: sklearn Pipelines
+
+```
+                        ╔══════════════════════════════════════════╗
+                        ║      SKLEARN PIPELINES PARA MLOPS        ║
+                        ╚══════════════════════════════════════════╝
+                                            │
+         ┌──────────────────────────────────┼──────────────────────────────────┐
+         ▼                                  ▼                                  ▼
+┌──────────────────┐              ┌──────────────────┐              ┌──────────────────┐
+│    Pipeline      │              │ColumnTransformer │              │ Custom Transform │
+└──────────────────┘              └──────────────────┘              └──────────────────┘
+       │                                 │                                 │
+├─ Pasos secuenciales            ├─ Transforma paralelo           ├─ BaseEstimator
+├─ fit/transform/predict         ├─ Por grupos de columnas        ├─ TransformerMixin
+├─ Serializable como 1 objeto    ├─ num/cat/text/etc              ├─ fit/transform
+└─ Evita training-serving skew   └─ Combina resultados            └─ Tu lógica custom
+```
+
+**Términos clave que debes dominar:**
+
+| Término | Significado | Ejemplo |
+|---------|-------------|---------|
+| **Pipeline** | Cadena de pasos (transformadores + modelo) | `Pipeline([('scaler', ...), ('model', ...)])` |
+| **ColumnTransformer** | Aplica diferentes transformaciones a diferentes columnas | Numéricas → Scaler, Categóricas → OneHot |
+| **Training-Serving Skew** | Diferencia entre preprocesamiento en train y producción | Scaler con diferente mean/std |
+| **fit_transform** | Aprende parámetros Y transforma (solo en training) | `scaler.fit_transform(X_train)` |
+| **transform** | Solo transforma con parámetros aprendidos (producción) | `scaler.transform(X_new)` |
+
+---
+
+### 💻 Ejercicio Puente: Pipeline Básico
+
+> **Meta**: Antes de crear pipelines complejos, domina el patrón básico.
+
+**Ejercicio 1: Pipeline mínimo**
+```python
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+
+# TU TAREA: Crea un pipeline con scaler + modelo
+pipeline = Pipeline([
+    # paso 1: escalar
+    # paso 2: modelo
+])
+
+# Entrenar
+pipeline.fit(X_train, y_train)
+
+# Predecir (¿necesitas transformar X_test manualmente?)
+predictions = pipeline.predict(X_test)
+```
+
+**Ejercicio 2: Guardar y cargar**
+```python
+import joblib
+
+# Guardar
+joblib.dump(pipeline, "pipeline.pkl")
+
+# En otro script/proceso
+pipeline_loaded = joblib.load("pipeline.pkl")
+
+# TU TAREA: ¿Qué contiene pipeline_loaded?
+# ¿Necesitas re-entrenar el scaler?
+```
+
+<details>
+<summary>🔍 Ver Solución</summary>
+
+```python
+# Ejercicio 1
+pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('model', LogisticRegression())
+])
+
+pipeline.fit(X_train, y_train)
+predictions = pipeline.predict(X_test)
+# NO necesitas transformar X_test manualmente
+# pipeline.predict() lo hace internamente
+
+# Ejercicio 2
+# pipeline_loaded contiene:
+# - StandardScaler YA fitted (con mean/std de X_train)
+# - LogisticRegression YA entrenado
+# NO necesitas re-entrenar nada
+# Puedes predecir directamente
+```
+</details>
+
+---
+
+### 🛠️ Práctica del Portafolio: Pipeline de BankChurn
+
+> **Tarea**: Explorar y entender el pipeline de BankChurn-Predictor.
+
+**Paso 1: Localiza el pipeline**
+```bash
+cd BankChurn-Predictor
+find . -name "*.pkl" -o -name "pipeline*"
+```
+
+**Paso 2: Inspecciona la estructura**
+```python
+import joblib
+
+pipeline = joblib.load("artifacts/pipeline.pkl")  # o ruta correcta
+print(pipeline)
+print(pipeline.named_steps)
+```
+
+**Paso 3: Entiende los pasos**
+```python
+# ¿Qué transformador se usa para numéricas?
+# ¿Qué encoder para categóricas?
+# ¿Qué modelo final?
+```
+
+**Paso 4: Verifica consistencia**
+```python
+# Carga datos de test
+# ¿pipeline.predict() funciona sin preprocesamiento manual?
+```
+
+---
+
+### ✅ Checkpoint de Conocimiento: Pipelines
+
+**Pregunta 1**: ¿Cuál es la ventaja principal de guardar `pipeline.pkl` vs `model.pkl`?
+
+A) Es más pequeño  
+B) Incluye preprocesamiento con parámetros de entrenamiento  
+C) Es más rápido  
+D) sklearn lo requiere  
+
+**Pregunta 2**: ¿Qué hace `ColumnTransformer`?
+
+A) Transforma una columna  
+B) Aplica DIFERENTES transformaciones a DIFERENTES grupos de columnas en paralelo  
+C) Concatena DataFrames  
+D) Filtra columnas  
+
+**Pregunta 3**: Si usas `OneHotEncoder(handle_unknown='ignore')`, ¿qué pasa con una categoría nueva en producción?
+
+A) Error  
+B) Se ignora (todos los valores de esa categoría serán 0)  
+C) Se crea una nueva columna  
+D) El modelo se reentrena  
+
+**🔧 Escenario de Debugging:**
+
+```python
+# Training
+pipeline.fit(X_train, y_train)
+joblib.dump(pipeline, "pipeline.pkl")
+
+# Production (meses después)
+pipeline = joblib.load("pipeline.pkl")
+X_new = get_new_data()  # Nuevo request
+pred = pipeline.predict(X_new)
+# ERROR: ValueError: columns in X are different from training
+```
+
+**¿Cuál es el problema y cómo lo solucionarías?**
+
+<details>
+<summary>🔍 Ver Respuestas</summary>
+
+**Pregunta 1**: B) Incluye preprocesamiento con parámetros de entrenamiento. Sin esto, tienes training-serving skew.
+
+**Pregunta 2**: B) Aplica DIFERENTES transformaciones a DIFERENTES grupos de columnas en paralelo.
+
+**Pregunta 3**: B) Se ignora. La fila tendrá 0s en todas las columnas de esa feature. Mejor que crashear.
+
+**Escenario de Debugging**: 
+- **Problema**: X_new tiene columnas diferentes (nombre, orden, o cantidad) que X_train.
+- **Solución**: 
+  1. Asegurar que X_new tenga EXACTAMENTE las mismas columnas que X_train
+  2. Usar Pydantic para validar el schema de entrada
+  3. Documentar las columnas esperadas
+```python
+expected_cols = ['CreditScore', 'Age', 'Balance', ...]
+X_new = X_new[expected_cols]  # Seleccionar y ordenar
+```
+</details>
+
+
 ```
 
 ---
@@ -250,7 +440,7 @@ X_processed = preprocessor.fit_transform(X_train)   # fit: aprende parámetros; 
               ┌───────────────┼───────────────┐
               │               │               │
               ▼               ▼               ▼
-        num_pipeline    cat_pipeline    remainder
+        num_pipeline    cat_pipeline      remainder
               │               │               │
               │               │               │
     ┌─────────┴─────────┐     │               │

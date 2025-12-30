@@ -72,13 +72,65 @@ Implementar monitoreo completo: logs, métricas, y drift detection como en el po
 - **16.4** [Model Monitoring](#164-model-monitoring)
 - **16.5** [🔬 Ingeniería Inversa: Observabilidad Producción](#165-ingenieria-inversa-observabilidad) ⭐ NUEVO
 - [Errores habituales](#errores-habituales)
-- [✅ Checkpoint](#checkpoint)
+- [<a id="checkpoint"></a>
+
+✅ Checkpoint](#checkpoint)
 - [✅ Ejercicio](#ejercicio)
 
 ---
 
 <a id="161-las-4-senales-de-oro"></a>
  
+
+### 🧠 Mapa Mental de Conceptos: 16.1 Las 4 Señales de Oro
+
+**Términos clave que debes dominar para este tema:**
+- Revisa los conceptos principales en la sección siguiente
+- Practica con los ejercicios del portafolio
+- Aplica los conocimientos en BankChurn-Predictor
+
+---
+
+
+
+### 💻 Ejercicio Puente: Monitoreo
+
+> **Meta**: Practica el concepto antes de aplicarlo al portafolio.
+
+**Ejercicio básico:**
+1. Lee la sección teórica siguiente
+2. Identifica los patrones clave del código de ejemplo
+3. Replica el patrón en un proyecto de prueba
+
+---
+
+### 🛠️ Práctica del Portafolio: Observabilidad en BankChurn
+
+> **Tarea**: Aplicar este módulo en BankChurn-Predictor.
+
+```bash
+cd BankChurn-Predictor
+# Explora el código relacionado con Monitoreo
+```
+
+**Checklist:**
+- [ ] Localicé el código relevante
+- [ ] Entendí la implementación actual
+- [ ] Identifiqué posibles mejoras
+
+---
+
+### <a id="checkpoint"></a>
+
+✅ Checkpoint de Conocimiento
+
+**Pregunta 1**: ¿Cuál es el objetivo principal de Observabilidad?
+
+**Pregunta 2**: ¿Cómo se implementa en el portafolio?
+
+**🔧 Escenario Debugging**: Si algo falla en Monitoreo, ¿cuál sería tu primer paso de diagnóstico?
+
+
 ## 16.1 Las 4 Señales de Oro
 
 ```
@@ -1518,7 +1570,9 @@ def test_predictions_type(trained_model, sample_data):
 
 ---
 
-## ✅ Checkpoint del Módulo
+## <a id="checkpoint"></a>
+
+✅ Checkpoint del Módulo
 
 - [ ] Tienes endpoint `/metrics` en tu API
 - [ ] Logs en formato JSON estructurado

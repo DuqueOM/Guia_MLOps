@@ -74,7 +74,9 @@
 - **19.5** [Ejercicio: Crea Tu Documentación](#195-ejercicio-crea-tu-documentacion)
 - [Errores habituales](#errores-habituales)
 - [✅ Ejercicio](#ejercicio)
-- [✅ Checkpoint](#checkpoint)
+- [<a id="checkpoint"></a>
+
+✅ Checkpoint](#checkpoint)
 
 ## 🎯 Lo Que Lograrás
 
@@ -86,6 +88,56 @@
 ---
 
 <a id="191-mkdocs-con-material-theme"></a>
+
+
+### 🧠 Mapa Mental de Conceptos
+
+**Términos clave para este módulo:**
+- Revisa los conceptos principales en las secciones siguientes
+- Practica con los ejercicios del portafolio BankChurn
+- Aplica los checkpoints para verificar tu comprensión
+
+---
+
+
+
+### 💻 Ejercicio Puente: Docs
+
+> **Meta**: Practica el concepto antes de aplicarlo al portafolio.
+
+**Ejercicio básico:**
+1. Lee la sección teórica siguiente
+2. Identifica los patrones clave del código de ejemplo
+3. Replica el patrón en un proyecto de prueba
+
+---
+
+### 🛠️ Práctica del Portafolio: Documentación en BankChurn
+
+> **Tarea**: Aplicar este módulo en BankChurn-Predictor.
+
+```bash
+cd BankChurn-Predictor
+# Explora el código relacionado con Docs
+```
+
+**Checklist:**
+- [ ] Localicé el código relevante
+- [ ] Entendí la implementación actual
+- [ ] Identifiqué posibles mejoras
+
+---
+
+### <a id="checkpoint"></a>
+
+✅ Checkpoint de Conocimiento
+
+**Pregunta 1**: ¿Cuál es el objetivo principal de Documentación?
+
+**Pregunta 2**: ¿Cómo se implementa en el portafolio?
+
+**🔧 Escenario Debugging**: Si algo falla en Docs, ¿cuál sería tu primer paso de diagnóstico?
+
 
 ## 19.1 MkDocs con Material Theme
 
