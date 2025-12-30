@@ -1,8 +1,4 @@
-# ════════════════════════════════════════════════════════════════════════════════
 # MÓDULO 05: GIT PROFESIONAL
-# Más Allá del Commit: Conventional Commits, Hooks y Branching
-# Guía MLOps v5.0: Senior Edition | DuqueOM | Noviembre 2025
-# ════════════════════════════════════════════════════════════════════════════════
 
 <div align="center">
 

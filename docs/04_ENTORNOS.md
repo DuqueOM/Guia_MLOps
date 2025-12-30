@@ -1,8 +1,4 @@
-# ════════════════════════════════════════════════════════════════════════════════
 # MÓDULO 04: ENTORNOS PROFESIONALES
-# Virtualenv vs Conda vs Poetry vs Docker: Análisis Comparativo
-# Guía MLOps v5.0: Senior Edition | DuqueOM | Noviembre 2025
-# ════════════════════════════════════════════════════════════════════════════════
 
 <div align="center">
 

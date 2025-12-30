@@ -1,8 +1,4 @@
-# ════════════════════════════════════════════════════════════════════════════════
 # MÓDULO 06: INGENIERÍA DE DATOS Y DVC
-# Versionado de Datos, DAGs y Reproducibilidad
-# Guía MLOps v5.0: Senior Edition | DuqueOM | Noviembre 2025
-# ════════════════════════════════════════════════════════════════════════════════
 
 <div align="center">
 

@@ -1,8 +1,6 @@
-# ════════════════════════════════════════════════════════════════════════════════
 # MÓDULO 19: DOCUMENTACIÓN Y ÉTICA
-# MkDocs, Model Cards y Responsible AI
-# Guía MLOps v5.0: Senior Edition | DuqueOM | Noviembre 2025
-# ════════════════════════════════════════════════════════════════════════════════
+
+
 
 <div align="center">
 

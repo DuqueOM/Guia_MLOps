@@ -1,8 +1,4 @@
-# ════════════════════════════════════════════════════════════════════════════════
 # MÓDULO 17: SERVERLESS VS CONTENEDORES
-# Cuándo Usar Lambda, ECS o Kubernetes
-# Guía MLOps v5.0: Senior Edition | DuqueOM | Noviembre 2025
-# ════════════════════════════════════════════════════════════════════════════════
 
 <div align="center">
 
