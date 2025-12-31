@@ -1,0 +1,173 @@
+# MkDocs configuration for Guía MLOps v2
+# Run: mkdocs serve  (dev) or mkdocs build (prod)
+
+site_name: "Guía MLOps — Portfolio Edition v2"
+site_description: "Curso end-to-end para construir un portafolio ML/MLOps profesional desde cero"
+site_author: "DuqueOM"
+site_url: "https://duqueom.github.io/Guia_MLOps/"
+
+docs_dir: ..
+
+site_dir: ../../site
+
+# Repository
+repo_name: "Guia_MLOps"
+repo_url: "https://github.com/DuqueOM/Guia_MLOps"
+edit_uri: "edit/main/"
+
+# Theme
+theme:
+  name: material
+  language: es
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: deep purple
+      toggle:
+        icon: material/brightness-7
+        name: Cambiar a modo oscuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: deep purple
+      toggle:
+        icon: material/brightness-4
+        name: Cambiar a modo claro
+  font:
+    text: Roboto
+    code: Roboto Mono
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+# Extensions
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.mark
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.tilde
+  - admonition
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+# Plugins
+plugins:
+  - search:
+      lang: es
+  - mkdocs-jupyter:
+      include: ["**/*.ipynb"]
+      execute: false
+      include_requirejs: true
+  - minify:
+      minify_html: true
+
+# Extra
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/DuqueOM
+    - icon: fontawesome/brands/linkedin
+      link: https://linkedin.com/in/duqueom
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+
+# Copyright
+copyright: Copyright &copy; 2024 DuqueOM — Guía MLOps v2
+
+# Navigation
+nav:
+  - Inicio: docs/index.md
+  - Índice Principal: docs/00_INDICE.md
+  - Syllabus: docs/SYLLABUS.md
+  - Mapa 1:1 Portafolio: docs/MAPA_PORTAFOLIO_1TO1.md
+  - Plan de Estudios: docs/PLAN_ESTUDIOS.md
+  - Fase 1 - Fundamentos:
+    - "01 — Python Moderno": docs/01_PYTHON_MODERNO.md
+    - "02 — Diseño de Sistemas": docs/02_DISENO_SISTEMAS.md
+    - "03 — Estructura de Proyecto": docs/03_ESTRUCTURA_PROYECTO.md
+    - "04 — Entornos": docs/04_ENTORNOS.md
+    - "05 — Git Profesional": docs/05_GIT_PROFESIONAL.md
+    - "06 — Versionado de Datos": docs/06_VERSIONADO_DATOS.md
+  - Fase 2 - ML Engineering:
+    - "07 — sklearn Pipelines": docs/07_SKLEARN_PIPELINES.md
+    - "08 — Ingeniería de Features": docs/08_INGENIERIA_FEATURES.md
+    - "09 — Training Profesional": docs/09_TRAINING_PROFESIONAL.md
+    - "10 — Experiment Tracking": docs/10_EXPERIMENT_TRACKING.md
+  - Fase 3 - MLOps Core:
+    - "11 — Testing ML": docs/11_TESTING_ML.md
+    - "12 — CI/CD": docs/12_CI_CD.md
+    - "13 — Docker": docs/13_DOCKER.md
+    - "14 — FastAPI": docs/14_FASTAPI.md
+    - "15 — Streamlit": docs/15_STREAMLIT.md
+    - "16 — Observabilidad": docs/16_OBSERVABILIDAD.md
+  - Fase 4 - Producción:
+    - "17 — Despliegue": docs/17_DESPLIEGUE.md
+    - "18 — Infraestructura": docs/18_INFRAESTRUCTURA.md
+  - Fase 5 - Senior/Staff:
+    - "19 — Documentación": docs/19_DOCUMENTACION.md
+    - "20 — Observabilidad Avanzada": docs/20_OBSERVABILIDAD_AVANZADA_DRIFT.md
+    - "21 — Cloud FinOps": docs/21_CLOUD_FINOPS.md
+    - "22 — IaC Empresarial": docs/22_IAC_EMPRESARIAL.md
+    - "23 — Proyecto Integrador": docs/23_PROYECTO_INTEGRADOR.md
+  - Material de Apoyo:
+    - "Índice Apoyo": docs/apoyo/index.md
+    - "Glosario MLOps": docs/apoyo/GLOSARIO.md
+    - "Checklist Profesional": docs/apoyo/CHECKLIST.md
+    - "Recursos Externos": docs/apoyo/RECURSOS.md
+    - "Rúbrica de Evaluación": docs/apoyo/RUBRICA_EVALUACION.md
+    - "Plantillas": docs/apoyo/PLANTILLAS.md
+    - "Guía Audiovisual": docs/apoyo/GUIA_AUDIOVISUAL.md
+    - "Guía de Mantenimiento": docs/apoyo/MAINTENANCE_GUIDE.md
+    - "Scripts Operacionales": docs/apoyo/GUIA_SCRIPTS_OPERACIONALES.md
+  - Herramientas de Estudio:
+    - "Índice": docs/study_tools/index.md
+    - "Protocolo E": docs/study_tools/PROTOCOLO_E.md
+    - "Diario de Errores": docs/study_tools/DIARIO_ERRORES.md
+    - "Cierre Semanal": docs/study_tools/CIERRE_SEMANAL.md
+  - Exámenes:
+    - "Exam 01 — Setup": exams/EXAM_01_SETUP.md
+    - "Exam 02 — Pipeline": exams/EXAM_02_PIPELINE.md
+    - "Exam 03 — Testing": exams/EXAM_03_TESTING.md
+    - "Exam 04 — Deployment": exams/EXAM_04_DEPLOYMENT.md
+    - "Exam 05 — Production": exams/EXAM_05_PRODUCTION.md
+    - "Exam 06 — Integration": exams/EXAM_06_INTEGRATION.md
+  - Simulacros de Entrevista:
+    - "Junior": docs/SIMULACRO_ENTREVISTA_JUNIOR.md
+    - "Mid": docs/SIMULACRO_ENTREVISTA_MID.md
+    - "Senior Parte 1": docs/SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md
+    - "Senior Parte 2": docs/SIMULACRO_ENTREVISTA_SENIOR_PARTE2.md
+  - Laboratorios:
+    - "LAB 01 — Docker Debug": notebooks/labs/LAB_01_DOCKER_DEBUG.md
+    - "LAB 02 — Pandas Performance": notebooks/labs/LAB_02_PANDAS_PERFORMANCE.md
+    - "LAB 03 — Dependency Conflicts": notebooks/labs/LAB_03_DEPENDENCY_CONFLICTS.md
+    - "Notebook Pipelines (07-08)": notebooks/07_08_sklearn_pipelines.ipynb
+  - Plantillas:
+    - "Índice Plantillas": docs/templates/index.md

@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]          # Herramienta de build requerida
+build-backend = "setuptools.build_meta"  # Backend PEP 517 estándar
+
+[project]
+name = "mi-proyecto"                     # Nombre del paquete (pip install mi-proyecto)
+version = "1.0.0"                        # Versión semántica: MAJOR.MINOR.PATCH
+description = "Descripción"              # Descripción corta para PyPI
+requires-python = ">=3.10"               # Versión mínima de Python
+
+dependencies = [                         # Dependencias de producción
+    "pandas>=2.0.0",                     # >=: versión mínima compatible
+    "scikit-learn>=1.3.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]          # Grupos opcionales: pip install .[api,dev]
+api = ["fastapi>=0.104.0", "uvicorn>=0.24.0"]  # Para serving
+dev = ["pytest>=7.4.0", "pytest-cov>=4.1.0"]   # Para desarrollo
+
+[tool.setuptools.packages.find]
+where = ["src"]                          # Busca paquetes en src/ (src layout)
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]                    # Directorio de tests
+addopts = "-v --cov=src/"                # Opciones por defecto: verbose + coverage
+
+[tool.coverage.report]
+fail_under = 80                          # CI falla si coverage < 80%

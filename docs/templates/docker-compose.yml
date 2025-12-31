@@ -1,0 +1,18 @@
+# docker-compose.yml — plantilla de ejemplo para proyectos ML/MLOps
+#
+# Esta es una plantilla mínima pensada como punto de partida. Puedes
+# copiarla y adaptarla en tus propios proyectos.
+
+version: '3.8'                           # Versión de sintaxis docker-compose
+
+services:
+  app:                                   # Nombre del servicio
+    build: .                             # Construye imagen desde Dockerfile en ./
+    image: ml-app:latest                 # Tag de la imagen resultante
+    ports:
+      - "8000:8000"                       # host:container - expone puerto 8000
+    environment:
+      - PYTHONUNBUFFERED=1               # Logs en tiempo real (sin buffer)
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    # command: sobreescribe CMD del Dockerfile
+    # --host 0.0.0.0: escucha en todas las interfaces (necesario en Docker)
