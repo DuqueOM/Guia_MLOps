@@ -1301,6 +1301,151 @@ async def predict(request: PredictRequest):
 
 ---
 
+## 🪤 La Trampa — Errores Comunes de Este Módulo
+
+### Trampa 1: API sin validación de entrada
+
+**Síntoma**:
+```python
+@app.post("/predict")
+def predict(data: dict):  # ❌ Acepta cualquier cosa
+    return model.predict(data["features"])
+```
+
+**Solución**:
+```python
+from pydantic import BaseModel, Field
+
+class PredictRequest(BaseModel):
+    features: list[float] = Field(..., min_items=4, max_items=4)
+
+@app.post("/predict")
+def predict(request: PredictRequest):  # ✅ Validado
+    return model.predict([request.features])
+```
+
+---
+
+### Trampa 2: Modelo cargado en cada request
+
+**Síntoma**: API lenta porque carga el modelo en cada request.
+
+**Solución**:
+```python
+@app.on_event("startup")
+async def load_model():
+    global model
+    model = joblib.load("model.pkl")
+
+# O con dependency injection
+from functools import lru_cache
+
+@lru_cache
+def get_model():
+    return joblib.load("model.pkl")
+
+@app.post("/predict")
+def predict(request: PredictRequest, model = Depends(get_model)):
+    return model.predict(...)
+```
+
+---
+
+### Trampa 3: Logs sin contexto de request
+
+**Síntoma**: Logs sin forma de correlacionar qué request falló.
+
+**Solución**: Añadir request_id con middleware:
+```python
+class RequestIDMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        request_id = str(uuid.uuid4())[:8]
+        with logger.contextualize(request_id=request_id):
+            response = await call_next(request)
+            response.headers["X-Request-ID"] = request_id
+        return response
+```
+
+---
+
+## 📝 Quiz del Módulo — Semanas 19-20
+
+### Quiz Semana 19: FastAPI
+
+#### Pregunta 1 (25 pts)
+¿Por qué usar Pydantic schemas en lugar de `dict` para requests?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+1. **Validación automática**: Tipos, rangos, formatos
+2. **Documentación**: OpenAPI generada automáticamente
+3. **Seguridad**: Rechaza payloads malformados antes de llegar al código
+4. **Autocompletado**: IDE sabe qué campos existen
+</details>
+
+#### Pregunta 2 (25 pts)
+¿Cómo evitas cargar el modelo en cada request?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+Usar `@app.on_event("startup")` o `@lru_cache`:
+```python
+@lru_cache
+def get_model():
+    return joblib.load("model.pkl")
+
+@app.post("/predict")
+def predict(model = Depends(get_model)):
+    ...
+```
+</details>
+
+#### Pregunta 3 (25 pts)
+¿Por qué es importante el endpoint `/health`?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+1. **Load balancers**: Verifican si el servicio está vivo
+2. **Kubernetes**: Probes de readiness/liveness
+3. **Monitoring**: Alertas si el servicio no responde
+4. **Debugging**: Verificar conectividad básica
+</details>
+
+#### 🔧 Ejercicio Práctico (25 pts)
+
+Crea un endpoint `/predict` con schema de entrada validado (age 18-100, balance ≥0) y respuesta estructurada (prediction, probability, risk_level).
+
+<details>
+<summary>✅ Solución</summary>
+
+```python
+from pydantic import BaseModel, Field
+from fastapi import FastAPI
+
+class PredictRequest(BaseModel):
+    age: int = Field(..., ge=18, le=100)
+    balance: float = Field(..., ge=0)
+
+class PredictResponse(BaseModel):
+    prediction: int
+    probability: float
+    risk_level: str
+
+@app.post("/predict", response_model=PredictResponse)
+def predict(request: PredictRequest):
+    features = [[request.age, request.balance]]
+    pred = model.predict(features)[0]
+    prob = model.predict_proba(features)[0][1]
+    risk = "high" if prob > 0.7 else "medium" if prob > 0.3 else "low"
+    return PredictResponse(prediction=pred, probability=prob, risk_level=risk)
+```
+</details>
+
+---
+
 <div align="center">
 
 **Siguiente módulo** → [15. Streamlit](15_STREAMLIT.md)

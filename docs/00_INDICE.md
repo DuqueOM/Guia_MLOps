@@ -245,6 +245,26 @@ Al completar esta guía serás capaz de:
 
 ## 📚 Material Complementario
 
+### 🏛️ Los 4 Pilares Pedagógicos
+
+Cada semana está estructurada en 4 pilares, **ahora integrados directamente en cada módulo**:
+
+| Pilar | Ubicación | Descripción |
+|:-----:|-----------|-------------|
+| **1. Teoría** | Módulos (`01_` a `23_`) | Conceptos con analogías del mundo real |
+| **2. Práctica** | README.md + módulos | Código paso a paso conectado al portafolio |
+| **3. La Trampa** | Sección "🪤 La Trampa" en cada módulo | 50+ errores típicos integrados por tema |
+| **4. Evaluación** | Sección "📝 Quiz del Módulo" en cada módulo | Quizzes integrados (3 preguntas + 1 ejercicio) |
+
+### 🎤 Preparación de Entrevistas
+
+| Recurso | Descripción |
+|---------|-------------|
+| [Defensa del Portafolio (Módulo 23)](23_PROYECTO_INTEGRADOR.md#defensa-del-portafolio--guía-completa-de-entrevista) | Preguntas técnicas sobre decisiones de arquitectura |
+| [Simulacro Junior](SIMULACRO_ENTREVISTA_JUNIOR.md) | 50 preguntas nivel entry |
+| [Simulacro Mid](SIMULACRO_ENTREVISTA_MID.md) | 60 preguntas nivel mid |
+| [Simulacro Senior P1](SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md) + [P2](SIMULACRO_ENTREVISTA_SENIOR_PARTE2.md) | 115 preguntas nivel senior |
+
 ### 📚 [Material de Apoyo](apoyo/index.md)
 
 | Recurso | Descripción |

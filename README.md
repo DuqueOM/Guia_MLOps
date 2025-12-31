@@ -99,6 +99,56 @@ Al completar esta guía de 24 semanas serás capaz de:
 
 ---
 
+## 🏛️ Los 4 Pilares Pedagógicos
+
+Cada semana de esta guía está estructurada en **4 pilares** que garantizan un aprendizaje profundo y aplicable:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                         LOS 4 PILARES DE CADA SEMANA                                │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                     │
+│  1️⃣ TEORÍA FUNDAMENTAL                2️⃣ PRÁCTICA GUIADA                          │
+│  ──────────────────────                ─────────────────────                        │
+│  • Explicación conceptual              • Código paso a paso                         │
+│  • Analogías del mundo real            • Construcción incremental                   │
+│    ("Docker es como un                 • Conexión directa con el                    │
+│     contenedor de carga...")             portafolio real                            │
+│  • Tabla de decisiones técnicas        • Comandos exactos a ejecutar                │
+│                                                                                     │
+│  3️⃣ LA TRAMPA (Debugging)             4️⃣ EVALUACIÓN                               │
+│  ─────────────────────────             ─────────────                                │
+│  • Errores comunes que                 • 3 preguntas conceptuales                   │
+│    TODOS cometen                       • 1 ejercicio de código                      │
+│  • Síntomas y diagnóstico              • Rúbrica de autoevaluación                  │
+│  • Solución paso a paso                • Mínimo aprobatorio: 70%                    │
+│  • Cómo prevenirlo en futuro                                                        │
+│                                                                                     │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 📚 Recursos por Pilar
+
+| Pilar | Ubicación Principal | Contenido |
+|:-----:|---------------------|-----------|
+| **1. Teoría** | Cada módulo (`docs/NN_*.md`) | Conceptos, analogías, tablas de decisión |
+| **2. Práctica** | README.md + módulos | Código comentado, comandos, puentes al portafolio |
+| **3. La Trampa** | Sección "🪤 La Trampa" en cada módulo | 50+ errores documentados integrados |
+| **4. Evaluación** | Sección "📝 Quiz del Módulo" en cada módulo | Quizzes integrados (3 preguntas + 1 ejercicio) |
+
+### 🎯 Flujo de Aprendizaje Semanal
+
+```
+Lunes-Martes     Miércoles-Jueves     Viernes          Fin de Semana
+─────────────    ────────────────     ────────         ─────────────
+📖 TEORÍA        💻 PRÁCTICA          🪤 LA TRAMPA      📝 EVALUACIÓN
+Leer módulo      Replicar código      Revisar errores  Completar quiz
+Tomar notas      Aplicar al           Debugging        Verificar ≥70%
+                 portafolio           guiado
+```
+
+---
+
 ## 🗺️ Tabla de Mapeo: Concepto → Herramienta → Portafolio
 
 Esta tabla conecta cada concepto teórico con la herramienta práctica y su ubicación exacta en el portafolio:
@@ -2057,16 +2107,40 @@ Cada uno de los **23 módulos** sigue una estructura pedagógica consistente:
 
 ---
 
-## �📚 Recursos Complementarios
+## 📚 Recursos Complementarios
+
+### 📖 Planificación y Estructura
 
 | Recurso | Descripción | Link |
 |---------|-------------|------|
 | **SYLLABUS.md** | Programa detallado macro-módulos | [docs/SYLLABUS.md](docs/SYLLABUS.md) |
 | **MAPA_PORTAFOLIO_1TO1.md** | Mapa 1:1 (Portafolio → Guía → Tareas/Evidencia) | [docs/MAPA_PORTAFOLIO_1TO1.md](docs/MAPA_PORTAFOLIO_1TO1.md) |
 | **PLAN_ESTUDIOS.md** | Cronograma día a día (ruta acelerada 8 semanas) | [docs/PLAN_ESTUDIOS.md](docs/PLAN_ESTUDIOS.md) |
-| **EJERCICIOS.md** | Problemas prácticos | [docs/EJERCICIOS.md](docs/EJERCICIOS.md) |
-| **GLOSARIO.md** | 100+ términos MLOps | [docs/21_GLOSARIO.md](docs/21_GLOSARIO.md) |
-| **Speech Portafolio** | Guión 5-7 min | [docs/APENDICE_A_SPEECH_PORTAFOLIO.md](docs/APENDICE_A_SPEECH_PORTAFOLIO.md) |
+
+### 🎯 Evaluación y Práctica
+
+| Recurso | Descripción | Link |
+|---------|-------------|------|
+| **Quizzes Integrados** | 3 preguntas + 1 ejercicio por módulo (en cada módulo) | Sección "📝 Quiz del Módulo" al final de cada módulo |
+| **La Trampa** | Errores típicos y cómo evitarlos (en cada módulo) | Sección "🪤 La Trampa" al final de cada módulo |
+| **EJERCICIOS.md** | Problemas prácticos adicionales | [docs/EJERCICIOS.md](docs/EJERCICIOS.md) |
+
+### 🎤 Preparación de Entrevistas
+
+| Recurso | Descripción | Link |
+|---------|-------------|------|
+| **Defensa del Portafolio** | Preguntas de entrevista técnica sobre decisiones de arquitectura | [Módulo 23 - Sección Defensa](docs/23_PROYECTO_INTEGRADOR.md#defensa-del-portafolio--guía-completa-de-entrevista) |
+| **Speech Portafolio** | Guión 5-7 min para presentar tu trabajo | [docs/APENDICE_A_SPEECH_PORTAFOLIO.md](docs/APENDICE_A_SPEECH_PORTAFOLIO.md) |
+| **Simulacro Junior** | 50 preguntas nivel entry | [docs/SIMULACRO_ENTREVISTA_JUNIOR.md](docs/SIMULACRO_ENTREVISTA_JUNIOR.md) |
+| **Simulacro Mid** | 60 preguntas nivel mid | [docs/SIMULACRO_ENTREVISTA_MID.md](docs/SIMULACRO_ENTREVISTA_MID.md) |
+| **Simulacro Senior** | 115 preguntas nivel senior | [docs/SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md](docs/SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md) |
+
+### 📋 Referencia
+
+| Recurso | Descripción | Link |
+|---------|-------------|------|
+| **GLOSARIO.md** | 100+ términos MLOps | [docs/apoyo/GLOSARIO.md](docs/apoyo/GLOSARIO.md) |
+| **Material de Apoyo** | Recursos externos, plantillas, checklists | [docs/apoyo/](docs/apoyo/) |
 
 ---
 

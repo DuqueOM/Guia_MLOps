@@ -33,7 +33,15 @@
 
 ### Preparación de Entrevistas
 - **Guía Audiovisual**: Crear demos profesionales
-- **Módulo 23**: Incluye preparación de entrevistas integrada
+- **Módulo 23**: Incluye preparación de entrevistas y [Defensa del Portafolio](../23_PROYECTO_INTEGRADOR.md#defensa-del-portafolio--guía-completa-de-entrevista) integrada
+
+### 🆕 Recursos Pedagógicos (Integrados en Módulos)
+
+| Recurso | Descripción | Ubicación |
+|---------|-------------|-----------|
+| **Quizzes** | 3 preguntas + 1 ejercicio por módulo | Sección "📝 Quiz del Módulo" al final de cada módulo |
+| **La Trampa** | 50+ errores típicos con soluciones | Sección "🪤 La Trampa" al final de cada módulo |
+| **Defensa del Portafolio** | Preguntas de entrevista técnica | [Módulo 23](../23_PROYECTO_INTEGRADOR.md#defensa-del-portafolio--guía-completa-de-entrevista) |
 
 ---
 

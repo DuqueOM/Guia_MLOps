@@ -1311,6 +1311,133 @@ client.transition_model_version_stage(
 
 ---
 
+## 🪤 La Trampa — Errores Comunes de Este Módulo
+
+### Trampa 1: MLflow run sin cerrar
+
+**Síntoma**:
+```python
+mlflow.start_run()
+mlflow.log_param("lr", 0.01)
+# Script termina sin mlflow.end_run()
+
+# Siguiente ejecución:
+mlflow.start_run()
+# Exception: Run already active
+```
+
+**Solución**: Siempre usar context manager:
+```python
+with mlflow.start_run():
+    mlflow.log_param("lr", 0.01)
+    # Se cierra automáticamente
+```
+
+---
+
+### Trampa 2: MLflow log_model sin signature
+
+**Síntoma**: En producción, el modelo acepta cualquier input y falla crípicamente.
+
+**Solución**:
+```python
+from mlflow.models import infer_signature
+
+signature = infer_signature(X_train, model.predict(X_train))
+mlflow.sklearn.log_model(model, "model", signature=signature)
+```
+
+---
+
+### Trampa 3: MLflow tracking URI incorrecto
+
+**Síntoma**: `mlflow.log_metric()` no aparece en mlflow ui.
+
+**Solución**:
+```python
+print(mlflow.get_tracking_uri())  # Verificar
+mlflow.set_tracking_uri("file:./mlruns")  # Configurar explícitamente
+```
+
+---
+
+## 📝 Quiz del Módulo — Semanas 11-12
+
+### Quiz Semana 11: MLflow Tracking
+
+#### Pregunta 1 (25 pts)
+¿Cuál es la diferencia entre un Experiment y un Run en MLflow?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+- **Experiment**: Contenedor de runs relacionados (un proyecto o hipótesis)
+- **Run**: Una ejecución individual de training (un intento/iteración)
+
+```
+Experiment: bankchurn-classifier
+├── Run 1: baseline (accuracy=0.82)
+├── Run 2: con feature engineering (accuracy=0.85)
+└── Run 3: hyperparameter tuning (accuracy=0.87)
+```
+</details>
+
+#### Pregunta 2 (25 pts)
+¿Por qué es importante `mlflow.log_model` con signature?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+La signature define el contrato de entrada/salida del modelo:
+1. **Documentación ejecutable**: Sabes qué features espera
+2. **Validación en serving**: MLflow valida input automáticamente
+3. **Compatibilidad**: Evita errores de tipos en producción
+</details>
+
+#### Pregunta 3 (25 pts)
+¿Cómo cargarías un modelo del Model Registry para producción?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+```python
+# Por nombre y stage
+model = mlflow.pyfunc.load_model("models:/BankChurn/Production")
+
+# Por nombre y versión específica
+model = mlflow.pyfunc.load_model("models:/BankChurn/3")
+```
+</details>
+
+#### 🔧 Ejercicio Práctico (25 pts)
+
+Escribe un script que configure experiment, loguee parámetros y métricas, y registre el modelo con signature.
+
+<details>
+<summary>✅ Solución</summary>
+
+```python
+import mlflow
+from mlflow.models import infer_signature
+
+mlflow.set_experiment("my-classifier")
+
+with mlflow.start_run(run_name="rf-training"):
+    mlflow.log_params({"n_estimators": 100, "max_depth": 10})
+    
+    model = RandomForestClassifier(n_estimators=100, max_depth=10)
+    model.fit(X_train, y_train)
+    
+    mlflow.log_metrics({"accuracy": 0.85, "f1": 0.82})
+    
+    signature = infer_signature(X_train, model.predict(X_train))
+    mlflow.sklearn.log_model(model, "model", signature=signature,
+                             registered_model_name="MyClassifier")
+```
+</details>
+
+---
+
 ## 🏁 FIN DE FASE 2: ML Engineering
 
 > 🎯 **¡Has completado los módulos 07-10!**

@@ -214,8 +214,33 @@ cd docs && mkdocs serve
 
 ---
 
+---
+
+## 14) Recursos Pedagógicos (Integrados en Módulos)
+
+| Recurso | Qué ofrece | Ubicación |
+|---------|-----------|-----------|
+| **Quizzes** | 3 preguntas + 1 ejercicio por módulo | Sección "📝 Quiz del Módulo" al final de cada módulo |
+| **La Trampa** | 50+ errores típicos con soluciones | Sección "🪤 La Trampa" al final de cada módulo |
+| **Defensa del Portafolio** | Preguntas de entrevista técnica | [Módulo 23 - Sección Defensa](23_PROYECTO_INTEGRADOR.md#defensa-del-portafolio--guía-completa-de-entrevista) |
+
+### Flujo de Aprendizaje por Semana
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  1. Leer módulo (teoría)                                                │
+│  2. Replicar código en el portafolio (práctica)                         │
+│  3. Revisar sección "🪤 La Trampa" del módulo (debugging)                │
+│  4. Completar sección "📝 Quiz del Módulo" (evaluación)                │
+│  5. Preparar entrevista con Módulo 23 - Defensa del Portafolio          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## 🔗 Navegación
 
 - [← Volver al Índice](00_INDICE.md)
 - [→ Plan de Estudios](PLAN_ESTUDIOS.md)
 - [→ Syllabus](SYLLABUS.md)
+- [→ Defensa del Portafolio (Módulo 23)](23_PROYECTO_INTEGRADOR.md#defensa-del-portafolio--guía-completa-de-entrevista)

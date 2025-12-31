@@ -998,6 +998,160 @@ cd proyecto1 && python -c "from src.proyecto1.training import train; train()"
 
 ---
 
+## 🎤 Defensa del Portafolio — Guía Completa de Entrevista
+
+> **Objetivo**: Prepararte para defender cada decisión arquitectónica del portafolio en una entrevista técnica real.
+
+### 🎙️ Speech de Elevador (5-7 minutos)
+
+**Estructura Recomendada**:
+
+```
+MINUTO 1: CONTEXTO + PROBLEMA
+"Construí un portafolio de 3 proyectos ML production-ready que demuestran
+el ciclo completo MLOps: desde entrenamiento hasta monitoreo en prod..."
+
+MINUTO 2-3: LOS 3 PROYECTOS (30s cada uno)
+- BankChurn: Clasificación binaria → FastAPI → Docker
+- CarVision: Regresión precios → Streamlit → Feature Engineering
+- TelecomAI: Multiclase → MLflow tracking → CI/CD completo
+
+MINUTO 4-5: DECISIONES TÉCNICAS CLAVE
+"Elegí DVC sobre Git LFS porque..." (1 min)
+"Usé sklearn Pipelines para evitar data leakage..." (1 min)
+
+MINUTO 6: RESULTADOS CUANTIFICABLES
+"97% coverage en CarVision, CI/CD con matrix testing 3.10-3.12..."
+
+MINUTO 7: CIERRE + APRENDIZAJES
+"El mayor desafío fue... Lo resolvería diferente haciendo..."
+```
+
+---
+
+### ❓ Preguntas de Entrevista por Categoría
+
+#### 🏗️ Arquitectura General
+
+**🟢 Junior: ¿Por qué dividiste el portafolio en 3 proyectos separados?**
+> Cada proyecto aborda un tipo diferente de problema ML (clasificación binaria, regresión, multiclase). Esto demuestra versatilidad y permite ciclos de vida independientes.
+
+**🟡 Mid: ¿Cómo manejas la configuración entre desarrollo y producción?**
+> Uso Pydantic Settings que lee de variables de entorno con fallback a valores por defecto. Docker pasa `--env-file` o variables directas.
+
+**🔴 Senior: Si tuvieras 100 modelos en producción, ¿cómo organizarías el código?**
+> Evolucionaría a monorepo con Model Server (Seldon/TF Serving), Model Registry centralizado (MLflow), Feature Store para features compartidos, y canary deployments por modelo.
+
+---
+
+#### 🐍 Python y Código
+
+**🟢 Junior: ¿Por qué usas type hints en todo el código?**
+> Documentación ejecutable, errores en tiempo de desarrollo con mypy, mejor autocompletado del IDE.
+
+**🟡 Mid: ¿Por qué creaste clases como `ChurnTrainer` en lugar de funciones sueltas?**
+> Estado encapsulado (el trainer mantiene el pipeline), extensibilidad (otros trainers heredan de BaseTrainer), testeabilidad (puedo mockear el trainer completo).
+
+---
+
+#### 📊 Pipelines ML
+
+**🟢 Junior: ¿Qué es data leakage y cómo lo evitas?**
+> Información del test set contamina training. Lo evito con sklearn Pipeline que encapsula fit/transform.
+
+**🟡 Mid: ¿Por qué usas ColumnTransformer?**
+> Procesamiento diferenciado (numéricas escalar, categóricas one-hot), serialización unificada (un solo .pkl), sin riesgo de desalineación.
+
+**🔴 Senior: ¿Cómo implementarías Target Encoding sin leakage?**
+> K-Fold dentro del fit: calcular encoding SOLO con train de cada fold, usar smoothing para categorías raras.
+
+---
+
+#### 🔄 Versionado (DVC/MLflow)
+
+**🟢 Junior: ¿Por qué usas DVC en lugar de Git LFS?**
+> DVC: storage propio (S3, gratis), pipelines (`dvc.yaml`), experimentos (`dvc exp run`), cache.
+> Git LFS: cobra por ancho de banda, sin pipelines.
+
+**🟡 Mid: ¿Cómo decides cuándo promover un modelo de Staging a Production?**
+> 3 gates: (1) Técnico: métricas > baseline, tests pasan, signature match. (2) Drift: PSI < 0.2. (3) Negocio: review de stakeholders.
+
+---
+
+#### 🧪 Testing
+
+**🟢 Junior: ¿Por qué tienes 80%+ de coverage como requirement?**
+> Balance pragmático: <60% faltan tests críticos, 80-90% estándar de industria, >95% costo marginal alto. Lo importante: paths críticos cubiertos.
+
+**🟡 Mid: ¿Cómo testeas el pipeline ML sin datos reales?**
+> Pirámide de fixtures: `minimal_data` (4 filas) para unitarios, `realistic_data` (1000 filas) para integración, `edge_case_data` (NaN, outliers) para límites.
+
+---
+
+#### 🐳 Docker y Deployment
+
+**🟢 Junior: ¿Por qué usas multi-stage builds?**
+> Separa construcción de ejecución: builder tiene compiladores (~900MB), runtime solo lo necesario (~150MB). Resultado: de 2GB a 300MB.
+
+**🟡 Mid: ¿Cómo manejas el caching de dependencias?**
+> Orden de capas importa. Primero COPY requirements.txt, luego RUN pip install (se cachea si no cambió), finalmente COPY código.
+
+---
+
+#### 🔒 CI/CD
+
+**🟢 Junior: ¿Por qué usas matrix testing (Python 3.10, 3.11, 3.12)?**
+> Garantiza compatibilidad: usuarios pueden tener diferentes versiones, producción podría estar en versión diferente. Costo mínimo: 3 jobs paralelos.
+
+**🟡 Mid: ¿Cómo evitas que secretos se filtren en el repositorio?**
+> Defensa en profundidad: pre-commit hook (gitleaks), CI scan, .gitignore robusto, GitHub Secret Scanning, documentación de qué variables necesitan.
+
+---
+
+### ⚠️ Preguntas Trampa y Cómo Responder
+
+**Trampa 1: "¿Por qué no usaste PyTorch/TensorFlow?"**
+> "Para problemas tabulares, sklearn es la herramienta correcta: más rápido de entrenar, interpretabilidad con feature_importances_, deployment más simple. Si fuera imágenes/NLP, usaría PyTorch."
+
+**Trampa 2: "Tu coverage es 97%. ¿No es demasiado?"**
+> "97% puede ser excesivo SI testeas getters triviales. En mi caso cubre paths críticos. El valor real no es el número, sino tener confianza para refactors."
+
+**Trampa 3: "¿Por qué no usaste Kubernetes desde el inicio?"**
+> "K8s resuelve problemas de escala que no tengo en desarrollo. Mi approach: desarrollo con docker-compose, producción con K8s cuando hay más de 3 servicios o necesito autoscaling."
+
+---
+
+### 📊 Rúbrica de Autoevaluación
+
+| Criterio | 1 (Novato) | 2 (Competente) | 3 (Profesional) | 4 (Experto) |
+|----------|------------|----------------|-----------------|-------------|
+| **Claridad** | Divago | Correcto pero largo | Conciso y correcto | Conciso + analogías memorables |
+| **Profundidad** | Solo superficie | Explico el "qué" | Explico el "por qué" | Trade-offs y alternativas |
+| **Conexión al código** | No menciono portafolio | Menciono archivos | Cito código específico | Puedo abrir y mostrar en vivo |
+| **Manejo de presión** | Me bloqueo | Respondo nervioso | Tranquilo, pido clarificación | Guío la conversación |
+
+**Meta para entrevista**: Promedio ≥ 3 en todos los criterios.
+
+---
+
+### 🎯 Escenarios de System Design (Staff Level)
+
+**Escenario 1: Escala 10x**
+> "Tu API recibe 100 rps. El cliente quiere 1000 rps."
+
+**Respuesta estructurada**:
+1. Medir primero con locust
+2. Optimizaciones por capa: API (más réplicas + HPA), Modelo (batch predictions), Red (gRPC), Storage (Redis cache)
+3. Arquitectura: Ingress → HPA pods → Redis cache
+4. Trade-off: Más réplicas = más costo, cache = posible stale data
+
+**Escenario 2: Multi-modelo**
+> "Tienes 20 modelos en producción. ¿Cómo organizas el serving?"
+
+**Recomendación**: Model Server (Seldon) + Gateway para routing + MLflow Registry para governance.
+
+---
+
 <div align="center">
 
 ## 🎉 ¡Felicidades!
@@ -1013,7 +1167,3 @@ Ahora tienes las habilidades de un **Senior/Staff MLOps Engineer**
 </div>
 
 **¡Éxito en tu proyecto! 🚀**
-
-[← Documentación](19_DOCUMENTACION.md) | [Glosario →](apoyo/GLOSARIO.md)
-
-</div>

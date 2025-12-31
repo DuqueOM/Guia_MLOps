@@ -1682,6 +1682,142 @@ pipeline = Pipeline([
 
 ---
 
+## 🪤 La Trampa — Errores Comunes de Este Módulo
+
+### Trampa 1: Data leakage con fit_transform en todo el dataset
+
+**Síntoma**: Métricas de cross-validation: 0.95, métricas en producción: 0.72
+
+**Causa raíz**:
+```python
+# ❌ LEAKAGE
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)  # fit en TODO X (incluye test)
+X_train, X_test = train_test_split(X_scaled)
+```
+
+**Solución**:
+```python
+# ✅ SIN LEAKAGE
+X_train, X_test = train_test_split(X)  # Split PRIMERO
+pipeline = Pipeline([
+    ("scaler", StandardScaler()),
+    ("model", RandomForestClassifier())
+])
+pipeline.fit(X_train, y_train)  # fit SOLO en train
+```
+
+---
+
+### Trampa 2: ColumnTransformer pierde nombres de columnas
+
+**Síntoma**:
+```python
+X_transformed = preprocessor.fit_transform(X)
+print(type(X_transformed))  # numpy.ndarray ← ¡Perdí los nombres!
+```
+
+**Solución** (sklearn >= 1.2):
+```python
+preprocessor.set_output(transform="pandas")  # ← Retorna DataFrame
+```
+
+---
+
+### Trampa 3: Custom Transformer sin retornar self en fit
+
+**Síntoma**:
+```python
+def fit(self, X, y=None):
+    self.mean_ = X.mean()
+    # ← Olvidé return self
+
+# AttributeError: 'NoneType' object has no attribute 'transform'
+```
+
+**Solución**: Siempre `return self` en el método `fit()`.
+
+---
+
+## 📝 Quiz del Módulo — Semanas 7-8
+
+### Quiz Semana 7: sklearn Pipelines
+
+#### Pregunta 1 (25 pts)
+¿Qué problema resuelve sklearn `Pipeline`?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+1. **Data leakage**: Encapsula fit/transform para que siempre se apliquen correctamente
+2. **Reproducibilidad**: Un solo objeto `.pkl` contiene todo el preprocesamiento + modelo
+3. **Código más limpio**: Una llamada a `pipeline.predict()` en lugar de 10 líneas
+4. **Cross-validation correcto**: `cross_val_score(pipeline, X, y)` hace fit/transform por fold
+</details>
+
+#### Pregunta 2 (25 pts)
+¿Por qué `ColumnTransformer` es necesario?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+Columnas diferentes necesitan transformaciones diferentes:
+- **Numéricas**: Imputar → Escalar
+- **Categóricas**: Imputar → OneHot/Target Encode
+
+ColumnTransformer aplica cada pipeline al subset correcto de columnas.
+</details>
+
+#### Pregunta 3 (25 pts)
+¿Qué hace `handle_unknown="ignore"` en `OneHotEncoder`?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+En producción pueden llegar categorías no vistas en training:
+- `"error"` (default): Lanza error si ve categoría nueva
+- `"ignore"`: Pone 0 en todas las columnas one-hot
+- **Recomendación**: Siempre usar `"ignore"` para producción.
+</details>
+
+#### 🔧 Ejercicio Práctico (25 pts)
+
+Crea un Pipeline que impute numéricas con mediana, escale, impute categóricas con moda, one-hot encode, y use RandomForestClassifier.
+
+<details>
+<summary>✅ Solución</summary>
+
+```python
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.ensemble import RandomForestClassifier
+
+num_pipeline = Pipeline([
+    ("imputer", SimpleImputer(strategy="median")),
+    ("scaler", StandardScaler())
+])
+
+cat_pipeline = Pipeline([
+    ("imputer", SimpleImputer(strategy="most_frequent")),
+    ("encoder", OneHotEncoder(handle_unknown="ignore"))
+])
+
+preprocessor = ColumnTransformer([
+    ("num", num_pipeline, numerical_cols),
+    ("cat", cat_pipeline, categorical_cols)
+])
+
+pipeline = Pipeline([
+    ("preprocessor", preprocessor),
+    ("classifier", RandomForestClassifier(class_weight="balanced"))
+])
+```
+</details>
+
+---
+
 <div align="center">
 
 **Siguiente módulo** → [08. Ingeniería de Features](08_INGENIERIA_FEATURES.md)

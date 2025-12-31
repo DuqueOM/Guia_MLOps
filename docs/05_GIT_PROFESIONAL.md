@@ -1522,6 +1522,167 @@ git commit -m "test(integration): add API endpoint tests with pytest"
 
 ---
 
+## 🪤 La Trampa — Errores Comunes de Este Módulo
+
+### Trampa 1: Import que funciona en notebook pero no en pytest
+
+**Síntoma**:
+```python
+# En notebook funciona:
+from bankchurn.training import train  # ✅
+
+# En pytest:
+# ModuleNotFoundError: No module named 'bankchurn'
+```
+
+**Causa raíz**: El notebook tiene el directorio actual en `sys.path`. pytest no.
+
+**Solución**:
+```bash
+# Instalar paquete en modo editable
+pip install -e ".[dev]"
+
+# Ahora pytest encuentra el módulo
+pytest tests/ -v  # ✅
+```
+
+**Prevención**: Siempre usar `src/` layout y `pip install -e .` antes de desarrollar.
+
+---
+
+### Trampa 2: .gitignore incompleto expone secretos
+
+**Síntoma**:
+```bash
+git add .
+git commit -m "add config"
+# Oops, .env con API keys está en el commit
+```
+
+**Solución inmediata** (si ya commiteaste):
+```bash
+# 1. Remover del historial (PELIGROSO, requiere force push)
+git filter-branch --force --index-filter \
+  "git rm --cached --ignore-unmatch .env" HEAD
+
+# 2. Rotar TODAS las credenciales expuestas (no hay vuelta atrás)
+```
+
+**Prevención**:
+```gitignore
+# .gitignore robusto
+.env
+.env.*
+*.pem
+*.key
+secrets/
+credentials/
+```
+
+---
+
+### Trampa 3: Pre-commit hook que no se ejecuta
+
+**Síntoma**:
+```bash
+git commit -m "feat: add feature"
+# Commit pasa, pero código tiene errores de lint
+```
+
+**Causa raíz**: pre-commit no está instalado en este repo.
+
+**Solución**:
+```bash
+# Instalar los hooks en el repo actual
+pre-commit install
+
+# Verificar que está activo
+ls .git/hooks/pre-commit  # Debe existir
+
+# Ejecutar manualmente para probar
+pre-commit run --all-files
+```
+
+---
+
+## 📝 Quiz del Módulo — Semana 4
+
+### Quiz Semana 4: Git Profesional + Estructura de Proyecto
+
+#### Pregunta 1 (25 pts)
+¿Por qué es importante el "src/ layout" en proyectos Python?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+**3 razones principales**:
+
+1. **Fuerza `pip install -e .`**: No puedes importar sin instalar, evitando "funciona en mi máquina"
+2. **Evita conflictos de imports**: El paquete está aislado en `src/`
+3. **Separa código de configuración**: Tests, configs y docs están fuera de `src/`
+</details>
+
+#### Pregunta 2 (25 pts)
+¿Qué problema resuelven los Conventional Commits?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+1. **Historial legible**: `git log` tiene estructura predecible
+2. **Changelogs automáticos**: Herramientas extraen cambios por tipo
+3. **Versionado semántico**: `feat` → minor, `fix` → patch, `BREAKING CHANGE` → major
+
+**Formato**: `<type>(<scope>): <description>`
+</details>
+
+#### Pregunta 3 (25 pts)
+¿Por qué pre-commit debe ejecutarse ANTES del commit, no después?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+1. **Evita commits rotos**: Si el check falla después, el commit malo ya está en el historial
+2. **Ahorra tiempo de CI**: Problemas se detectan localmente
+3. **Feedback inmediato**: Ves el error mientras tienes el contexto fresco
+</details>
+
+#### 🔧 Ejercicio Práctico (25 pts)
+
+Configura un `.pre-commit-config.yaml` que incluya:
+1. Verificar archivos YAML válidos
+2. Trailing whitespace removal
+3. ruff para linting
+4. mypy para type checking
+
+<details>
+<summary>✅ Solución</summary>
+
+```yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-yaml
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.6
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.7.0
+    hooks:
+      - id: mypy
+        args: [--ignore-missing-imports]
+```
+</details>
+
+---
+
 <div align="center">
 
 **Siguiente módulo** → [06. Versionado de Datos](06_VERSIONADO_DATOS.md)

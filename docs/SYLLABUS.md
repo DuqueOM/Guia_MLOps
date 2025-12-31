@@ -425,10 +425,51 @@ La guía incluye simulacros de entrevista adaptados a cada nivel de experiencia:
 | 🟡 Mid | [Simulacro Mid](SIMULACRO_ENTREVISTA_MID.md) | 60 | Semanas 5-6 |
 | 🔴 Senior | [Simulacro Senior P1](SIMULACRO_ENTREVISTA_SENIOR_PARTE1.md) + [P2](SIMULACRO_ENTREVISTA_SENIOR_PARTE2.md) | 115 | Semanas 7-8 |
 
+### 🆕 Defensa del Portafolio
+
+| Recurso | Descripción |
+|---------|-------------|
+| [DEFENSA_PORTAFOLIO.md](DEFENSA_PORTAFOLIO.md) | Preguntas técnicas sobre decisiones de arquitectura del portafolio |
+
+Incluye:
+- **Speech de 5-7 minutos**: Guión estructurado para presentar tu trabajo
+- **50+ preguntas por categoría**: Arquitectura, Python, Pipelines, DVC/MLflow, Testing, Docker, CI/CD, Observabilidad, Infraestructura
+- **Escenarios de System Design**: Escalado 10x, multi-modelo
+- **Preguntas trampa**: Cómo responder sin caer en errores comunes
+- **Rúbrica de autoevaluación**: Mide tu preparación
+
 **Progresión recomendada**:
 1. **Junior**: Python básico, ML fundamentos, Git, estructura de proyecto
 2. **Mid**: Pipelines, testing, CI/CD, Docker, APIs
 3. **Senior**: System design, arquitectura, liderazgo, trade-offs
+
+---
+
+## 🏛️ Los 4 Pilares Pedagógicos
+
+Cada semana está estructurada en 4 pilares, **ahora integrados directamente en cada módulo**:
+
+| Pilar | Ubicación | Contenido |
+|:-----:|-----------|-----------|
+| **1. Teoría** | Módulos (`01_` a `23_`) | Conceptos con analogías del mundo real |
+| **2. Práctica** | README.md + módulos | Código paso a paso, puentes al portafolio |
+| **3. La Trampa** | Sección "🪤 La Trampa" al final de cada módulo | 50+ errores típicos integrados por tema |
+| **4. Evaluación** | Sección "📝 Quiz del Módulo" al final de cada módulo | Quizzes integrados (3 preguntas + 1 ejercicio) |
+
+### 🪤 La Trampa — Errores Comunes (Integrados)
+
+Al final de cada módulo encontrarás errores que **todos** cometen:
+- **Síntoma**: Qué ves cuando caes en la trampa
+- **Causa raíz**: Por qué sucede
+- **Solución**: Cómo arreglarlo paso a paso
+- **Prevención**: Cómo evitarlo en el futuro
+
+### 📝 Quizzes (Integrados en Módulos)
+
+Al final de cada módulo:
+- 3 preguntas conceptuales (25 pts c/u)
+- 1 ejercicio práctico de código (25 pts)
+- Total: 100 pts/módulo, mínimo aprobatorio: 70 pts
 
 
 ---

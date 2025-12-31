@@ -1649,6 +1649,159 @@ def train_model(
 
 ---
 
+## 🪤 La Trampa — Errores Comunes de Este Módulo
+
+### Trampa 1: dvc add en archivo ya trackeado por Git
+
+**Síntoma**:
+```bash
+dvc add data/customers.csv
+# ERROR: data/customers.csv is already tracked by Git
+```
+
+**Solución**:
+```bash
+# 1. Remover de Git (mantener archivo local)
+git rm --cached data/customers.csv
+
+# 2. Ahora sí, añadir a DVC
+dvc add data/customers.csv
+
+# 3. Commitear el .dvc y .gitignore
+git add data/customers.csv.dvc data/.gitignore
+git commit -m "data: track customers.csv with DVC"
+```
+
+---
+
+### Trampa 2: dvc repro no detecta cambios en código
+
+**Síntoma**:
+```bash
+# Modifico train.py
+vim src/bankchurn/train.py
+
+dvc repro
+# "Stage 'train' didn't change, skipping"  ← ¡Debería re-ejecutar!
+```
+
+**Causa raíz**: El archivo modificado no está en `deps:` del stage.
+
+**Solución**:
+```yaml
+# dvc.yaml
+stages:
+  train:
+    cmd: python src/bankchurn/train.py
+    deps:
+      - src/bankchurn/train.py      # ← El script
+      - src/bankchurn/pipeline.py   # ← Dependencias del script
+      - data/processed/train.csv    # ← Datos
+    outs:
+      - models/model.pkl
+```
+
+---
+
+### Trampa 3: dvc pull falla silenciosamente
+
+**Síntoma**:
+```bash
+dvc pull
+# (sin output)
+ls data/
+# (vacío o archivos antiguos)
+```
+
+**Solución**:
+```bash
+# Verificar configuración
+dvc remote list
+dvc remote default
+
+# Pull con verbose
+dvc pull -v
+```
+
+---
+
+## 📝 Quiz del Módulo — Semanas 5-6
+
+### Quiz Semana 5: DVC Fundamentos
+
+#### Pregunta 1 (25 pts)
+¿Cuál es la diferencia fundamental entre Git LFS y DVC?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+| Aspecto | Git LFS | DVC |
+|---------|---------|-----|
+| **Storage** | GitHub (pago por ancho de banda) | Tu propio storage (S3, GCS, local) |
+| **Pipelines** | ❌ No | ✅ `dvc.yaml` con DAGs |
+| **Experimentos** | ❌ No | ✅ `dvc exp run` |
+| **Cache** | ❌ No | ✅ Reutiliza artefactos |
+</details>
+
+#### Pregunta 2 (25 pts)
+¿Qué hace `dvc add data/raw.csv` internamente?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+1. **Calcula hash MD5** del archivo
+2. **Crea `data/raw.csv.dvc`** (puntero con el hash)
+3. **Añade `data/raw.csv` a `.gitignore`**
+4. **Mueve el archivo al cache** (`.dvc/cache/`)
+</details>
+
+#### Pregunta 3 (25 pts)
+¿Por qué `dvc repro` no re-ejecuta si no hay cambios?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+DVC trackea **hashes de deps y outs** en `dvc.lock`. En `dvc repro`:
+1. Calcula hashes actuales de deps
+2. Compara con `dvc.lock`
+3. Si coinciden → skip
+4. Si difieren → re-ejecuta y actualiza lock
+</details>
+
+#### 🔧 Ejercicio Práctico (25 pts)
+
+Escribe un `dvc.yaml` con dos stages:
+1. `prepare`: lee `data/raw.csv`, genera `data/processed.csv`
+2. `train`: lee `data/processed.csv` + `src/train.py`, genera `models/model.pkl`
+
+<details>
+<summary>✅ Solución</summary>
+
+```yaml
+stages:
+  prepare:
+    cmd: python src/prepare.py
+    deps:
+      - src/prepare.py
+      - data/raw.csv
+    outs:
+      - data/processed.csv
+
+  train:
+    cmd: python src/train.py
+    deps:
+      - src/train.py
+      - data/processed.csv
+    outs:
+      - models/model.pkl
+    metrics:
+      - metrics.json:
+          cache: false
+```
+</details>
+
+---
+
 ## 🔜 Siguiente Fase: ML Engineering
 
 Con los fundamentos completados, es hora de construir **pipelines de sklearn avanzados**.

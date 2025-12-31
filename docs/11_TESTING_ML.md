@@ -1725,6 +1725,141 @@ def test_predict_proba_in_range(trained_pipeline, sample_data):
 
 ---
 
+## 🪤 La Trampa — Errores Comunes de Este Módulo
+
+### Trampa 1: Test que pasa localmente pero falla en CI
+
+**Síntoma**:
+```bash
+# Local: pytest tests/  # ✅ All passed
+# CI: pytest tests/  # ❌ FileNotFoundError: data/test.csv
+```
+
+**Causa raíz**: Path hardcodeado que solo existe en tu máquina.
+
+**Solución**: Usar paths relativos y fixtures:
+```python
+from pathlib import Path
+DATA_PATH = Path(__file__).parent.parent / "data" / "test.csv"
+
+# O mejor: fixture que genera datos
+@pytest.fixture
+def sample_data():
+    return pd.DataFrame({"age": [25, 45], "balance": [1000, 5000]})
+```
+
+---
+
+### Trampa 2: Test con efectos secundarios
+
+**Síntoma**: Test 1 solo ✅, todos los tests ❌ (test_predict falla porque test_train dejó un archivo).
+
+**Solución**: Usar directorios temporales:
+```python
+@pytest.fixture
+def temp_model_dir(tmp_path):
+    model_dir = tmp_path / "models"
+    model_dir.mkdir()
+    yield model_dir
+    # tmp_path se limpia automáticamente
+```
+
+---
+
+### Trampa 3: Mock que no mockea lo correcto
+
+**Síntoma**: El mock no funciona porque mockeaste donde se define, no donde se usa.
+
+**Solución**: Mockear donde se USA:
+```python
+# Si mymodule.py hace: import requests
+@patch('mymodule.requests.get')  # ✅ Donde se usa
+def test_fetch(mock_get):
+    mock_get.return_value.json.return_value = {"data": [1, 2, 3]}
+```
+
+---
+
+## 📝 Quiz del Módulo — Semanas 13-14
+
+### Quiz Semana 13: Testing para ML
+
+#### Pregunta 1 (25 pts)
+¿Qué es un pytest fixture y para qué sirve?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+Un fixture es una función que provee datos o setup reutilizable para tests:
+```python
+@pytest.fixture
+def sample_data():
+    return pd.DataFrame({"age": [25, 45], "balance": [1000, 5000]})
+
+def test_pipeline(sample_data):  # ← Inyectado automáticamente
+    pipeline.fit(sample_data, [0, 1])
+```
+**Beneficios**: Reutilización, cleanup automático con `yield`, scopes.
+</details>
+
+#### Pregunta 2 (25 pts)
+¿Por qué 80% coverage y no 100%?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+- **< 60%**: Probablemente faltan tests críticos
+- **80%**: Balance pragmático (cubre lo importante)
+- **100%**: Costo marginal alto, puede forzar tests de bajo valor
+
+**Lo importante**: Cubrir paths críticos (predicción, validación), no getters triviales.
+</details>
+
+#### Pregunta 3 (25 pts)
+¿Cómo testeas que no hay data leakage?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+```python
+def test_no_data_leakage():
+    pipeline.fit(X_train, y_train)
+    scaler = pipeline.named_steps['preprocessor'].transformers_[0][1].named_steps['scaler']
+    
+    expected_mean = X_train[numerical_cols].mean()
+    actual_mean = scaler.mean_
+    
+    np.testing.assert_array_almost_equal(actual_mean, expected_mean)
+```
+</details>
+
+#### 🔧 Ejercicio Práctico (25 pts)
+
+Crea una pirámide de fixtures: `minimal_data` (4 filas), `realistic_data` (1000 filas), `edge_case_data` (NaN, outliers).
+
+<details>
+<summary>✅ Solución</summary>
+
+```python
+@pytest.fixture
+def minimal_data():
+    return pd.DataFrame({"age": [25, 45, 35, 60], "balance": [1000, 5000, 0, 10000]})
+
+@pytest.fixture
+def realistic_data():
+    return pd.read_csv("tests/fixtures/sample_1000.csv")
+
+@pytest.fixture
+def edge_case_data():
+    return pd.DataFrame({
+        "age": [18, 100, None, 45],  # Límites y NaN
+        "balance": [-100, 0, 1e9, 5000]  # Outliers
+    })
+```
+</details>
+
+---
+
 <div align="center">
 
 **Siguiente módulo** → [12. CI/CD](12_CI_CD.md)

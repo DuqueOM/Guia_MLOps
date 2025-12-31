@@ -3511,6 +3511,355 @@ dev = ["pytest>=7.0", "ruff>=0.1"]
 
 ---
 
+## 🪤 La Trampa — Errores Comunes de Este Módulo
+
+### Trampa 1: Type Hints que no se verifican
+
+**Síntoma**:
+```python
+def train(data: pd.DataFrame) -> Pipeline:
+    return "esto no es un Pipeline"  # Python no se queja
+```
+
+**Causa raíz**: Python no verifica types en runtime por defecto. Los hints son solo documentación.
+
+**Solución**:
+```bash
+# Ejecutar mypy para verificar
+mypy src/ --strict
+
+# Error: Incompatible return value type (got "str", expected "Pipeline")
+```
+
+**Prevención**:
+```yaml
+# .pre-commit-config.yaml
+- repo: https://github.com/pre-commit/mirrors-mypy
+  hooks:
+    - id: mypy
+      args: [--strict]
+```
+
+---
+
+### Trampa 2: Pydantic con valores mutables por defecto
+
+**Síntoma**:
+```python
+class Config(BaseModel):
+    features: list = []  # ❌ PELIGRO: lista compartida entre instancias
+
+c1 = Config()
+c1.features.append("age")
+c2 = Config()
+print(c2.features)  # ["age"] ← ¡Contaminado!
+```
+
+**Causa raíz**: Objetos mutables (listas, dicts) como defaults se comparten.
+
+**Solución**:
+```python
+from pydantic import Field
+
+class Config(BaseModel):
+    features: list = Field(default_factory=list)  # ✅ Nueva lista cada vez
+```
+
+---
+
+### Trampa 3: Validación Pydantic silenciosa con coerción
+
+**Síntoma**:
+```python
+class Config(BaseModel):
+    n_estimators: int
+
+config = Config(n_estimators="100")  # ← String, no int
+print(config.n_estimators)  # 100 (int) ← Pydantic lo convirtió silenciosamente
+```
+
+**Solución** (si necesitas validación estricta):
+```python
+from pydantic import ConfigDict
+
+class Config(BaseModel):
+    model_config = ConfigDict(strict=True)  # ← No coerción
+    n_estimators: int
+
+Config(n_estimators="100")  # ❌ ValidationError
+```
+
+---
+
+### Trampa 4: ABC sin @abstractmethod no obliga implementación
+
+**Síntoma**:
+```python
+from abc import ABC
+
+class BaseTrainer(ABC):
+    def fit(self, X, y):  # ← Olvidé @abstractmethod
+        pass
+
+class ChurnTrainer(BaseTrainer):
+    pass  # ← No implementé fit, pero Python no se queja
+
+trainer = ChurnTrainer()  # ✅ Funciona (mal)
+```
+
+**Solución**:
+```python
+from abc import ABC, abstractmethod
+
+class BaseTrainer(ABC):
+    @abstractmethod  # ← Ahora sí obliga
+    def fit(self, X, y):
+        pass
+
+trainer = ChurnTrainer()  # ❌ TypeError: Can't instantiate abstract class
+```
+
+---
+
+### Trampa 5: SettingWithCopyWarning ignorada
+
+**Síntoma**:
+```python
+df_filtered = df[df["age"] > 18]
+df_filtered["category"] = "adult"  # ⚠️ SettingWithCopyWarning
+```
+
+**Solución**:
+```python
+# Opción 1: Copia explícita
+df_filtered = df[df["age"] > 18].copy()
+df_filtered["category"] = "adult"  # ✅ Siempre funciona
+
+# Opción 2: .loc para modificar en su lugar
+df.loc[df["age"] > 18, "category"] = "adult"  # ✅ Modificación directa
+```
+
+---
+
+### Trampa 6: Pandera schema muy permisivo
+
+**Síntoma**:
+```python
+class DataSchema(pa.DataFrameModel):
+    age: Series[int]
+    balance: Series[float]
+    # ← Sin Config.strict, permite columnas extra
+
+df_with_extra = pd.DataFrame({
+    "age": [25], "balance": [1000.0], 
+    "malicious_column": ["payload"]  # ← Pasa validación
+})
+DataSchema.validate(df_with_extra)  # ✅ No falla
+```
+
+**Solución**:
+```python
+class DataSchema(pa.DataFrameModel):
+    age: Series[int]
+    balance: Series[float]
+    
+    class Config:
+        strict = True  # ← Rechaza columnas extra
+```
+
+---
+
+## 📝 Quiz del Módulo — Semanas 1-3
+
+### Quiz Semana 1: Type Hints + Pydantic
+
+#### Pregunta 1 (25 pts)
+¿Cuál es la diferencia entre type hints de Python y la validación de Pydantic?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+| Aspecto | Type Hints | Pydantic |
+|---------|-----------|----------|
+| **Cuándo verifica** | Estáticamente (con mypy) | En runtime |
+| **Qué hace si falla** | mypy reporta error | Lanza ValidationError |
+| **Coerción** | No convierte tipos | Convierte `"123"` → `123` |
+| **Dónde usar** | Todo el código | Fronteras (APIs, configs) |
+
+**Clave**: Type hints son documentación verificable; Pydantic es validación activa.
+</details>
+
+#### Pregunta 2 (25 pts)
+¿Por qué este código es peligroso?
+
+```python
+class Config(BaseModel):
+    features: list = []
+```
+
+<details>
+<summary>✅ Respuesta</summary>
+
+La lista `[]` es mutable y se comparte entre todas las instancias. Usar `Field(default_factory=list)` en su lugar.
+</details>
+
+#### Pregunta 3 (25 pts)
+Explica qué hace `Field(ge=0, le=100)` en Pydantic.
+
+<details>
+<summary>✅ Respuesta</summary>
+
+Define restricciones de validación:
+- `ge=0`: Greater or Equal → valor ≥ 0
+- `le=100`: Less or Equal → valor ≤ 100
+</details>
+
+#### 🔧 Ejercicio Práctico (25 pts)
+
+Crea un schema Pydantic `CustomerInput` que valide:
+- `age`: entero entre 18 y 100
+- `balance`: float ≥ 0
+- `tenure`: entero ≥ 0
+- `products`: entero entre 1 y 4
+
+<details>
+<summary>✅ Solución</summary>
+
+```python
+from pydantic import BaseModel, Field
+
+class CustomerInput(BaseModel):
+    age: int = Field(..., ge=18, le=100)
+    balance: float = Field(..., ge=0)
+    tenure: int = Field(..., ge=0)
+    products: int = Field(..., ge=1, le=4)
+```
+</details>
+
+---
+
+### Quiz Semana 2: OOP y Protocolos
+
+#### Pregunta 1 (25 pts)
+¿Cuál es la diferencia entre ABC y Protocol en Python?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+| Aspecto | ABC | Protocol |
+|---------|-----|----------|
+| **Herencia** | Requiere `class X(ABC)` | No requiere herencia |
+| **Verificación** | Runtime con `isinstance` | Estática con mypy |
+| **Librerías externas** | Deben heredar explícitamente | Cumplen automáticamente (duck typing) |
+</details>
+
+#### Pregunta 2 (25 pts)
+¿Para qué sirve `@runtime_checkable` en un Protocol?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+Permite usar `isinstance()` con el Protocol en runtime:
+```python
+@runtime_checkable
+class Predictor(Protocol):
+    def predict(self, X): ...
+
+isinstance(model, Predictor)  # ✅ Funciona
+```
+</details>
+
+#### Pregunta 3 (25 pts)
+¿Qué error hay en este código?
+```python
+from abc import ABC
+class BaseTrainer(ABC):
+    def fit(self, X, y): pass
+```
+
+<details>
+<summary>✅ Respuesta</summary>
+
+Falta `@abstractmethod`. Sin él, los métodos son concretos y heredables, no obliga implementación.
+</details>
+
+#### 🔧 Ejercicio Práctico (25 pts)
+
+Crea un Protocol `DataLoader` con métodos `load(path: str) -> pd.DataFrame` y `validate(df: pd.DataFrame) -> bool`.
+
+<details>
+<summary>✅ Solución</summary>
+
+```python
+from typing import Protocol, runtime_checkable
+import pandas as pd
+
+@runtime_checkable
+class DataLoader(Protocol):
+    def load(self, path: str) -> pd.DataFrame: ...
+    def validate(self, df: pd.DataFrame) -> bool: ...
+```
+</details>
+
+---
+
+### Quiz Semana 3: Pandas de Producción + Pandera
+
+#### Pregunta 1 (25 pts)
+¿Qué causa `SettingWithCopyWarning` y cómo se evita?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+**Causa**: Modificar un slice que puede ser vista o copia.
+**Solución**: Usar `.copy()` explícito o `.loc` para asignar.
+</details>
+
+#### Pregunta 2 (25 pts)
+¿Cuál es la diferencia entre `strict=True` y `strict=False` en Pandera?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+- `strict=False` (default): Permite columnas adicionales no definidas
+- `strict=True`: Rechaza cualquier columna no definida en el schema
+</details>
+
+#### Pregunta 3 (25 pts)
+¿Cómo validarías que una columna "email" tenga formato correcto con Pandera?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+```python
+email: Series[str] = pa.Field(str_matches=r"^[\w\.-]+@[\w\.-]+\.\w+$")
+```
+</details>
+
+#### 🔧 Ejercicio Práctico (25 pts)
+
+Crea un schema Pandera `BankDataSchema` con `customer_id` (string único), `credit_score` (int 300-850), `balance` (float ≥ 0), `is_active` (bool), modo strict.
+
+<details>
+<summary>✅ Solución</summary>
+
+```python
+import pandera as pa
+from pandera.typing import Series
+
+class BankDataSchema(pa.DataFrameModel):
+    customer_id: Series[str] = pa.Field(unique=True)
+    credit_score: Series[int] = pa.Field(ge=300, le=850)
+    balance: Series[float] = pa.Field(ge=0)
+    is_active: Series[bool]
+    
+    class Config:
+        strict = True
+```
+</details>
+
+---
+
 <div align="center">
 
 **Siguiente módulo** → [02. Diseño de Sistemas ML](02_DISENO_SISTEMAS.md)

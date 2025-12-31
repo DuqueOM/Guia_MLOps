@@ -2214,6 +2214,141 @@ volumes:
 
 ---
 
+## 🪤 La Trampa — Errores Comunes de Este Módulo
+
+### Trampa 1: Dockerfile que solo funciona en tu máquina
+
+**Síntoma**: Build falla en CI con "No module named 'src'"
+
+**Causa raíz**: `.dockerignore` no existe o está mal configurado.
+
+**Solución**:
+```dockerfile
+# .dockerignore
+.git
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+```
+
+---
+
+### Trampa 2: Container que muere sin logs
+
+**Síntoma**: Container se ejecuta y muere inmediatamente, sin output.
+
+**Causa raíz**: Python bufferea stdout por defecto.
+
+**Solución**:
+```dockerfile
+ENV PYTHONUNBUFFERED=1
+```
+
+---
+
+### Trampa 3: Imagen Docker gigante (2GB+)
+
+**Síntoma**: `docker images` muestra 2.3GB.
+
+**Solución**:
+```dockerfile
+# 1. Base slim
+FROM python:3.11-slim  # 150MB vs 900MB
+
+# 2. Multi-stage
+FROM python:3.11 as builder
+RUN pip wheel -r requirements.txt -w /wheels
+
+FROM python:3.11-slim as runtime
+COPY --from=builder /wheels /wheels
+RUN pip install /wheels/*.whl && rm -rf /wheels
+```
+
+---
+
+## 📝 Quiz del Módulo — Semanas 17-18
+
+### Quiz Semana 17: Docker
+
+#### Pregunta 1 (25 pts)
+¿Por qué usas multi-stage builds en el Dockerfile?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+Multi-stage separa **construcción** de **ejecución**:
+- Stage 1 (builder): Tiene compiladores, herramientas (~900MB)
+- Stage 2 (runtime): Solo lo necesario (~150MB)
+
+**Resultado**: De ~2GB a ~300MB, menor superficie de ataque.
+</details>
+
+#### Pregunta 2 (25 pts)
+¿Por qué creas un usuario no-root en el Dockerfile?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+Ejecutar como root es un **riesgo de seguridad**:
+- Si un atacante escapa del container, tiene root en el host
+- Vulnerabilidades en dependencias pueden ser explotadas
+
+```dockerfile
+RUN useradd --create-home appuser
+USER appuser
+```
+</details>
+
+#### Pregunta 3 (25 pts)
+¿Cómo manejas el caching de dependencias en Docker?
+
+<details>
+<summary>✅ Respuesta</summary>
+
+**Orden de capas importa**. Docker cachea cada capa; si una cambia, invalida las siguientes.
+
+```dockerfile
+# ✅ BUENO: requirements rara vez cambia
+COPY requirements.txt /app/
+RUN pip install -r requirements.txt
+# Esta capa se cachea si requirements no cambió
+
+COPY . /app  # Esta capa cambia frecuentemente
+```
+</details>
+
+#### 🔧 Ejercicio Práctico (25 pts)
+
+Escribe un Dockerfile multi-stage para una app FastAPI con usuario no-root.
+
+<details>
+<summary>✅ Solución</summary>
+
+```dockerfile
+FROM python:3.11-slim as builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip wheel --no-cache-dir -r requirements.txt -w /wheels
+
+FROM python:3.11-slim as runtime
+WORKDIR /app
+
+RUN useradd --create-home appuser
+COPY --from=builder /wheels /wheels
+RUN pip install --no-cache /wheels/*.whl && rm -rf /wheels
+
+COPY --chown=appuser:appuser . .
+USER appuser
+
+ENV PYTHONUNBUFFERED=1
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+</details>
+
+---
+
 <div align="center">
 
 **Siguiente módulo** → [14. FastAPI](14_FASTAPI.md)
